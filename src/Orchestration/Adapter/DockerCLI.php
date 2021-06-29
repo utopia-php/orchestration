@@ -2,7 +2,6 @@
 
 namespace Utopia\Orchestration\Adapter;
 
-use Exception;
 use Utopia\CLI\Console;
 use Utopia\Orchestration\Adapter;
 
@@ -52,7 +51,7 @@ class DockerCLI extends Adapter
         $code = Console::execute("docker exec ".\implode(" ", $vars)." {$name} {$command}"
             , '', $stdout, $stderr, 30);
 
-        return (Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label='.$this->namespace.'-type=runtime', '', '', '') === 0);
+        return ($code === 0);
     }
 
     public function remove($name): bool

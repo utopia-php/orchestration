@@ -2,8 +2,6 @@
 
 namespace Utopia\Orchestration;
 
-use Exception;
-
 abstract class Adapter
 {
     /**
@@ -38,32 +36,43 @@ abstract class Adapter
     /**
      * List Containers
      *
-     * @return bool
+     * @return array
      */
-    abstract public function list(): bool;
+    abstract public function list(): array;
 
     /**
      * Run Container
      */
-    abstract public function run(string $image, string $name, string $entrypoint = '', string $command = '', string $workdir = '/', array $volumes = [], array $vars = []): bool;
+    abstract public function run(string $image, string $name, string $entrypoint = '', string $command = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool;
 
     /**
      * Execute Container
      *
-     * @param  mixed $name
-     * @param  mixed $command
-     * @param  mixed $vars
+     * @param string $name
+     * @param string $command
+     * @param array $vars
      * @return bool
      */
     abstract public function execute(string $name, string $command, array $vars = []): bool;
+
+    /**
+     * Execute Container return Stdout
+     * 
+     * @param string $name
+     * @param string $command
+     * @param array $vars
+     * @return string
+     */
+    abstract public function executeWithStdout(string $name, string $command, array $vars = []): string;
     
     /**
      * Remove Container
      *
-     * @param  mixed $name
+     * @param string $name
+     * @param bool $force
      * @return bool
      */
-    abstract public function remove($name): bool;
+    abstract public function remove($name, $force): bool;
 
     /**
      * Set containers namespace

@@ -1,10 +1,10 @@
 <?php
 
-namespace Utopia\Orchestartion;
+namespace Utopia\Orchestration;
 
 use Utopia\Orchestration\Adapter;
 
-class Orchestartion
+class Orchestration
 {
     /**
      * @var Adapter
@@ -34,9 +34,9 @@ class Orchestartion
     /**
      * List Containers
      *
-     * @return bool
+     * @return array
      */
-    public function list(): bool
+    public function list(): array
     {
         return $this->adapter->list();
     }
@@ -44,33 +44,47 @@ class Orchestartion
     /**
      * Run Container
      */
-    public function run(string $image, string $name, string $entrypoint = '', string $command = '', string $workdir = '/', array $volumes = [], array $vars = []): bool
+    public function run(string $image, string $name, string $entrypoint = '', string $command = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool
     {
-        return $this->adapter->run($image, $name, $entrypoint, $command, $workdir, $volumes, $vars);
+        return $this->adapter->run($image, $name, $entrypoint, $command, $workdir, $volumes, $vars, $mountFolder);
     }
 
     /**
      * Execute Container
      *
-     * @param  mixed $name
-     * @param  mixed $command
-     * @param  mixed $vars
+     * @param string $name
+     * @param string $command
+     * @param array $vars
      * @return bool
      */
     public function execute(string $name, string $command, array $vars = []): bool
     {
         return $this->adapter->execute($name, $command, $vars);
     }
+
+    /**
+     * Execute Container but return Stdout as a string
+     * 
+     * @param string $name
+     * @param string $command
+     * @param array $vars
+     * @return string
+     */
+    public function executeWithStdout(string $name, string $command, array $vars = []): string 
+    {
+        return $this->adapter->executeWithStdout($name, $command, $vars);
+    }
     
     /**
      * Remove Container
      *
-     * @param  mixed $name
+     * @param string $name
+     * @param bool $force
      * @return bool
      */
-    public function remove($name): bool
+    public function remove(string $name, $force = false): bool
     {
-        return $this->adapter->remove($name);
+        return $this->adapter->remove($name, $force);
     }
 
     /**

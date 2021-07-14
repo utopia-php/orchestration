@@ -43,27 +43,27 @@ abstract class Adapter
     /**
      * Run Container
      */
-    abstract public function run(string $image, string $name, string $entrypoint = '', string $command = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool;
+    abstract public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool;
 
     /**
      * Execute Container
      *
      * @param string $name
-     * @param string $command
+     * @param array $command
      * @param array $vars
      * @return bool
      */
-    abstract public function execute(string $name, string $command, array $vars = []): bool;
+    abstract public function execute(string $name, array $command, array $vars = []): bool;
 
     /**
      * Execute Container return Stdout
      * 
      * @param string $name
-     * @param string $command
+     * @param array $command
      * @param array $vars
      * @return string
      */
-    abstract public function executeWithStdout(string $name, string $command, array $vars = []): string;
+    abstract public function executeWithStdout(string $name,array $command, array $vars = []): string;
     
     /**
      * Remove Container

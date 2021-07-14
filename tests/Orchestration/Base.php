@@ -38,7 +38,9 @@ abstract class Base extends TestCase
             'appwrite/runtime-for-php:8.0',
             'TestContainer',
             "",
-            "sh -c 'cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null'",
+            array("sh",
+            "-c",
+            "cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null"),
             '/usr/local/src/',
             [],
             [],
@@ -56,7 +58,10 @@ abstract class Base extends TestCase
     {
         $response = static::getOrchestration()->executeWithStdout(
             'TestContainer',
-            'php index.php'
+            array(
+                'php',
+                'index.php'
+            )
         );
 
         $this->assertEquals("Hello World!", $response);
@@ -73,7 +78,7 @@ abstract class Base extends TestCase
         $foundContainer = false;
 
         \array_map(function($value) use (&$foundContainer) {
-            if ($value['name'] == 'TestContainer') {
+            if ($value->name == 'TestContainer') {
                 $foundContainer = true;
             }
         }, $response);

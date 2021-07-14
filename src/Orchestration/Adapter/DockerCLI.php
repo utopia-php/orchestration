@@ -5,6 +5,7 @@ namespace Utopia\Orchestration\Adapter;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Orchestration\Adapter;
+use Utopia\Orchestration\StandardContainer;
 
 class DockerCLI extends Adapter
 {
@@ -39,7 +40,7 @@ class DockerCLI extends Adapter
         $stdout = '';
         $stderr = '';
 
-        $result = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label='.$this->namespace.'-type=runtime', '', $stdout, $stderr);
+        $result = Console::execute('docker ps --all --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label='.$this->namespace.'-type=runtime', '', $stdout, $stderr);
 
         if ($result !== 0) {
             throw new Exception("Docker Error: {$stderr}");
@@ -54,32 +55,38 @@ class DockerCLI extends Adapter
             \parse_str($value, $container);
         
             if(isset($container['name'])) {
-                $container = [
-                    'name' => $container['name'],
-                    'online' => (\substr($container['status'], 0, 2) === 'Up'),
-                    'status' => $container['status'],
-                    'labels' => $container['labels'],
-                ];
+                $parsedContainer = new StandardContainer();
+                $parsedContainer->name = $container['name'];
+                $parsedContainer->id = $container['id'];
+                $parsedContainer->status = $container['status'];
             
-                \array_map(function($value) use (&$container) {
+                \array_map(function($value) use (&$parsedContainer) {
                     $value = \explode('=', $value);
 
                     if(isset($value[0]) && isset($value[1])) {
-                        $container[$value[0]] = $value[1];
+                        $parsedContainer->labels[$value[0]] = $value[1];
                     }
                 }, \explode(',', $container['labels']));
             
-                $list[$container['name']] = $container;
+                $list[$container['name']] = $parsedContainer;
             }
         }, $stdoutArray);
 
         return ($list);
     }
 
-    public function run(string $image, string $name, string $entrypoint = '', string $command = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool
+    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool
     {
         $stdout = '';
         $stderr = '';
+
+        $command = \array_map(function($value) {
+            if (str_contains($value, " ")) {
+                $value = "'".$value."'";
+            }
+
+            return $value;
+        }, $command);
 
         $time = time();
         $result = Console::execute("docker run ".
@@ -95,7 +102,7 @@ class DockerCLI extends Adapter
             " --workdir {$workdir}".
             " ".\implode(" ", $vars).
             " {$image}".
-            " {$command}"
+            " ".implode(" ", $command)
             , '', $stdout, $stderr, 30);
 
         if (!empty($stderr)) {
@@ -105,12 +112,12 @@ class DockerCLI extends Adapter
         return !$result;
     }
 
-    public function execute(string $name, string $command, array $vars = []): bool
+    public function execute(string $name, array $command, array $vars = []): bool
     {
         $stdout = '';
         $stderr = '';
 
-        $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} {$command}"
+        $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)
             , '', $stdout, $stderr, 30);
             
         if ($result !== 0) {
@@ -120,12 +127,12 @@ class DockerCLI extends Adapter
         return !$result;
     }
 
-    public function executeWithStdout(string $name, string $command, array $vars = []): string
+    public function executeWithStdout(string $name, array $command, array $vars = []): string
     {
         $stdout = '';
         $stderr = '';
 
-        $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} {$command}"
+        $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)
             , '', $stdout, $stderr, 30);
             
         if ($result !== 0) {

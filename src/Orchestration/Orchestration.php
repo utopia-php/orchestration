@@ -43,8 +43,9 @@ class Orchestration
 
     /**
      * Run Container
+     * 
      */
-    public function run(string $image, string $name, string $entrypoint = '', string $command = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool
+    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool
     {
         return $this->adapter->run($image, $name, $entrypoint, $command, $workdir, $volumes, $vars, $mountFolder);
     }
@@ -53,11 +54,11 @@ class Orchestration
      * Execute Container
      *
      * @param string $name
-     * @param string $command
+     * @param array $command
      * @param array $vars
      * @return bool
      */
-    public function execute(string $name, string $command, array $vars = []): bool
+    public function execute(string $name, array $command, array $vars = []): bool
     {
         return $this->adapter->execute($name, $command, $vars);
     }
@@ -66,11 +67,11 @@ class Orchestration
      * Execute Container but return Stdout as a string
      * 
      * @param string $name
-     * @param string $command
+     * @param array $command
      * @param array $vars
      * @return string
      */
-    public function executeWithStdout(string $name, string $command, array $vars = []): string 
+    public function executeWithStdout(string $name, array $command, array $vars = []): string 
     {
         return $this->adapter->executeWithStdout($name, $command, $vars);
     }

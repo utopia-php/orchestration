@@ -44,6 +44,15 @@ class Orchestration
     /**
      * Run Container
      * 
+     * @param string $image
+     * @param string $name
+     * @param string $entrypoint
+     * @param array $command
+     * @param string $workdir
+     * @param array $volumes
+     * @param array $vars
+     * @param string $mountFolder
+     * @return bool
      */
     public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool
     {

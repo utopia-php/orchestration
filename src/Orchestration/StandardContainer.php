@@ -2,8 +2,23 @@
 namespace Utopia\Orchestration;
 
 class StandardContainer {
-    public string $name = '';
-    public string $id = '';
-    public string $status = '';
-    public array $labels = [];
+    /**
+     * @var string
+     */
+    public $name = '';
+
+    /**
+     * @var string
+     */
+    public $id = '';
+
+    /**
+     * @var string
+     */
+    public $status = '';
+
+    /**
+     * @var array
+     */
+    public $labels = [];
 }

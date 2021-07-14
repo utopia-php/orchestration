@@ -7,17 +7,32 @@ use Exception;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\StandardContainer;
 
-use function PHPUnit\Framework\isEmpty;
-
 class DockerAPI extends Adapter
 {
+    /**
+     * Constructor
+     * 
+     * @param string $usernam
+     * @param string $password
+     */
     public function __construct(string $username = null, string $password = null)
     {
         if ($username && $password) {
+
         }
     }
 
-    function requestWrapper(string $url, string $method, mixed $body = null, array $headers = []): array
+
+    /**
+     * Create a request with cURL
+     * 
+     * @param string $url
+     * @param string $method
+     * @param array|bool|int|float|object|resource|string|null $body
+     * @param array $headers
+     * @return array
+     */
+    protected function requestWrapper($url, $method, $body = null, $headers = []): array
     {
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
@@ -58,7 +73,14 @@ class DockerAPI extends Adapter
         );
     }
 
-    function streamRequestWrapper(string $url): array
+    /**
+     * Create a request with cURL
+     * but process a Docker Stream Response
+     * 
+     * @param string $url
+     * @return array
+     */
+    protected function streamRequestWrapper($url): array
     {
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);

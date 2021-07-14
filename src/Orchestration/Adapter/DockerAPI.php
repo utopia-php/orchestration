@@ -2,6 +2,7 @@
 
 namespace Utopia\Orchestration\Adapter;
 
+use CurlHandle;
 use Exception;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\StandardContainer;
@@ -16,7 +17,7 @@ class DockerAPI extends Adapter
         }
     }
 
-    function requestWrapper(string $url, string $method, mixed $body = null, array $headers = [])
+    function requestWrapper(string $url, string $method, mixed $body = null, array $headers = []): array
     {
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
@@ -57,7 +58,7 @@ class DockerAPI extends Adapter
         );
     }
 
-    function streamRequestWrapper(string $url)
+    function streamRequestWrapper(string $url): array
     {
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
@@ -90,7 +91,7 @@ class DockerAPI extends Adapter
         $stdout = '';
         $stderr = '';
 
-        $callback = function ($ch, $str) use (&$stdout, &$stderr) {
+        $callback = function (CurlHandle $ch, string $str) use (&$stdout, &$stderr): int {
             $rawStream = unpack('C*', $str);
             $stream = $rawStream[1]; // 1-based index, not 0-based
             switch ($stream) { // only 1 or 2, as set while creating exec 
@@ -149,7 +150,7 @@ class DockerAPI extends Adapter
 
         $list = [];
 
-        \array_map(function($value) use (&$list) {
+        \array_map(function(array $value) use (&$list) {
             if(isset($value['Names'][0])) {
                 $parsedContainer = new StandardContainer();
                 $parsedContainer->name = \str_replace("/", "", $value['Names'][0]);

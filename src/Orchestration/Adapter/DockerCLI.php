@@ -2,13 +2,19 @@
 
 namespace Utopia\Orchestration\Adapter;
 
-use Exception;
 use Utopia\CLI\Console;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\StandardContainer;
+use Utopia\Orchestration\Exceptions\DockerCLIException;
 
 class DockerCLI extends Adapter
 {
+    /**
+     * Constructor
+     * 
+     * @param string $usernam
+     * @param string $password
+     */
     public function __construct(string $username = null, string $password = null)
     {
         if($username && $password) {
@@ -16,7 +22,7 @@ class DockerCLI extends Adapter
             $stderr = '';
 
             if (!Console::execute('docker login --username '.$username.' --password-stdin', $password, $stdout, $stderr)) {
-                throw new Exception("Docker Error: {$stderr}");
+                throw new DockerCLIException("Docker Error: {$stderr}");
             };
         }
     }
@@ -29,7 +35,7 @@ class DockerCLI extends Adapter
         $result = Console::execute('docker pull '.$image, '', $stdout, $stderr);
 
         if ($result !== 0) {
-            throw new Exception("Docker Error: {$stderr}");
+            throw new DockerCLIException("Docker Error: {$stderr}");
         }
 
         return !$result;
@@ -43,7 +49,7 @@ class DockerCLI extends Adapter
         $result = Console::execute('docker ps --all --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label='.$this->namespace.'-type=runtime', '', $stdout, $stderr);
 
         if ($result !== 0) {
-            throw new Exception("Docker Error: {$stderr}");
+            throw new DockerCLIException("Docker Error: {$stderr}");
         }
 
         $list = [];
@@ -106,7 +112,7 @@ class DockerCLI extends Adapter
             , '', $stdout, $stderr, 30);
 
         if (!empty($stderr)) {
-            throw new Exception("Docker Error: {$stderr}");
+            throw new DockerCLIException("Docker Error: {$stderr}");
         }
 
         return !$result;
@@ -121,7 +127,7 @@ class DockerCLI extends Adapter
             , '', $stdout, $stderr, 30);
             
         if ($result !== 0) {
-            throw new Exception("Docker Error: {$stderr}");
+            throw new DockerCLIException("Docker Error: {$stderr}");
         }
 
         return !$result;
@@ -136,7 +142,7 @@ class DockerCLI extends Adapter
             , '', $stdout, $stderr, 30);
             
         if ($result !== 0) {
-            throw new Exception("Docker Error: {$stderr}");
+            throw new DockerCLIException("Docker Error: {$stderr}");
         }
 
         return $stdout;
@@ -149,8 +155,8 @@ class DockerCLI extends Adapter
 
         $result = Console::execute("docker rm " . ($force ? '--force': '') . " {$name}", '', $stdout, $stderr);
 
-        if ($result !== 0) {
-            throw new Exception("Docker Error: {$stderr}");
+        if (!str_contains($stdout, $name)) {
+            throw new DockerCLIException("Docker Error: {$stderr}");
         }
 
         return !$result;

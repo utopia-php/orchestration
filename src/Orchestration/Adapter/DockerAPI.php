@@ -3,9 +3,9 @@
 namespace Utopia\Orchestration\Adapter;
 
 use CurlHandle;
-use Exception;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\StandardContainer;
+use Utopia\Orchestration\Exceptions\DockerAPIException;
 
 class DockerAPI extends Adapter
 {
@@ -18,7 +18,7 @@ class DockerAPI extends Adapter
     public function __construct(string $username = null, string $password = null)
     {
         if ($username && $password) {
-
+            //TODO: Handle Dockerhub Sign-in
         }
     }
 
@@ -152,9 +152,9 @@ class DockerAPI extends Adapter
         if ($result["code"] !== 200 && $result["code"] !== 204) {
             $data = json_decode($result["response"], true);
             if (isset($data['message'])) {
-                throw new Exception('Failed to pull container: ' . $data["message"]);
+                throw new DockerAPIException('Failed to pull container: ' . $data["message"]);
             } else {
-                throw new Exception('Failed to pull container: Internal Docker Error');
+                throw new DockerAPIException('Failed to pull container: Internal Docker Error');
             }
             return false;
         } else {
@@ -211,7 +211,7 @@ class DockerAPI extends Adapter
         ));
 
         if ($result['code'] !== 201) {
-            throw new Exception("Failed to create function environment: {$result['response']} Response Code: {$result['code']}");
+            throw new DockerAPIException("Failed to create function environment: {$result['response']} Response Code: {$result['code']}");
         }
 
         $parsedResponse = json_decode($result['response'], true);
@@ -220,7 +220,7 @@ class DockerAPI extends Adapter
         $result = $this->requestWrapper("http://localhost/containers/{$parsedResponse['Id']}/start", "POST", "{}");
         
         if ($result['code'] !== 204) {
-            throw new Exception("Failed to create function environment: {$result['response']} Response Code: {$result['code']}");
+            throw new DockerAPIException("Failed to create function environment: {$result['response']} Response Code: {$result['code']}");
         } else {
             return true;
         }
@@ -241,7 +241,7 @@ class DockerAPI extends Adapter
         ));
 
         if ($result['code'] !== 201) {
-            throw new Exception("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
+            throw new DockerAPIException("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
         }
 
         $parsedResponse = json_decode($result['response'], true);
@@ -249,7 +249,7 @@ class DockerAPI extends Adapter
         $result = $this->streamRequestWrapper("http://localhost/exec/{$parsedResponse['Id']}/start");
 
         if ($result['code'] !== 200) {
-            throw new Exception("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
+            throw new DockerAPIException("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
         } else {
             return true;
         }
@@ -270,7 +270,7 @@ class DockerAPI extends Adapter
         ));
 
         if ($result['code'] !== 201) {
-            throw new Exception("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
+            throw new DockerAPIException("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
         }
 
         $parsedResponse = json_decode($result['response'], true);
@@ -278,7 +278,7 @@ class DockerAPI extends Adapter
         $result = $this->streamRequestWrapper("http://localhost/exec/{$parsedResponse['Id']}/start");
 
         if ($result['code'] !== 200) {
-            throw new Exception("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
+            throw new DockerAPIException("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
         } else {
             return $result['stdout'];
         }
@@ -289,7 +289,7 @@ class DockerAPI extends Adapter
         $result = $this->requestWrapper("http://localhost/containers/{$name}".($force ? '?force=true': ''), "DELETE");
 
         if ($result['code'] !== 204) {
-            throw new Exception("Failed to remove container: {$result['response']} Response Code: {$result['code']}");
+            throw new DockerAPIException("Failed to remove container: {$result['response']} Response Code: {$result['code']}");
         } else {
             return true;
         }

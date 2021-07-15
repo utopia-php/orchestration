@@ -197,6 +197,12 @@ abstract class Base extends TestCase
             "update"
         ), $test);
 
+        $test = static::getOrchestration()->parseCommandString("test");
+
+        $this->assertEquals(array(
+            "test"
+        ), $test);
+
         /**
          * Test for failure
          */

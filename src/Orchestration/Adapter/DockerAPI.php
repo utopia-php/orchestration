@@ -187,13 +187,14 @@ class DockerAPI extends Adapter
         return $list;
     }
 
-    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool
+    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool
     {
         $body = array(
             "Entrypoint" => "",
             "Image" => $image,
             "Cmd" => $command,
             "WorkingDir" => "/usr/local/src",
+            "Labels" => (object) $labels,
             "HostConfig" => array(
                 "Binds" => array(
                     "{$mountFolder}:/tmp"

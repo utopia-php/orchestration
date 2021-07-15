@@ -81,7 +81,7 @@ class DockerCLI extends Adapter
         return ($list);
     }
 
-    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool
+    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool
     {
         $stdout = '';
         $stderr = '';
@@ -94,6 +94,12 @@ class DockerCLI extends Adapter
             return $value;
         }, $command);
 
+        $labelString = ' ';
+
+        \array_walk($labels, function (string $key, string $value) use ($labelString) {
+            $labelString = $labelString . "--label {$key}={$value}";
+        });
+
         $time = time();
         $result = Console::execute("docker run ".
             " -d".
@@ -105,6 +111,7 @@ class DockerCLI extends Adapter
             " --label {$this->namespace}-type=runtime".
             " --label {$this->namespace}-created={$time}".
             " --volume {$mountFolder}:/tmp:rw".
+            $labelString .
             " --workdir {$workdir}".
             " ".\implode(" ", $vars).
             " {$image}".

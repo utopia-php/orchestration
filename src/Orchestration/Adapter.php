@@ -42,8 +42,19 @@ abstract class Adapter
 
     /**
      * Run Container
+     * 
+     * @param string $image
+     * @param string $name
+     * @param string $entrypoint
+     * @param array $command
+     * @param string $workdir
+     * @param array $volumes
+     * @param array $vars
+     * @param string $mountFolder
+     * 
+     * @return bool
      */
-    abstract public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool;
+    abstract public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool;
 
     /**
      * Execute Container
@@ -63,7 +74,7 @@ abstract class Adapter
      * @param array $vars
      * @return string
      */
-    abstract public function executeWithStdout(string $name,array $command, array $vars = []): string;
+    abstract public function executeWithStdout(string $name, array $command, array $vars = []): string;
     
     /**
      * Remove Container

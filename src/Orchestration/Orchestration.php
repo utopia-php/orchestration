@@ -29,10 +29,14 @@ class Orchestration
     public function parseCommandString(string $command): array {
         $currentPos = 0;
         $commandProcessed = [];
+
+        if (strpos($command, " ", $currentPos) === false) {
+            return array($command);
+        }
         
         while (true) {
             if (strpos($command, " ", $currentPos) !== false) {
-                $place = strpos($command, " ", $currentPos);
+                $place = (int) strpos($command, " ", $currentPos);
     
                 if ($command[$place + 1] !== "'") {
                     array_push($commandProcessed, substr($command, $currentPos, $place - $currentPos));
@@ -101,9 +105,9 @@ class Orchestration
      * @param string $mountFolder
      * @return bool
      */
-    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = ''): bool
+    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool
     {
-        return $this->adapter->run($image, $name, $entrypoint, $command, $workdir, $volumes, $vars, $mountFolder);
+        return $this->adapter->run($image, $name, $entrypoint, $command, $workdir, $volumes, $vars, $mountFolder, $labels);
     }
 
     /**

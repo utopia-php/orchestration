@@ -3,6 +3,7 @@
 namespace Utopia\Orchestration;
 
 use Utopia\Orchestration\Adapter;
+use Exception;
 
 class Orchestration
 {
@@ -17,6 +18,52 @@ class Orchestration
     public function __construct(Adapter $adapter)
     {
         $this->adapter = $adapter;
+    }
+
+    /**
+     * Command Line String into Array
+     * 
+     * @param string $command
+     * @return array
+     */
+    public function parseCommandString(string $command): array {
+        $currentPos = 0;
+        $commandProcessed = [];
+        
+        while (true) {
+            if (strpos($command, " ", $currentPos) !== false) {
+                $place = strpos($command, " ", $currentPos);
+    
+                if ($command[$place + 1] !== "'") {
+                    array_push($commandProcessed, substr($command, $currentPos, $place - $currentPos));
+                    $place = $place + 1;
+                } else {
+                    array_push($commandProcessed, substr($command, $currentPos, $place - $currentPos));
+                    
+    
+                    $closingString = strpos($command, "'", $place + 2);
+
+                    if ($closingString == false) {
+                        throw new Exception("Invalid Command given, are you missing an `'` at the end?");
+                    }
+
+                    array_push($commandProcessed, substr($command, $place + 1, $closingString));
+                    $place = $closingString + 1;
+                }
+                
+                if (strpos($command, " ", $place) === false) {
+                   if (!empty(substr($command, $place, strlen($command) - $currentPos))) {
+                        array_push($commandProcessed, substr($command, $place, strlen($command) - $currentPos));
+                    }
+                }
+                
+                $currentPos = $place;
+            } else {
+                break;
+            }
+        }
+
+        return $commandProcessed;
     }
 
     /**

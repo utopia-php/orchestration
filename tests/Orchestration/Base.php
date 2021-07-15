@@ -175,4 +175,39 @@ abstract class Base extends TestCase
 
         $this->assertEquals(true, $testFailed);
     }
+
+    public function testParseCLICommand(): void
+    {
+        /**
+         * Test for success
+         */
+        $test = static::getOrchestration()->parseCommandString("sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'");
+
+        $this->assertEquals(array(
+            "sh",
+            "-c",
+            "'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
+        ), $test);
+
+        $test = static::getOrchestration()->parseCommandString("sudo apt-get update");
+
+        $this->assertEquals(array(
+            "sudo",
+            "apt-get",
+            "update"
+        ), $test);
+
+        /**
+         * Test for failure
+         */
+        $testFailed = false;
+
+        try {
+            $test = static::getOrchestration()->parseCommandString("sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null");
+        } catch (Exception $e) {
+            $testFailed = true;
+        }
+
+        $this->assertEquals(true, $testFailed);
+    }
 }

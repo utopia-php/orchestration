@@ -46,7 +46,7 @@ class DockerCLI extends Adapter
         $stdout = '';
         $stderr = '';
 
-        $result = Console::execute('docker ps --all --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label='.$this->namespace.'-type=runtime', '', $stdout, $stderr);
+        $result = Console::execute('docker ps --all --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"', '', $stdout, $stderr);
 
         if ($result !== 0) {
             throw new DockerCLIException("Docker Error: {$stderr}");

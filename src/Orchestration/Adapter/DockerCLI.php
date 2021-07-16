@@ -127,6 +127,13 @@ class DockerCLI extends Adapter
 
     public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = 0): bool
     {
+        \array_walk($vars, function (string &$value, string $key) {
+            $key = $this->filterEnvKey($key);
+
+            $value = \escapeshellarg((empty($value)) ? '' : $value);
+            $value = "--env {$key}={$value}";
+        });
+
         $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)
             , '', $stdout, $stderr, 30);
             

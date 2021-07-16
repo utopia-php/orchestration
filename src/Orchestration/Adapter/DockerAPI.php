@@ -229,6 +229,11 @@ class DockerAPI extends Adapter
 
     public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = 0): bool
     {
+        \array_walk($vars, function (string &$value, string $key) {
+            $key = $this->filterEnvKey($key);
+            $value = "{$key}={$value}";
+        });
+
         $body = array(
             "Env" => \array_values($vars),
             "Cmd" => $command,

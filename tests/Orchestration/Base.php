@@ -103,6 +103,7 @@ abstract class Base extends TestCase
     public function testExecContainer(): void
     {
         $stdout = '';
+        $stderr = '';
 
         $response = static::getOrchestration()->execute(
             'TestContainer',
@@ -110,10 +111,14 @@ abstract class Base extends TestCase
                 'php',
                 'index.php'
             ),
-            $stdout
+            $stdout,
+            $stderr,
+            array(
+                "test" => "testEnviromentVariable"
+            )
         );
 
-        $this->assertEquals("Hello World!", $stdout);
+        $this->assertEquals("Hello World! testEnviromentVariable", $stdout);
 
         /**
          * Test for Failure

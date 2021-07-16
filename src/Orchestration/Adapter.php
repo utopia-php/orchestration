@@ -41,6 +41,27 @@ abstract class Adapter
     abstract public function list(): array;
 
     /**
+     * Filter ENV vars
+     * 
+     * @param string $string
+     * 
+     * @return string
+     */
+    public function filterEnvKey(string $string): string
+    {
+        $string     = \str_split($string);
+        $output     = '';
+    
+        foreach ($string as $char) {
+            if(\array_key_exists($char, array_fill_keys(\str_split('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_'), true))) {
+                $output .= $char;
+            }
+        }
+    
+        return $output;
+    }
+
+    /**
      * Run Container
      * 
      * @param string $image

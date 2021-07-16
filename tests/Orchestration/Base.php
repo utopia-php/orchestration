@@ -84,7 +84,10 @@ abstract class Base extends TestCase
                 '/usr/local/src/',
                 [],
                 [],
-                __DIR__.'/Resources'
+                __DIR__.'/Resources',
+                array(
+                    "test" => "Hello World!"
+                )
             );
         } catch (Exception $e) {
             $testFailed = true;
@@ -99,15 +102,19 @@ abstract class Base extends TestCase
      */
     public function testExecContainer(): void
     {
-        $response = static::getOrchestration()->executeWithStdout(
+        $stdout = '';
+
+        $response = static::getOrchestration()->execute(
             'TestContainer',
             array(
                 'php',
                 'index.php'
-            )
+            ),
+            [],
+            $stdout
         );
 
-        $this->assertEquals("Hello World!", $response);
+        $this->assertEquals("Hello World!", $stdout);
 
         /**
          * Test for Failure
@@ -115,13 +122,17 @@ abstract class Base extends TestCase
 
         $testFailed = false;
 
+        $stdout = '';
+
         try {
-            $response = static::getOrchestration()->executeWithStdout(
+            $response = static::getOrchestration()->execute(
                 '60clotVWpufbEpy33zJLcoYHrUTqWaD1FV0FZWsw', // Non-Existent Container
                 array(
                     'php',
                     'index.php'
-                )
+                ),
+                [],
+                $stdout
             );
         } catch (Exception $e) {
             $testFailed = true;

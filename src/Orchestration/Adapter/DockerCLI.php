@@ -125,11 +125,8 @@ class DockerCLI extends Adapter
         return !$result;
     }
 
-    public function execute(string $name, array $command, array $vars = []): bool
+    public function execute(string $name, array $command, array $vars = [], string &$stdout = '', string &$stderr = '', int $timeout = 0): bool
     {
-        $stdout = '';
-        $stderr = '';
-
         $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)
             , '', $stdout, $stderr, 30);
             

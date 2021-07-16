@@ -62,19 +62,12 @@ abstract class Adapter
      * @param string $name
      * @param array $command
      * @param array $vars
+     * @param string $stdout
+     * @param string $stderr
+     * @param int $timeout
      * @return bool
      */
-    abstract public function execute(string $name, array $command, array $vars = []): bool;
-
-    /**
-     * Execute Container return Stdout
-     * 
-     * @param string $name
-     * @param array $command
-     * @param array $vars
-     * @return string
-     */
-    abstract public function executeWithStdout(string $name, array $command, array $vars = []): string;
+    abstract public function execute(string $name, array $command, array $vars = [], string &$stdout, string &$stderr, int $timeout): bool;
     
     /**
      * Remove Container

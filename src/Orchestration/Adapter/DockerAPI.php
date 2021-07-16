@@ -227,7 +227,7 @@ class DockerAPI extends Adapter
         }
     }
 
-    public function execute(string $name, array $command, array $vars = []): bool
+    public function execute(string $name, array $command, array $vars = [], string &$stdout = '', string &$stderr = '', int $timeout = 0): bool
     {
         $body = array(
             "Env" => \array_values($vars),
@@ -248,40 +248,14 @@ class DockerAPI extends Adapter
         $parsedResponse = json_decode($result['response'], true);
 
         $result = $this->streamRequestWrapper("http://localhost/exec/{$parsedResponse['Id']}/start");
+
+        $stdout = $result['stdout'];
+        $stderr = $result['stderr'];
 
         if ($result['code'] !== 200) {
             throw new DockerAPIException("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
         } else {
             return true;
-        }
-    }
-
-    public function executeWithStdout(string $name, array $command, array $vars = []): string
-    {
-        $body = array(
-            "Env" => \array_values($vars),
-            "Cmd" => $command,
-            "AttachStdout" => true,
-            "AttachStderr" => true
-        );
-
-        $result = $this->requestWrapper("http://localhost/containers/{$name}/exec", "POST", json_encode($body), array(
-            'Content-Type: application/json',
-            'Content-Length: ' . \strlen(\json_encode($body))
-        ));
-
-        if ($result['code'] !== 201) {
-            throw new DockerAPIException("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
-        }
-
-        $parsedResponse = json_decode($result['response'], true);
-
-        $result = $this->streamRequestWrapper("http://localhost/exec/{$parsedResponse['Id']}/start");
-
-        if ($result['code'] !== 200) {
-            throw new DockerAPIException("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
-        } else {
-            return $result['stdout'];
         }
     }
 

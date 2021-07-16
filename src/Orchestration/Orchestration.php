@@ -116,24 +116,14 @@ class Orchestration
      * @param string $name
      * @param array $command
      * @param array $vars
+     * @param string $stdout
+     * @param string $stderr
+     * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command, array $vars = []): bool
+    public function execute(string $name, array $command, array $vars = [], string &$stdout = '', string &$stderr = '', int $timeout = 0): bool
     {
-        return $this->adapter->execute($name, $command, $vars);
-    }
-
-    /**
-     * Execute Container but return Stdout as a string
-     * 
-     * @param string $name
-     * @param array $command
-     * @param array $vars
-     * @return string
-     */
-    public function executeWithStdout(string $name, array $command, array $vars = []): string 
-    {
-        return $this->adapter->executeWithStdout($name, $command, $vars);
+        return $this->adapter->execute($name, $command, $vars, $stdout, $stderr, $timeout);
     }
     
     /**

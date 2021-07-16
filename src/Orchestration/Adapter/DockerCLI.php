@@ -100,6 +100,13 @@ class DockerCLI extends Adapter
             $labelString = $labelString . "--label {$key}={$value}";
         });
 
+        \array_walk($vars, function (string &$value, string $key) {
+            $key = $this->filterEnvKey($key);
+
+            $value = \escapeshellarg((empty($value)) ? '' : $value);
+            $value = "--env {$key}={$value}";
+        });
+
         $time = time();
         $result = Console::execute("docker run ".
             " -d".

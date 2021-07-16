@@ -227,7 +227,7 @@ class DockerAPI extends Adapter
         }
     }
 
-    public function execute(string $name, array $command, array $vars = [], string &$stdout = '', string &$stderr = '', int $timeout = 0): bool
+    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = 0): bool
     {
         $body = array(
             "Env" => \array_values($vars),

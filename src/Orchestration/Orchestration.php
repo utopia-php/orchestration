@@ -115,15 +115,15 @@ class Orchestration
      *
      * @param string $name
      * @param array $command
-     * @param array $vars
      * @param string $stdout
      * @param string $stderr
+     * @param array $vars
      * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command, array $vars = [], string &$stdout = '', string &$stderr = '', int $timeout = 0): bool
+    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = 0): bool
     {
-        return $this->adapter->execute($name, $command, $vars, $stdout, $stderr, $timeout);
+        return $this->adapter->execute($name, $command, $stdout, $stderr, $vars, $timeout);
     }
     
     /**

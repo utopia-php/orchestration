@@ -110,7 +110,6 @@ abstract class Base extends TestCase
                 'php',
                 'index.php'
             ),
-            [],
             $stdout
         );
 
@@ -131,7 +130,6 @@ abstract class Base extends TestCase
                     'php',
                     'index.php'
                 ),
-                [],
                 $stdout
             );
         } catch (Exception $e) {

@@ -189,9 +189,11 @@ class DockerAPI extends Adapter
 
     public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool
     {
-        \array_walk($vars, function (string &$value, string $key) {
+        $varsList = [];
+
+        \array_walk($vars, function (string &$value, string $key) use (&$varsList) {
             $key = $this->filterEnvKey($key);
-            $value = strval($key)."=".strval($value);
+            array_push($varsList, strval($key)."=".strval($value));
         });
 
         $body = array(

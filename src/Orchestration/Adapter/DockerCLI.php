@@ -142,7 +142,7 @@ class DockerCLI extends Adapter
         });
 
         $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)
-            , '', $stdout, $stderr, 30);
+            , '', $stdout, $stderr, $timeout);
             
         if ($result !== 0) {
             throw new DockerCLIException("Docker Error: {$stderr}");

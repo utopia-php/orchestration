@@ -30,15 +30,17 @@ class DockerAPI extends Adapter
      * @param string $method
      * @param array|bool|int|float|object|resource|string|null $body
      * @param array $headers
+     * @param int $timeout
      * @return array
      */
-    protected function requestWrapper($url, $method, $body = null, $headers = []): array
+    protected function requestWrapper($url, $method, $body = null, $headers = [], $timeout = 0): array
     {
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
 
         switch ($method) {
             case "GET":
@@ -78,9 +80,10 @@ class DockerAPI extends Adapter
      * but process a Docker Stream Response
      * 
      * @param string $url
+     * @param int $timeout
      * @return array
      */
-    protected function streamRequestWrapper($url): array
+    protected function streamRequestWrapper($url, $timeout = 0): array
     {
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
@@ -130,8 +133,15 @@ class DockerAPI extends Adapter
         };
         \curl_setopt($ch, CURLOPT_WRITEFUNCTION, $callback);
 
+
+        \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
         $result = \curl_exec($ch);
         $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+        if(curl_errno($ch))
+        {
+            throw new DockerAPIException('Curl Error: ' . curl_error($ch));
+        }
 
         \curl_close($ch);
 
@@ -189,11 +199,9 @@ class DockerAPI extends Adapter
 
     public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool
     {
-        $varsList = [];
-
-        \array_walk($vars, function (string &$value, string $key) use (&$varsList) {
+        \array_walk($vars, function (string &$value, string $key) {
             $key = $this->filterEnvKey($key);
-            array_push($varsList, strval($key)."=".strval($value));
+            $value = "{$key}={$value}";
         });
 
         $body = array(
@@ -202,7 +210,7 @@ class DockerAPI extends Adapter
             "Cmd" => $command,
             "WorkingDir" => "/usr/local/src",
             "Labels" => (object) $labels,
-            "Env" => $vars,
+            "Env" => array_values($vars),
             "HostConfig" => array(
                 "Binds" => array(
                     "{$mountFolder}:/tmp"
@@ -251,8 +259,8 @@ class DockerAPI extends Adapter
 
         $result = $this->requestWrapper("http://localhost/containers/{$name}/exec", "POST", json_encode($body), array(
             'Content-Type: application/json',
-            'Content-Length: ' . \strlen(\json_encode($body))
-        ));
+            'Content-Length: ' . \strlen(\json_encode($body)),
+        ), $timeout);
 
         if ($result['code'] !== 201) {
             throw new DockerAPIException("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
@@ -260,7 +268,7 @@ class DockerAPI extends Adapter
 
         $parsedResponse = json_decode($result['response'], true);
 
-        $result = $this->streamRequestWrapper("http://localhost/exec/{$parsedResponse['Id']}/start");
+        $result = $this->streamRequestWrapper("http://localhost/exec/{$parsedResponse['Id']}/start", $timeout);
 
         $stdout = $result['stdout'];
         $stderr = $result['stderr'];

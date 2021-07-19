@@ -85,9 +85,6 @@ abstract class Base extends TestCase
                 [],
                 [],
                 __DIR__.'/Resources',
-                array(
-                    "test" => "Hello World!"
-                )
             );
         } catch (Exception $e) {
             $testFailed = true;
@@ -115,7 +112,7 @@ abstract class Base extends TestCase
             $stderr,
             array(
                 "test" => "testEnviromentVariable"
-            )
+            ),
         );
 
         $this->assertEquals("Hello World! testEnviromentVariable", $stdout);
@@ -136,6 +133,59 @@ abstract class Base extends TestCase
                     'index.php'
                 ),
                 $stdout
+            );
+        } catch (Exception $e) {
+            $testFailed = true;
+        }
+
+        $this->assertEquals(true, $testFailed);
+    }
+
+    /**
+     * @return void
+     * @depends testExecContainer
+     */
+    public function testTimeoutContainer(): void
+    {
+        // Create container
+        $response = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            'TestContainerTimeout',
+            "",
+            array("sh",
+            "-c",
+            "cp /tmp/timeout.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null"),
+            '/usr/local/src/',
+            [],
+            [],
+            __DIR__.'/Resources',
+            array(
+                "test2" => "Hello World!"
+            )
+        );
+
+        $this->assertEquals(true, $response);
+
+        /**
+         * Test for Failure
+         */
+
+        $testFailed = false;
+
+        $stdout = '';
+        $stderr = '';
+
+        try {
+            $response = static::getOrchestration()->execute(
+                'TestContainerTimeout',
+                array(
+                    'php',
+                    'index.php'
+                ),
+                $stdout,
+                $stderr,
+                [],
+                1
             );
         } catch (Exception $e) {
             $testFailed = true;
@@ -174,6 +224,9 @@ abstract class Base extends TestCase
          */
         $response = static::getOrchestration()->remove('TestContainer', true);
 
+        $this->assertEquals(true, $response);
+
+        $response = static::getOrchestration()->remove('TestContainerTimeout', true);
         $this->assertEquals(true, $response);
 
         /**

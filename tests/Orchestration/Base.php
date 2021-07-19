@@ -4,6 +4,7 @@ namespace Utopia\Tests;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
+use Utopia\Orchestration\Exceptions\TimeoutException;
 use Utopia\Orchestration\Orchestration;
 
 abstract class Base extends TestCase
@@ -187,7 +188,7 @@ abstract class Base extends TestCase
                 [],
                 1
             );
-        } catch (Exception $e) {
+        } catch (TimeoutException $e) {
             $testFailed = true;
         }
 

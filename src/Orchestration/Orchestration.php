@@ -133,7 +133,7 @@ class Orchestration
      * @param bool $force
      * @return bool
      */
-    public function remove(string $name, $force = false): bool
+    public function remove(string $name, bool $force = false): bool
     {
         return $this->adapter->remove($name, $force);
     }

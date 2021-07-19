@@ -97,7 +97,7 @@ abstract class Adapter
      * @param bool $force
      * @return bool
      */
-    abstract public function remove($name, $force): bool;
+    abstract public function remove(string $name, bool $force): bool;
 
     /**
      * Set containers namespace

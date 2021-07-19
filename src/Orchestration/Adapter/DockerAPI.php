@@ -4,8 +4,9 @@ namespace Utopia\Orchestration\Adapter;
 
 use CurlHandle;
 use Utopia\Orchestration\Adapter;
-use Utopia\Orchestration\StandardContainer;
+use Utopia\Orchestration\Container;
 use Utopia\Orchestration\Exceptions\DockerAPIException;
+use Utopia\Orchestration\Exceptions\TimeoutException;
 
 class DockerAPI extends Adapter
 {
@@ -33,7 +34,7 @@ class DockerAPI extends Adapter
      * @param int $timeout
      * @return array
      */
-    protected function requestWrapper($url, $method, $body = null, $headers = [], $timeout = 0): array
+    protected function call(string $url, string $method, $body = null, array $headers = [], int $timeout = 0): array
     {
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
@@ -83,7 +84,7 @@ class DockerAPI extends Adapter
      * @param int $timeout
      * @return array
      */
-    protected function streamRequestWrapper($url, $timeout = 0): array
+    protected function streamCall(string $url, int $timeout = 0): array
     {
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
@@ -98,7 +99,7 @@ class DockerAPI extends Adapter
         ];
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-                /*
+        /*
          * Exec logs come back with STDOUT+STDERR multiplexed into a single stream.
          * Each frame of the stream has the following format: 
          *   header := [8]byte{STREAM_TYPE, 0, 0, 0, SIZE1, SIZE2, SIZE3, SIZE4}
@@ -140,7 +141,11 @@ class DockerAPI extends Adapter
 
         if(curl_errno($ch))
         {
-            throw new DockerAPIException('Curl Error: ' . curl_error($ch));
+            if (\curl_errno($ch) == CURLE_OPERATION_TIMEOUTED) {
+                throw new TimeoutException('Curl Error: ' . curl_error($ch));
+            } else {
+                throw new DockerAPIException('Curl Error: ' . curl_error($ch));
+            }
         }
 
         \curl_close($ch);
@@ -155,7 +160,7 @@ class DockerAPI extends Adapter
 
     public function pull(string $image): bool
     {
-        $result = $this->requestWrapper("http://localhost/images/create", "POST", \http_build_query(array(
+        $result = $this->call("http://localhost/images/create", "POST", \http_build_query(array(
             "fromImage" => $image
         )));
 
@@ -178,13 +183,13 @@ class DockerAPI extends Adapter
             "all" => true
         );
 
-        $result = $this->requestWrapper("http://localhost/containers/json".'?'.\http_build_query($body), "GET");
+        $result = $this->call("http://localhost/containers/json".'?'.\http_build_query($body), "GET");
 
         $list = [];
 
         \array_map(function(array $value) use (&$list) {
             if(isset($value['Names'][0])) {
-                $parsedContainer = new StandardContainer();
+                $parsedContainer = new Container();
                 $parsedContainer->name = \str_replace("/", "", $value['Names'][0]);
                 $parsedContainer->id = $value['Id'];
                 $parsedContainer->status = $value['Status'];
@@ -222,7 +227,7 @@ class DockerAPI extends Adapter
             ),
         );
 
-        $result = $this->requestWrapper("http://localhost/containers/create?name={$name}", "POST", json_encode($body), array(
+        $result = $this->call("http://localhost/containers/create?name={$name}", "POST", json_encode($body), array(
             'Content-Type: application/json',
             'Content-Length: ' . \strlen(\json_encode($body))
         ));
@@ -234,7 +239,7 @@ class DockerAPI extends Adapter
         $parsedResponse = json_decode($result['response'], true);
 
         // Run Created Container
-        $result = $this->requestWrapper("http://localhost/containers/{$parsedResponse['Id']}/start", "POST", "{}");
+        $result = $this->call("http://localhost/containers/{$parsedResponse['Id']}/start", "POST", "{}");
         
         if ($result['code'] !== 204) {
             throw new DockerAPIException("Failed to create function environment: {$result['response']} Response Code: {$result['code']}");
@@ -257,7 +262,7 @@ class DockerAPI extends Adapter
             "AttachStderr" => true
         );
 
-        $result = $this->requestWrapper("http://localhost/containers/{$name}/exec", "POST", json_encode($body), array(
+        $result = $this->call("http://localhost/containers/{$name}/exec", "POST", json_encode($body), array(
             'Content-Type: application/json',
             'Content-Length: ' . \strlen(\json_encode($body)),
         ), $timeout);
@@ -268,7 +273,7 @@ class DockerAPI extends Adapter
 
         $parsedResponse = json_decode($result['response'], true);
 
-        $result = $this->streamRequestWrapper("http://localhost/exec/{$parsedResponse['Id']}/start", $timeout);
+        $result = $this->streamCall("http://localhost/exec/{$parsedResponse['Id']}/start", $timeout);
 
         $stdout = $result['stdout'];
         $stderr = $result['stderr'];
@@ -280,9 +285,9 @@ class DockerAPI extends Adapter
         }
     }
 
-    public function remove($name, $force = false): bool
+    public function remove(string $name, bool $force = false): bool
     {
-        $result = $this->requestWrapper("http://localhost/containers/{$name}".($force ? '?force=true': ''), "DELETE");
+        $result = $this->call("http://localhost/containers/{$name}".($force ? '?force=true': ''), "DELETE");
 
         if ($result['code'] !== 204) {
             throw new DockerAPIException("Failed to remove container: {$result['response']} Response Code: {$result['code']}");

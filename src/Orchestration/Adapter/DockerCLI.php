@@ -4,8 +4,9 @@ namespace Utopia\Orchestration\Adapter;
 
 use Utopia\CLI\Console;
 use Utopia\Orchestration\Adapter;
-use Utopia\Orchestration\StandardContainer;
+use Utopia\Orchestration\Container;
 use Utopia\Orchestration\Exceptions\DockerCLIException;
+use Utopia\Orchestration\Exceptions\TimeoutException;
 
 class DockerCLI extends Adapter
 {
@@ -61,7 +62,7 @@ class DockerCLI extends Adapter
             \parse_str($value, $container);
         
             if(isset($container['name'])) {
-                $parsedContainer = new StandardContainer();
+                $parsedContainer = new Container();
                 $parsedContainer->name = $container['name'];
                 $parsedContainer->id = $container['id'];
                 $parsedContainer->status = $container['status'];
@@ -145,7 +146,11 @@ class DockerCLI extends Adapter
             , '', $stdout, $stderr, $timeout);
             
         if ($result !== 0) {
-            throw new DockerCLIException("Docker Error: {$stderr}");
+            if ($result == 1) {
+                throw new TimeoutException("Command timed out");
+            } else {
+                throw new DockerCLIException("Docker Error: {$stderr}");
+            }
         }
 
         return !$result;
@@ -166,7 +171,7 @@ class DockerCLI extends Adapter
         return $stdout;
     }
 
-    public function remove($name, $force = false): bool
+    public function remove(string $name, bool $force = false): bool
     {
         $stdout = '';
         $stderr = '';

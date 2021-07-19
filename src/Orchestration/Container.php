@@ -1,7 +1,7 @@
 <?php
 namespace Utopia\Orchestration;
 
-class StandardContainer {
+class Container {
     /**
      * @var string
      */

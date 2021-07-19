@@ -191,7 +191,7 @@ class DockerAPI extends Adapter
     {
         \array_walk($vars, function (string &$value, string $key) {
             $key = $this->filterEnvKey($key);
-            $value = "{$key}={$value}";
+            $value = strval($key)."=".strval($value);
         });
 
         $body = array(

@@ -16,12 +16,22 @@ class DockerAPI extends Adapter
      * @param string $usernam
      * @param string $password
      */
-    public function __construct(string $username = null, string $password = null)
+    public function __construct(string $username = null, string $password = null, string $email = null)
     {
-        if ($username && $password) {
-            //TODO: Handle Dockerhub Sign-in
+        if ($username && $password && $email) {
+            $this->registryAuth = base64_encode(json_encode(array(
+                'username' => $username,
+                'password' => $password,
+                'serveraddress' => 'https://index.docker.io/v1/',
+                'email' => $email
+            )));
         }
     }
+
+    /**
+     * @var string
+     */
+    private $registryAuth = '';
 
 
     /**
@@ -162,7 +172,9 @@ class DockerAPI extends Adapter
     {
         $result = $this->call("http://localhost/images/create", "POST", \http_build_query(array(
             "fromImage" => $image
-        )));
+        )), array(
+            "X-Registry-Auth" => $this->registryAuth
+        ));
 
         if ($result["code"] !== 200 && $result["code"] !== 204) {
             $data = json_decode($result["response"], true);

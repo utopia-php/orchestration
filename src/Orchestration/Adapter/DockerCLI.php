@@ -13,8 +13,9 @@ class DockerCLI extends Adapter
     /**
      * Constructor
      * 
-     * @param string $usernam
+     * @param string $username
      * @param string $password
+     * @return void
      */
     public function __construct(string $username = null, string $password = null)
     {
@@ -28,6 +29,14 @@ class DockerCLI extends Adapter
         }
     }
 
+
+    /**
+     * Pull Image
+     * 
+     * @param string $image
+     * 
+     * @return bool
+     */
     public function pull(string $image): bool
     {
         $stdout = '';
@@ -42,6 +51,11 @@ class DockerCLI extends Adapter
         return !$result;
     }
 
+    /**
+     * List Containers
+     *
+     * @return array
+     */
     public function list(): array
     {
         $stdout = '';
@@ -82,6 +96,20 @@ class DockerCLI extends Adapter
         return ($list);
     }
 
+    /**
+     * Run Container
+     * 
+     * @param string $image
+     * @param string $name
+     * @param string $entrypoint
+     * @param array $command
+     * @param string $workdir
+     * @param array $volumes
+     * @param array $vars
+     * @param string $mountFolder
+     * 
+     * @return bool
+     */
     public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool
     {
         $stdout = '';
@@ -96,10 +124,6 @@ class DockerCLI extends Adapter
         }, $command);
 
         $labelString = ' ';
-
-        \array_walk($labels, function (string $key, string $value) use ($labelString) {
-            $labelString = $labelString . "--label {$key}={$value}";
-        });
 
         \array_walk($vars, function (string &$value, string $key) {
             $key = $this->filterEnvKey($key);
@@ -133,6 +157,17 @@ class DockerCLI extends Adapter
         return !$result;
     }
 
+    /**
+     * Execute Container
+     *
+     * @param string $name
+     * @param array $command
+     * @param string $stdout
+     * @param string $stderr
+     * @param array $vars
+     * @param int $timeout
+     * @return bool
+     */
     public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = 0): bool
     {
         \array_walk($vars, function (string &$value, string $key) {
@@ -156,21 +191,13 @@ class DockerCLI extends Adapter
         return !$result;
     }
 
-    public function executeWithStdout(string $name, array $command, array $vars = []): string
-    {
-        $stdout = '';
-        $stderr = '';
-
-        $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)
-            , '', $stdout, $stderr, 30);
-            
-        if ($result !== 0) {
-            throw new DockerCLIException("Docker Error: {$stderr}");
-        }
-
-        return $stdout;
-    }
-
+    /**
+     * Remove Container
+     *
+     * @param string $name
+     * @param bool $force
+     * @return bool
+     */
     public function remove(string $name, bool $force = false): bool
     {
         $stdout = '';

@@ -13,8 +13,9 @@ class DockerAPI extends Adapter
     /**
      * Constructor
      * 
-     * @param string $usernam
+     * @param string $username
      * @param string $password
+     * @param string $email
      */
     public function __construct(string $username = null, string $password = null, string $email = null)
     {
@@ -36,13 +37,16 @@ class DockerAPI extends Adapter
 
     /**
      * Create a request with cURL
-     * 
+     *
      * @param string $url
      * @param string $method
      * @param array|bool|int|float|object|resource|string|null $body
      * @param array $headers
      * @param int $timeout
-     * @return array
+     *
+     * @return (bool|mixed|string)[]
+     *
+     * @psalm-return array{response: mixed, code: mixed}
      */
     protected function call(string $url, string $method, $body = null, array $headers = [], int $timeout = 0): array
     {
@@ -89,10 +93,13 @@ class DockerAPI extends Adapter
     /**
      * Create a request with cURL
      * but process a Docker Stream Response
-     * 
+     *
      * @param string $url
      * @param int $timeout
-     * @return array
+     *
+     * @return (bool|mixed|string)[]
+     *
+     * @psalm-return array{response: bool|string, code: mixed, stdout: mixed, stderr: mixed}
      */
     protected function streamCall(string $url, int $timeout = 0): array
     {
@@ -168,6 +175,12 @@ class DockerAPI extends Adapter
         );
     }
 
+
+    /**
+     * @param string $image
+     * @return bool
+     */
+
     public function pull(string $image): bool
     {
         $result = $this->call("http://localhost/images/create", "POST", \http_build_query(array(
@@ -188,6 +201,10 @@ class DockerAPI extends Adapter
             return true;
         }
     }
+
+    /**
+     * @returns array
+     */
 
     public function list(): array
     {
@@ -214,6 +231,18 @@ class DockerAPI extends Adapter
         return $list;
     }
 
+    /**
+     * @param string $image
+     * @param string $name
+     * @param string $entrypoint
+     * @param array $command
+     * @param string $workdir
+     * @param array $volumes
+     * @param array $vars
+     * @param string $mountFolder
+     * @param array $labels
+     * @return bool
+     */
     public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool
     {
         \array_walk($vars, function (string &$value, string $key) {
@@ -260,6 +289,15 @@ class DockerAPI extends Adapter
         }
     }
 
+    /**
+     * @param string $name
+     * @param array $command
+     * @param string $stdout
+     * @param string $stderr
+     * @param array $vars
+     * @param int $timeout
+     * @return bool
+     */
     public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = 0): bool
     {
         \array_walk($vars, function (string &$value, string $key) {
@@ -297,6 +335,11 @@ class DockerAPI extends Adapter
         }
     }
 
+    /**
+     * @param string $name
+     * @param bool $force
+     * @return bool
+     */
     public function remove(string $name, bool $force = false): bool
     {
         $result = $this->call("http://localhost/containers/{$name}".($force ? '?force=true': ''), "DELETE");

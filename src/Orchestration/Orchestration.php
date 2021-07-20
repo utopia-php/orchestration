@@ -22,9 +22,12 @@ class Orchestration
 
     /**
      * Command Line String into Array
-     * 
+     *
      * @param string $command
-     * @return array
+     *
+     * @return (false|string)[]
+     *
+     * @psalm-return list<false|string>
      */
     public function parseCommandString(string $command): array {
         $currentPos = 0;

@@ -20,12 +20,12 @@ class DockerAPI extends Adapter
     public function __construct(string $username = null, string $password = null, string $email = null)
     {
         if ($username && $password && $email) {
-            $this->registryAuth = base64_encode(json_encode(array(
+            $this->registryAuth = base64_encode(json_encode([
                 'username' => $username,
                 'password' => $password,
                 'serveraddress' => 'https://index.docker.io/v1/',
                 'email' => $email
-            )));
+            ]));
         }
     }
 
@@ -58,20 +58,20 @@ class DockerAPI extends Adapter
         \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
 
         switch ($method) {
-            case "GET":
+            case 'GET':
                 if (!is_null($body)) {
                     \curl_setopt($ch, CURLOPT_URL, $url . '?' . $body);
                 }
                 break;
-            case "POST":
+            case 'POST':
                 \curl_setopt($ch, CURLOPT_POST, 1);
 
                 if (!is_null($body)) {
                     \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
                 }
                 break;
-            case "DELETE":
-                \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+            case 'DELETE':
+                \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
 
                 if (!is_null($body)) {
                     \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
@@ -84,10 +84,10 @@ class DockerAPI extends Adapter
 
         \curl_close($ch);
 
-        return array(
-            "response" => $result,
-            "code" => $responseCode
-        );
+        return [
+            'response' => $result,
+            'code' => $responseCode
+        ];
     }
 
     /**
@@ -167,12 +167,12 @@ class DockerAPI extends Adapter
 
         \curl_close($ch);
 
-        return array(
-            "response" => $result,
-            "code" => $responseCode,
-            "stdout" => $stdout,
-            "stderr" => $stderr
-        );
+        return [
+            'response' => $result,
+            'code' => $responseCode,
+            'stdout' => $stdout,
+            'stderr' => $stderr
+        ];
     }
 
 
@@ -183,16 +183,16 @@ class DockerAPI extends Adapter
 
     public function pull(string $image): bool
     {
-        $result = $this->call("http://localhost/images/create", "POST", \http_build_query(array(
-            "fromImage" => $image
-        )), array(
-            "X-Registry-Auth" => $this->registryAuth
-        ));
+        $result = $this->call('http://localhost/images/create', 'POST', \http_build_query([
+            'fromImage' => $image
+        ]), [
+            'X-Registry-Auth' => $this->registryAuth
+        ]);
 
-        if ($result["code"] !== 200 && $result["code"] !== 204) {
-            $data = json_decode($result["response"], true);
+        if ($result['code'] !== 200 && $result['code'] !== 204) {
+            $data = json_decode($result['response'], true);
             if (isset($data['message'])) {
-                throw new DockerAPIException('Failed to pull container: ' . $data["message"]);
+                throw new DockerAPIException('Failed to pull container: ' . $data['message']);
             } else {
                 throw new DockerAPIException('Failed to pull container: Internal Docker Error');
             }
@@ -208,21 +208,21 @@ class DockerAPI extends Adapter
 
     public function list(): array
     {
-        $body = array(
-            "all" => true
-        );
+        $body = [
+            'all' => true
+        ];
 
-        $result = $this->call("http://localhost/containers/json".'?'.\http_build_query($body), "GET");
+        $result = $this->call('http://localhost/containers/json'.'?'.\http_build_query($body), 'GET');
 
         $list = [];
 
         \array_map(function(array $value) use (&$list) {
             if(isset($value['Names'][0])) {
                 $parsedContainer = new Container(
-                    \str_replace("/", "", $value['Names'][0]), 
+                    \str_replace('/', '', $value['Names'][0]), 
                     $value['Id'],
                     $value['Status'],
-                    $value["Labels"]
+                    $value['Labels']
                 );
 
             
@@ -249,43 +249,43 @@ class DockerAPI extends Adapter
     {
         \array_walk($vars, function (string &$value, string $key) {
             $key = $this->filterEnvKey($key);
-            $value = "{$key}={$value}";
+            $value = $key.'='.$value;
         });
 
-        $body = array(
-            "Entrypoint" => "",
-            "Image" => $image,
-            "Cmd" => $command,
-            "WorkingDir" => "/usr/local/src",
-            "Labels" => (object) $labels,
-            "Env" => array_values($vars),
-            "HostConfig" => array(
-                "Binds" => array(
-                    "{$mountFolder}:/tmp"
-                ),
-                "CpuQuota" => floatval($this->cpus) * 100000,
-                "CpuPeriod" => 100000,
-                "Memory" => intval($this->memory) * 1e+6, // Convert into bytes
-                "MemorySwap" => intval($this->swap) * 1e+6 // Convert into bytes
-            ),
-        );
+        $body = [
+            'Entrypoint' => '',
+            'Image' => $image,
+            'Cmd' => $command,
+            'WorkingDir' => '/usr/local/src',
+            'Labels' => (object) $labels,
+            'Env' => array_values($vars),
+            'HostConfig' => [
+                'Binds' => [
+                    $mountFolder.':/tmp'
+                ],
+                'CpuQuota' => floatval($this->cpus) * 100000,
+                'CpuPeriod' => 100000,
+                'Memory' => intval($this->memory) * 1e+6, // Convert into bytes
+                'MemorySwap' => intval($this->swap) * 1e+6 // Convert into bytes
+            ],
+        ];
 
-        $result = $this->call("http://localhost/containers/create?name={$name}", "POST", json_encode($body), array(
+        $result = $this->call('http://localhost/containers/create?name='.$name, 'POST', json_encode($body), [
             'Content-Type: application/json',
             'Content-Length: ' . \strlen(\json_encode($body))
-        ));
+        ]);
 
         if ($result['code'] !== 201) {
-            throw new DockerAPIException("Failed to create function environment: {$result['response']} Response Code: {$result['code']}");
+            throw new DockerAPIException('Failed to create function environment: '. $result['response']. ' Response Code: '. $result['code']);
         }
 
         $parsedResponse = json_decode($result['response'], true);
 
         // Run Created Container
-        $result = $this->call("http://localhost/containers/{$parsedResponse['Id']}/start", "POST", "{}");
+        $result = $this->call('http://localhost/containers/'.$parsedResponse['Id'].'/start', 'POST', '{}');
         
         if ($result['code'] !== 204) {
-            throw new DockerAPIException("Failed to create function environment: {$result['response']} Response Code: {$result['code']}");
+            throw new DockerAPIException('Failed to create function environment: '.$result['response'].' Response Code: '.$result['code']);
         } else {
             return true;
         }
@@ -304,34 +304,34 @@ class DockerAPI extends Adapter
     {
         \array_walk($vars, function (string &$value, string $key) {
             $key = $this->filterEnvKey($key);
-            $value = "{$key}={$value}";
+            $value = $key.'='.$value;
         });
 
-        $body = array(
-            "Env" => \array_values($vars),
-            "Cmd" => $command,
-            "AttachStdout" => true,
-            "AttachStderr" => true
-        );
+        $body = [
+            'Env' => \array_values($vars),
+            'Cmd' => $command,
+            'AttachStdout' => true,
+            'AttachStderr' => true
+        ];
 
-        $result = $this->call("http://localhost/containers/{$name}/exec", "POST", json_encode($body), array(
+        $result = $this->call('http://localhost/containers/'.$name.'/exec', 'POST', json_encode($body), [
             'Content-Type: application/json',
             'Content-Length: ' . \strlen(\json_encode($body)),
-        ), $timeout);
+        ], $timeout);
 
         if ($result['code'] !== 201) {
-            throw new DockerAPIException("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
+            throw new DockerAPIException('Failed to create execute command: '.$result['response'].' Response Code: '.$result['code']);
         }
 
         $parsedResponse = json_decode($result['response'], true);
 
-        $result = $this->streamCall("http://localhost/exec/{$parsedResponse['Id']}/start", $timeout);
+        $result = $this->streamCall('http://localhost/exec/'.$parsedResponse['Id'].'/start', $timeout);
 
         $stdout = $result['stdout'];
         $stderr = $result['stderr'];
 
         if ($result['code'] !== 200) {
-            throw new DockerAPIException("Failed to create execute command: {$result['response']} Response Code: {$result['code']}");
+            throw new DockerAPIException('Failed to create execute command: '.$result['response'].' Response Code: '. $result['code']);
         } else {
             return true;
         }
@@ -344,10 +344,10 @@ class DockerAPI extends Adapter
      */
     public function remove(string $name, bool $force = false): bool
     {
-        $result = $this->call("http://localhost/containers/{$name}".($force ? '?force=true': ''), "DELETE");
+        $result = $this->call('http://localhost/containers/'.$name.($force ? '?force=true': ''), 'DELETE');
 
         if ($result['code'] !== 204) {
-            throw new DockerAPIException("Failed to remove container: {$result['response']} Response Code: {$result['code']}");
+            throw new DockerAPIException('Failed to remove container: '.$result['response'].' Response Code: '.$result['code']);
         } else {
             return true;
         }

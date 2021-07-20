@@ -51,9 +51,9 @@ abstract class Adapter
     {
         $string     = \str_split($string);
         $output     = '';
-    
+
         foreach ($string as $char) {
-            if(\array_key_exists($char, array_fill_keys(\str_split('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_'), true))) {
+            if(\in_array($char, ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','_',])) {
                 $output .= $char;
             }
         }

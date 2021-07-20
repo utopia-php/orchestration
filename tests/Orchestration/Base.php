@@ -57,9 +57,9 @@ abstract class Base extends TestCase
             'appwrite/runtime-for-php:8.0',
             'TestContainer',
             "",
-            array("sh",
+            ["sh",
             "-c",
-            "cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null"),
+            "cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null"],
             '/usr/local/src/',
             [],
             [],
@@ -79,9 +79,9 @@ abstract class Base extends TestCase
                 'appwrite/tXDytMhecKCuz5B4PlITXL1yKhZXDP', // Non-Existent Image
                 'TestContainer',
                 "",
-                array("sh",
+                ["sh",
                 "-c",
-                "cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null"),
+                "cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null"],
                 '/usr/local/src/',
                 [],
                 [],
@@ -105,15 +105,15 @@ abstract class Base extends TestCase
 
         $response = static::getOrchestration()->execute(
             'TestContainer',
-            array(
+            [
                 'php',
                 'index.php'
-            ),
+            ],
             $stdout,
             $stderr,
-            array(
+            [
                 "test" => "testEnviromentVariable"
-            ),
+            ],
         );
 
         $this->assertEquals("Hello World! testEnviromentVariable", $stdout);
@@ -129,10 +129,10 @@ abstract class Base extends TestCase
         try {
             $response = static::getOrchestration()->execute(
                 '60clotVWpufbEpy33zJLcoYHrUTqWaD1FV0FZWsw', // Non-Existent Container
-                array(
+                [
                     'php',
                     'index.php'
-                ),
+                ],
                 $stdout
             );
         } catch (Exception $e) {
@@ -153,16 +153,16 @@ abstract class Base extends TestCase
             'appwrite/runtime-for-php:8.0',
             'TestContainerTimeout',
             "",
-            array("sh",
+            ["sh",
             "-c",
-            "cp /tmp/timeout.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null"),
+            "cp /tmp/timeout.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null"],
             '/usr/local/src/',
             [],
             [],
             __DIR__.'/Resources',
-            array(
+            [
                 "test2" => "Hello World!"
-            )
+            ]
         );
 
         $this->assertEquals(true, $response);
@@ -179,10 +179,10 @@ abstract class Base extends TestCase
         try {
             $response = static::getOrchestration()->execute(
                 'TestContainerTimeout',
-                array(
+                [
                     'php',
                     'index.php'
-                ),
+                ],
                 $stdout,
                 $stderr,
                 [],
@@ -251,25 +251,25 @@ abstract class Base extends TestCase
          */
         $test = static::getOrchestration()->parseCommandString("sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'");
 
-        $this->assertEquals(array(
+        $this->assertEquals([
             "sh",
             "-c",
             "'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
-        ), $test);
+        ], $test);
 
         $test = static::getOrchestration()->parseCommandString("sudo apt-get update");
 
-        $this->assertEquals(array(
+        $this->assertEquals([
             "sudo",
             "apt-get",
             "update"
-        ), $test);
+        ], $test);
 
         $test = static::getOrchestration()->parseCommandString("test");
 
-        $this->assertEquals(array(
+        $this->assertEquals([
             "test"
-        ), $test);
+        ], $test);
 
         /**
          * Test for failure

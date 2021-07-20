@@ -33,13 +33,13 @@ class Orchestration
         $currentPos = 0;
         $commandProcessed = [];
 
-        if (strpos($command, " ", $currentPos) === false) {
-            return array($command);
+        if (strpos($command, ' ', $currentPos) === false) {
+            return [$command];
         }
         
         while (true) {
-            if (strpos($command, " ", $currentPos) !== false) {
-                $place = (int) strpos($command, " ", $currentPos);
+            if (strpos($command, ' ', $currentPos) !== false) {
+                $place = (int) strpos($command, ' ', $currentPos);
     
                 if ($command[$place + 1] !== "'") {
                     array_push($commandProcessed, substr($command, $currentPos, $place - $currentPos));
@@ -58,7 +58,7 @@ class Orchestration
                     $place = $closingString + 1;
                 }
                 
-                if (strpos($command, " ", $place) === false) {
+                if (strpos($command, ' ', $place) === false) {
                    if (!empty(substr($command, $place, strlen($command) - $currentPos))) {
                         array_push($commandProcessed, substr($command, $place, strlen($command) - $currentPos));
                     }

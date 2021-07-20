@@ -25,6 +25,18 @@ abstract class Adapter
     protected $swap = 0;
 
     /**
+     * Filter ENV vars
+     * 
+     * @param string $string
+     * 
+     * @return string
+     */
+    public function filterEnvKey(string $string): string
+    {
+        return preg_replace('/[^A-Za-z0-9\_]/', '', $string);
+    }
+
+    /**
      * Pull Image
      * 
      * @param string $image
@@ -36,30 +48,9 @@ abstract class Adapter
     /**
      * List Containers
      *
-     * @return array
+     * @return Container[]
      */
     abstract public function list(): array;
-
-    /**
-     * Filter ENV vars
-     * 
-     * @param string $string
-     * 
-     * @return string
-     */
-    public function filterEnvKey(string $string): string
-    {
-        $string     = \str_split($string);
-        $output     = '';
-
-        foreach ($string as $char) {
-            if(\in_array($char, ['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','_',])) {
-                $output .= $char;
-            }
-        }
-    
-        return $output;
-    }
 
     /**
      * Run Container
@@ -67,10 +58,10 @@ abstract class Adapter
      * @param string $image
      * @param string $name
      * @param string $entrypoint
-     * @param array $command
+     * @param string[] $command
      * @param string $workdir
-     * @param array $volumes
-     * @param array $vars
+     * @param string[] $volumes
+     * @param array<string, string> $vars
      * @param string $mountFolder
      * 
      * @return bool
@@ -81,10 +72,10 @@ abstract class Adapter
      * Execute Container
      *
      * @param string $name
-     * @param array $command
-     * @param string $stdout
-     * @param string $stderr
-     * @param array $vars
+     * @param string[] $command
+     * @param string &$stdout
+     * @param string &$stderr
+     * @param array<string, string> $vars
      * @param int $timeout
      * @return bool
      */

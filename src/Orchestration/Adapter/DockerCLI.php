@@ -54,7 +54,7 @@ class DockerCLI extends Adapter
     /**
      * List Containers
      *
-     * @return array
+     * @return Container[]
      */
     public function list(): array
     {
@@ -102,10 +102,10 @@ class DockerCLI extends Adapter
      * @param string $image
      * @param string $name
      * @param string $entrypoint
-     * @param array $command
+     * @param string[] $command
      * @param string $workdir
-     * @param array $volumes
-     * @param array $vars
+     * @param string[] $volumes
+     * @param array<string, string> $vars
      * @param string $mountFolder
      * 
      * @return bool
@@ -161,10 +161,10 @@ class DockerCLI extends Adapter
      * Execute Container
      *
      * @param string $name
-     * @param array $command
-     * @param string $stdout
-     * @param string $stderr
-     * @param array $vars
+     * @param string[] $command
+     * @param string &$stdout
+     * @param string &$stderr
+     * @param array<string, string> $vars
      * @param int $timeout
      * @return bool
      */

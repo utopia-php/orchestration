@@ -36,15 +36,9 @@ abstract class Base extends TestCase
          * Test for Failure
          */
 
-        $testFailed = false;
+        $this->expectException(\Exception::class);
 
-        try {
-            $response = static::getOrchestration()->pull('appwrite/tXDytMhecKCuz5B4PlITXL1yKhZXDP'); // Pull non-existent Container
-        } catch (Exception $e) {
-            $testFailed = true;
-        }
-
-        $this->assertEquals(true, $testFailed);
+        $response = static::getOrchestration()->pull('appwrite/tXDytMhecKCuz5B4PlITXL1yKhZXDP'); // Pull non-existent Container
     }
 
     /**
@@ -72,26 +66,21 @@ abstract class Base extends TestCase
          * Test for Failure
          */
 
-        $testFailed = false;
+        $this->expectException(\Exception::class);
 
-        try {
-            $response = static::getOrchestration()->run(
-                'appwrite/tXDytMhecKCuz5B4PlITXL1yKhZXDP', // Non-Existent Image
-                'TestContainer',
-                "",
-                ["sh",
-                "-c",
-                "cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null"],
-                '/usr/local/src/',
-                [],
-                [],
-                __DIR__.'/Resources',
-            );
-        } catch (Exception $e) {
-            $testFailed = true;
-        }
-
-        $this->assertEquals(true, $testFailed);
+        
+        $response = static::getOrchestration()->run(
+            'appwrite/tXDytMhecKCuz5B4PlITXL1yKhZXDP', // Non-Existent Image
+            'TestContainer',
+            "",
+            ["sh",
+            "-c",
+            "cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null"],
+            '/usr/local/src/',
+            [],
+            [],
+            __DIR__.'/Resources',
+        );
     }
 
     /**
@@ -126,20 +115,16 @@ abstract class Base extends TestCase
 
         $stdout = '';
 
-        try {
-            $response = static::getOrchestration()->execute(
-                '60clotVWpufbEpy33zJLcoYHrUTqWaD1FV0FZWsw', // Non-Existent Container
-                [
-                    'php',
-                    'index.php'
-                ],
-                $stdout
-            );
-        } catch (Exception $e) {
-            $testFailed = true;
-        }
+        $this->expectException(\Exception::class);
 
-        $this->assertEquals(true, $testFailed);
+        static::getOrchestration()->execute(
+            '60clotVWpufbEpy33zJLcoYHrUTqWaD1FV0FZWsw', // Non-Existent Container
+            [
+                'php',
+                'index.php'
+            ],
+            $stdout
+        );
     }
 
     /**
@@ -176,23 +161,19 @@ abstract class Base extends TestCase
         $stdout = '';
         $stderr = '';
 
-        try {
-            $response = static::getOrchestration()->execute(
-                'TestContainerTimeout',
-                [
-                    'php',
-                    'index.php'
-                ],
-                $stdout,
-                $stderr,
-                [],
-                1
-            );
-        } catch (TimeoutException $e) {
-            $testFailed = true;
-        }
+        $this->expectException(\Exception::class);
 
-        $this->assertEquals(true, $testFailed);
+        $response = static::getOrchestration()->execute(
+            'TestContainerTimeout',
+            [
+                'php',
+                'index.php'
+            ],
+            $stdout,
+            $stderr,
+            [],
+            1
+        );
     }
 
     /**
@@ -233,15 +214,9 @@ abstract class Base extends TestCase
         /**
          * Test for Failure
          */
-        $testFailed = false;
+        $this->expectException(\Exception::class);
 
-        try {
-            $response = static::getOrchestration()->remove('TestContainer', true);
-        } catch (Exception $e) {
-            $testFailed = true;
-        }
-
-        $this->assertEquals(true, $testFailed);
+        $response = static::getOrchestration()->remove('TestContainer', true);
     }
 
     public function testParseCLICommand(): void
@@ -274,14 +249,8 @@ abstract class Base extends TestCase
         /**
          * Test for failure
          */
-        $testFailed = false;
+        $this->expectException(\Exception::class);
 
-        try {
-            $test = static::getOrchestration()->parseCommandString("sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null");
-        } catch (Exception $e) {
-            $testFailed = true;
-        }
-
-        $this->assertEquals(true, $testFailed);
+        $test = static::getOrchestration()->parseCommandString("sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null");
     }
 }

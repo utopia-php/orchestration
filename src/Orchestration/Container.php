@@ -6,7 +6,7 @@ class Container {
      * @param string $name
      * @param string $id
      * @param string $status
-     * @param array $labels
+     * @param array<string, string> $labels
      */
     public function __construct(string $name = '', string $id = '', string $status = '', array $labels = [])
     {
@@ -32,7 +32,7 @@ class Container {
     public $status = '';
 
     /**
-     * @var array
+     * @var array<string, string> 
      */
     public $labels = [];
 }

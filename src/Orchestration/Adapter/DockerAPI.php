@@ -36,12 +36,12 @@ class DockerAPI extends Adapter
 
 
     /**
-     * Create a request with cURL
+     * Create a request with cURL via the Docker socket
      *
      * @param string $url
      * @param string $method
      * @param array|bool|int|float|object|resource|string|null $body
-     * @param array $headers
+     * @param string[] $headers
      * @param int $timeout
      *
      * @return (bool|mixed|string)[]
@@ -91,7 +91,7 @@ class DockerAPI extends Adapter
     }
 
     /**
-     * Create a request with cURL
+     * Create a request with cURL via the Docker socket
      * but process a Docker Stream Response
      *
      * @param string $url
@@ -177,10 +177,12 @@ class DockerAPI extends Adapter
 
 
     /**
+     * Pull Image
+     * 
      * @param string $image
+     * 
      * @return bool
      */
-
     public function pull(string $image): bool
     {
         $result = $this->call('http://localhost/images/create', 'POST', \http_build_query([
@@ -203,9 +205,10 @@ class DockerAPI extends Adapter
     }
 
     /**
-     * @returns array
+     * List Containers
+     *
+     * @return Container[]
      */
-
     public function list(): array
     {
         $body = [
@@ -234,15 +237,17 @@ class DockerAPI extends Adapter
     }
 
     /**
+     * Run Container
+     * 
      * @param string $image
      * @param string $name
      * @param string $entrypoint
-     * @param array $command
+     * @param string[] $command
      * @param string $workdir
-     * @param array $volumes
-     * @param array $vars
+     * @param string[] $volumes
+     * @param array<string, string> $vars
      * @param string $mountFolder
-     * @param array $labels
+     * 
      * @return bool
      */
     public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool
@@ -292,11 +297,13 @@ class DockerAPI extends Adapter
     }
 
     /**
+     * Execute Container
+     *
      * @param string $name
-     * @param array $command
-     * @param string $stdout
-     * @param string $stderr
-     * @param array $vars
+     * @param string[] $command
+     * @param string &$stdout
+     * @param string &$stderr
+     * @param array<string, string> $vars
      * @param int $timeout
      * @return bool
      */
@@ -338,6 +345,8 @@ class DockerAPI extends Adapter
     }
 
     /**
+     * Remove Container
+     *
      * @param string $name
      * @param bool $force
      * @return bool

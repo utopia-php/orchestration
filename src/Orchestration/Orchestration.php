@@ -26,8 +26,6 @@ class Orchestration
      * @param string $command
      *
      * @return (false|string)[]
-     *
-     * @psalm-return list<false|string>
      */
     public function parseCommandString(string $command): array {
         $currentPos = 0;
@@ -88,7 +86,7 @@ class Orchestration
     /**
      * List Containers
      *
-     * @return array
+     * @return Container[]
      */
     public function list(): array
     {
@@ -101,11 +99,12 @@ class Orchestration
      * @param string $image
      * @param string $name
      * @param string $entrypoint
-     * @param array $command
+     * @param string[] $command
      * @param string $workdir
-     * @param array $volumes
-     * @param array $vars
+     * @param string[] $volumes
+     * @param array<string, string> $vars
      * @param string $mountFolder
+     * 
      * @return bool
      */
     public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool
@@ -117,10 +116,10 @@ class Orchestration
      * Execute Container
      *
      * @param string $name
-     * @param array $command
-     * @param string $stdout
-     * @param string $stderr
-     * @param array $vars
+     * @param string[] $command
+     * @param string &$stdout
+     * @param string &$stderr
+     * @param array<string, string> $vars
      * @param int $timeout
      * @return bool
      */

@@ -218,11 +218,13 @@ class DockerAPI extends Adapter
 
         \array_map(function(array $value) use (&$list) {
             if(isset($value['Names'][0])) {
-                $parsedContainer = new Container();
-                $parsedContainer->name = \str_replace("/", "", $value['Names'][0]);
-                $parsedContainer->id = $value['Id'];
-                $parsedContainer->status = $value['Status'];
-                $parsedContainer->labels = $value["Labels"];
+                $parsedContainer = new Container(
+                    \str_replace("/", "", $value['Names'][0]), 
+                    $value['Id'],
+                    $value['Status'],
+                    $value["Labels"]
+                );
+
             
                 array_push($list, $parsedContainer);
             }

@@ -76,18 +76,17 @@ class DockerCLI extends Adapter
             \parse_str($value, $container);
         
             if(isset($container['name'])) {
-                $parsedContainer = new Container();
-                $parsedContainer->name = $container['name'];
-                $parsedContainer->id = $container['id'];
-                $parsedContainer->status = $container['status'];
-            
-                \array_map(function($value) use (&$parsedContainer) {
+                $labelsParsed = [];
+
+                \array_map(function($value) use (&$labelsParsed) {
                     $value = \explode('=', $value);
 
                     if(isset($value[0]) && isset($value[1])) {
-                        $parsedContainer->labels[$value[0]] = $value[1];
+                        $labelsParsed[$value[0]] = $value[1];
                     }
                 }, \explode(',', $container['labels']));
+
+                $parsedContainer = new Container($container['name'], $container['id'], $container['status'], $labelsParsed);
             
                 $list[$container['name']] = $parsedContainer;
             }

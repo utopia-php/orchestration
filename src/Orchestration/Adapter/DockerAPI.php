@@ -34,7 +34,6 @@ class DockerAPI extends Adapter
      */
     private $registryAuth = '';
 
-
     /**
      * Create a request with cURL via the Docker socket
      *
@@ -174,7 +173,6 @@ class DockerAPI extends Adapter
             'stderr' => $stderr
         ];
     }
-
 
     /**
      * Pull Image

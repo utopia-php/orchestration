@@ -22,6 +22,13 @@ class Orchestration
 
     /**
      * Command Line String into Array
+     * 
+     * This function will convert a string containing a command into an array of arguments.
+     * It will go through the string and find all instances of spaces, and will split the string
+     * however if it detects a apostrophe comes after the space it will find the next apostrophe and split the entire thing
+     * and add it to the array. This is so arguments with spaces in them can be passed such as scripts for sh or bash.
+     * 
+     * If there are no spaces detected in the first place it will just return the string as an array.
      *
      * @param string $command
      *

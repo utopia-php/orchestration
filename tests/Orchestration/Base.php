@@ -187,7 +187,7 @@ abstract class Base extends TestCase
         $foundContainer = false;
 
         \array_map(function($value) use (&$foundContainer) {
-            if ($value->name == 'TestContainer') {
+            if ($value->getName() == 'TestContainer') {
                 $foundContainer = true;
             }
         }, $response);

@@ -21,7 +21,7 @@ class DockerCLITest extends Base {
 
     static function getAdapterName(): string
     {
-    return "Docker CLI";
+        return "Docker CLI";
     }
 
     /**

@@ -21,7 +21,7 @@ class DockerAPITest extends Base {
 
     static function getAdapterName(): string
     {
-    return "Docker API";
+        return "Docker API";
     }
 
     /**

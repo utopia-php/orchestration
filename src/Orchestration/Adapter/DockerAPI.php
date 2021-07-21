@@ -128,6 +128,8 @@ class DockerAPI extends Adapter
          *   - check the first byte of the header to assign stream
          *   - pack up stream, omitting the 8 bytes of header
          *   - concat to stream
+         * 
+         * Reference: https://docs.docker.com/engine/api/v1.41/#operation/ContainerAttach
          */
 
         $stdout = '';

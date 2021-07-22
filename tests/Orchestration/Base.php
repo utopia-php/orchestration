@@ -60,7 +60,7 @@ abstract class Base extends TestCase
             __DIR__.'/Resources'
         );
 
-        $this->assertEquals(true, $response);
+        $this->assertNotEmpty($response);
 
         /**
          * Test for Failure
@@ -150,7 +150,7 @@ abstract class Base extends TestCase
             ]
         );
 
-        $this->assertEquals(true, $response);
+        $this->assertNotEmpty($response);
 
         /**
          * Test for Failure

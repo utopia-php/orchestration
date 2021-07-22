@@ -103,6 +103,9 @@ class Orchestration
     /**
      * Run Container
      * 
+     * Creates and runs a new container, On success it will return a string containing the container ID.
+     * On fail it will throw an exception.
+     * 
      * @param string $image
      * @param string $name
      * @param string $entrypoint
@@ -112,9 +115,9 @@ class Orchestration
      * @param array<string, string> $vars
      * @param string $mountFolder
      * 
-     * @return bool
+     * @return string
      */
-    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool
+    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
     {
         return $this->adapter->run($image, $name, $entrypoint, $command, $workdir, $volumes, $vars, $mountFolder, $labels);
     }

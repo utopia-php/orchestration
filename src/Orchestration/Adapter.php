@@ -55,6 +55,9 @@ abstract class Adapter
     /**
      * Run Container
      * 
+     * Creates and runs a new container, On success it will return a string containing the container ID.
+     * On fail it will throw an exception.
+     * 
      * @param string $image
      * @param string $name
      * @param string $entrypoint
@@ -64,9 +67,9 @@ abstract class Adapter
      * @param array<string, string> $vars
      * @param string $mountFolder
      * 
-     * @return bool
+     * @return string
      */
-    abstract public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool;
+    abstract public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string;
 
     /**
      * Execute Container

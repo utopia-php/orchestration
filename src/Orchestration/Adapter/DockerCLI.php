@@ -98,6 +98,9 @@ class DockerCLI extends Adapter
     /**
      * Run Container
      * 
+     * Creates and runs a new container, On success it will return a string containing the container ID.
+     * On fail it will throw an exception.
+     * 
      * @param string $image
      * @param string $name
      * @param string $entrypoint
@@ -107,9 +110,9 @@ class DockerCLI extends Adapter
      * @param array<string, string> $vars
      * @param string $mountFolder
      * 
-     * @return bool
+     * @return string
      */
-    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool
+    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
     {
         $stdout = '';
         $stderr = '';
@@ -149,11 +152,11 @@ class DockerCLI extends Adapter
             " ".implode(" ", $command)
             , '', $stdout, $stderr, 30);
 
-        if (!empty($stderr)) {
+        if (!empty($stderr) || $result !== 0) {
             throw new DockerCLIException("Docker Error: {$stderr}");
         }
 
-        return !$result;
+        return rtrim($stdout);
     }
 
     /**

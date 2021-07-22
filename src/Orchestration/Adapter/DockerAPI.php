@@ -239,6 +239,9 @@ class DockerAPI extends Adapter
     /**
      * Run Container
      * 
+     * Creates and runs a new container, On success it will return a string containing the container ID.
+     * On fail it will throw an exception.
+     * 
      * @param string $image
      * @param string $name
      * @param string $entrypoint
@@ -248,9 +251,9 @@ class DockerAPI extends Adapter
      * @param array<string, string> $vars
      * @param string $mountFolder
      * 
-     * @return bool
+     * @return string
      */
-    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): bool
+    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
     {
         \array_walk($vars, function (string &$value, string $key) {
             $key = $this->filterEnvKey($key);
@@ -292,7 +295,7 @@ class DockerAPI extends Adapter
         if ($result['code'] !== 204) {
             throw new DockerAPIException('Failed to create function environment: '.$result['response'].' Response Code: '.$result['code']);
         } else {
-            return true;
+            return $parsedResponse['Id'];
         }
     }
 

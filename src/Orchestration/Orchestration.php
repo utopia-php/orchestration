@@ -134,7 +134,7 @@ class Orchestration
      * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = 0): bool
+    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
     {
         return $this->adapter->execute($name, $command, $stdout, $stderr, $vars, $timeout);
     }

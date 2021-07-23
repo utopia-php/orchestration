@@ -163,8 +163,6 @@ abstract class Base extends TestCase
          * Test for Failure
          */
 
-        $testFailed = false;
-
         $stdout = '';
         $stderr = '';
 
@@ -181,6 +179,27 @@ abstract class Base extends TestCase
             [],
             1
         );
+
+        /**
+         * Test for Success
+         */
+
+        $stdout = '';
+        $stderr = '';
+
+        $response = static::getOrchestration()->execute(
+            'TestContainerTimeout',
+            [
+                'php',
+                'index.php'
+            ],
+            $stdout,
+            $stderr,
+            [],
+            10
+        );
+
+        $this->assertEquals(true, $response);
     }
 
     /**

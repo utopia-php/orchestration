@@ -177,7 +177,7 @@ class DockerCLI extends Adapter
      * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = 0): bool
+    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
     {
         \array_walk($vars, function (string &$value, string $key) {
             $key = $this->filterEnvKey($key);

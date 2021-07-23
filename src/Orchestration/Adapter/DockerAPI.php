@@ -48,7 +48,7 @@ class DockerAPI extends Adapter
      *
      * @psalm-return array{response: mixed, code: mixed}
      */
-    protected function call(string $url, string $method, $body = null, array $headers = [], int $timeout = 0): array
+    protected function call(string $url, string $method, $body = null, array $headers = [], int $timeout = -1): array
     {
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
@@ -101,7 +101,7 @@ class DockerAPI extends Adapter
      *
      * @psalm-return array{response: bool|string, code: mixed, stdout: mixed, stderr: mixed}
      */
-    protected function streamCall(string $url, int $timeout = 0): array
+    protected function streamCall(string $url, int $timeout = -1): array
     {
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
@@ -323,7 +323,7 @@ class DockerAPI extends Adapter
      * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = 0): bool
+    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
     {
         \array_walk($vars, function (string &$value, string $key) {
             $key = $this->filterEnvKey($key);

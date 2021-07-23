@@ -53,15 +53,22 @@ class DockerCLI extends Adapter
 
     /**
      * List Containers
+     * @param array<string, string> $filters
      *
      * @return Container[]
      */
-    public function list(): array
+    public function list(array $filters = []): array
     {
         $stdout = '';
         $stderr = '';
 
-        $result = Console::execute('docker ps --all --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"', '', $stdout, $stderr);
+        $filterString = '';
+        array_walk($filters,
+            function(string $value, string $key) use (&$filterString){
+                $filterString = $filterString . ' --filter "'.$key.'='.$value.'"';
+            });
+
+        $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"'.$filterString, '', $stdout, $stderr);
 
         if ($result !== 0) {
             throw new DockerCLIException("Docker Error: {$stderr}");
@@ -88,7 +95,7 @@ class DockerCLI extends Adapter
 
                 $parsedContainer = new Container($container['name'], $container['id'], $container['status'], $labelsParsed);
             
-                $list[$container['name']] = $parsedContainer;
+                array_push($list, $parsedContainer);
             }
         }, $stdoutArray);
 

@@ -14,6 +14,11 @@ abstract class Base extends TestCase
      */
     abstract static protected function getOrchestration(): Orchestration;
 
+    /**
+     * @var string
+     */
+    static $containerID;
+
     public function setUp(): void
     {
 
@@ -152,6 +157,8 @@ abstract class Base extends TestCase
 
         $this->assertNotEmpty($response);
 
+        self::$containerID = $response;
+
         /**
          * Test for Failure
          */
@@ -193,6 +200,18 @@ abstract class Base extends TestCase
         }, $response);
 
         $this->assertEquals(true, $foundContainer);
+    }
+
+    /**
+     * @return void
+     * @depends testCreateContainer
+     */
+
+    public function testListFilters(): void
+    {
+        $response = $this->getOrchestration()->list(['id' => self::$containerID]);
+
+        $this->assertEquals(self::$containerID, $response[0]->getId());
     }
 
     /**

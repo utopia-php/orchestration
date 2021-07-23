@@ -47,10 +47,11 @@ abstract class Adapter
         
     /**
      * List Containers
+     * @param array<string, string> $filters
      *
      * @return Container[]
      */
-    abstract public function list(): array;
+    abstract public function list(array $filters = []): array;
 
     /**
      * Run Container

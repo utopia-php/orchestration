@@ -92,12 +92,13 @@ class Orchestration
         
     /**
      * List Containers
+     * @param array<string, string> $filters
      *
      * @return Container[]
      */
-    public function list(): array
+    public function list(array $filters = []): array
     {
-        return $this->adapter->list();
+        return $this->adapter->list($filters);
     }
 
     /**

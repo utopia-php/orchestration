@@ -3,6 +3,7 @@
 namespace Utopia\Orchestration\Adapter;
 
 use CurlHandle;
+use stdClass;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
 use Utopia\Orchestration\Exceptions\DockerAPIException;
@@ -206,18 +207,30 @@ class DockerAPI extends Adapter
 
     /**
      * List Containers
+     * @param array<string, string> $filters
      *
      * @return Container[]
      */
-    public function list(): array
+    public function list(array $filters = []): array
     {
+        $filtersSorted = [];
+        array_walk($filters,
+            function(string $value, string $key) use (&$filtersSorted){
+                $filtersSorted[$key] = [$value];
+            });
+
         $body = [
-            'all' => true
+            'all' => true,
+            'filters' => empty($filtersSorted) ? new stdClass() : json_encode($filtersSorted)
         ];
 
         $result = $this->call('http://localhost/containers/json'.'?'.\http_build_query($body), 'GET');
 
         $list = [];
+
+        if ($result['code'] !== 200) {
+            throw new DockerAPIException($result['response']);
+        }
 
         \array_map(function(array $value) use (&$list) {
             if(isset($value['Names'][0])) {

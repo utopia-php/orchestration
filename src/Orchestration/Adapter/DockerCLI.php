@@ -186,6 +186,12 @@ class DockerCLI extends Adapter
             $value = "--env {$key}={$value}";
         });
 
+        \array_walk($command, function (string &$value, string $key) {
+            if (str_contains($value, " ")) {
+                $value = "'".$value."'";
+            }
+        });
+
         $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)
             , '', $stdout, $stderr, $timeout);
             

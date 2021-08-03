@@ -200,6 +200,29 @@ abstract class Base extends TestCase
         );
 
         $this->assertEquals(true, $response);
+
+        /**
+         * Test for Success
+         */
+
+        $stdout = '';
+        $stderr = '';
+
+        $response = static::getOrchestration()->execute(
+            'TestContainerTimeout',
+            [
+                'sh',
+                '-c',
+                'echo Hello World!'
+            ],
+            $stdout,
+            $stderr,
+            [],
+            10
+        );
+
+        $this->assertEquals("Hello World!", $stdout);
+        $this->assertEquals(true, $response);
     }
 
     /**

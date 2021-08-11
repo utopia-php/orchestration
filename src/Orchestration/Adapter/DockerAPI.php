@@ -269,8 +269,12 @@ class DockerAPI extends Adapter
     public function run(string $image, string $name, array $command, string $entrypoint = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
     {
         foreach ($vars as $key => $value) {
-            $key = $this->filterEnvKey($key);
-            $value = $key.'='.$value;
+            if ($value !== '') {
+                $key = $this->filterEnvKey($key);
+                $value = $key.'='.$value;
+            } else {
+                unset($vars[$key]);
+            }
         }
 
         $body = [

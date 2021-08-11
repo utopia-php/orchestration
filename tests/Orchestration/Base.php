@@ -148,7 +148,9 @@ abstract class Base extends TestCase
             '',
             '/usr/local/src/',
             [],
-            [],
+            [
+                'teasdsa' => '',
+            ],
             __DIR__.'/Resources',
             [
                 'test2' => 'Hello World!'

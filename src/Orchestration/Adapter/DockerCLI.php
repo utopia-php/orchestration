@@ -133,10 +133,14 @@ class DockerCLI extends Adapter
         $labelString = ' ';
 
         foreach ($vars as $key => &$value) {
-            $key = $this->filterEnvKey($key);
+            if ($value !== '') {
+                $key = $this->filterEnvKey($key);
 
-            $value = \escapeshellarg((empty($value)) ? '' : $value);
-            $value = "--env {$key}={$value}";
+                $value = \escapeshellarg((empty($value)) ? '' : $value);
+                $value = "--env {$key}={$value}";
+            } else {
+                unset($vars[$key]);
+            }
         }
 
         $time = time();

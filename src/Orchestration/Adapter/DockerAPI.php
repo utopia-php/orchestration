@@ -269,12 +269,8 @@ class DockerAPI extends Adapter
     public function run(string $image, string $name, array $command, string $entrypoint = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
     {
         foreach ($vars as $key => &$value) {
-            if ($value !== '') {
-                $key = $this->filterEnvKey($key);
-                $value = $key.'='.$value;
-            } else {
-                unset($vars[$key]);
-            }
+            $key = $this->filterEnvKey($key);
+            $value = $key.'='.$value;
         }
 
         $body = [
@@ -330,12 +326,8 @@ class DockerAPI extends Adapter
     public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool
     {
         foreach ($vars as $key => &$value) {
-            if ($value !== '') {
-                $key = $this->filterEnvKey($key);
-                $value = $key.'='.$value;
-            } else {
-                unset($vars[$key]);
-            }
+            $key = $this->filterEnvKey($key);
+            $value = $key.'='.$value;
         }
 
         $body = [

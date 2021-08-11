@@ -77,7 +77,7 @@ class DockerCLI extends Adapter
         $list = [];
         $stdoutArray = \explode("\n", $stdout);
 
-        \array_map(function($value) use (&$list) {
+        foreach($stdoutArray as $value) {
             $container = [];
         
             \parse_str($value, $container);
@@ -85,19 +85,19 @@ class DockerCLI extends Adapter
             if(isset($container['name'])) {
                 $labelsParsed = [];
 
-                \array_map(function($value) use (&$labelsParsed) {
+                foreach (\explode(',', $container['labels']) as $value) {
                     $value = \explode('=', $value);
 
                     if(isset($value[0]) && isset($value[1])) {
                         $labelsParsed[$value[0]] = $value[1];
                     }
-                }, \explode(',', $container['labels']));
+                }
 
                 $parsedContainer = new Container($container['name'], $container['id'], $container['status'], $labelsParsed);
             
                 array_push($list, $parsedContainer);
             }
-        }, $stdoutArray);
+        }
 
         return ($list);
     }
@@ -124,13 +124,11 @@ class DockerCLI extends Adapter
         $stdout = '';
         $stderr = '';
 
-        $command = \array_map(function($value) {
+        foreach ($command as &$value) {
             if (str_contains($value, " ")) {
                 $value = "'".$value."'";
             }
-
-            return $value;
-        }, $command);
+        }
 
         $labelString = ' ';
 

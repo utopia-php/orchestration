@@ -33,7 +33,7 @@ abstract class Adapter
      */
     public function filterEnvKey(string $string): string
     {
-        return preg_replace('/[^A-Za-z0-9\_]/', '', $string);
+        return preg_replace('/[^A-Za-z0-9\_\.\-]/', '', $string);
     }
 
     /**
@@ -70,7 +70,7 @@ abstract class Adapter
      * 
      * @return string
      */
-    abstract public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string;
+    abstract public function run(string $image, string $name, string $entrypoint = '', array $command, string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string;
 
     /**
      * Execute Container
@@ -83,7 +83,7 @@ abstract class Adapter
      * @param int $timeout
      * @return bool
      */
-    abstract public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool;
+    abstract public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool;
     
     /**
      * Remove Container

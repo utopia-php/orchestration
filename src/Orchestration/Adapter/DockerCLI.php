@@ -63,10 +63,10 @@ class DockerCLI extends Adapter
         $stderr = '';
 
         $filterString = '';
-        array_walk($filters,
-            function(string $value, string $key) use (&$filterString){
-                $filterString = $filterString . ' --filter "'.$key.'='.$value.'"';
-            });
+
+        foreach($filters as $key => $value) {
+            $filterString = $filterString . ' --filter "'.$key.'='.$value.'"';
+        }
 
         $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"'.$filterString, '', $stdout, $stderr);
 
@@ -134,12 +134,12 @@ class DockerCLI extends Adapter
 
         $labelString = ' ';
 
-        \array_walk($vars, function (string &$value, string $key) {
+        foreach ($vars as $key => &$value) {
             $key = $this->filterEnvKey($key);
 
             $value = \escapeshellarg((empty($value)) ? '' : $value);
             $value = "--env {$key}={$value}";
-        });
+        }
 
         $time = time();
         $result = Console::execute("docker run ".
@@ -179,18 +179,18 @@ class DockerCLI extends Adapter
      */
     public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
     {
-        \array_walk($vars, function (string &$value, string $key) {
+        foreach ($vars as $key => &$value) {
             $key = $this->filterEnvKey($key);
 
             $value = \escapeshellarg((empty($value)) ? '' : $value);
             $value = "--env {$key}={$value}";
-        });
+        }
 
-        \array_walk($command, function (string &$value, string $key) {
+        foreach ($command as &$value) {
             if (str_contains($value, " ")) {
                 $value = "'".$value."'";
             }
-        });
+        }
 
         $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)
             , '', $stdout, $stderr, $timeout);

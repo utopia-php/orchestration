@@ -214,10 +214,10 @@ class DockerAPI extends Adapter
     public function list(array $filters = []): array
     {
         $filtersSorted = [];
-        array_walk($filters,
-            function(string $value, string $key) use (&$filtersSorted){
-                $filtersSorted[$key] = [$value];
-            });
+
+        foreach($filters as $key => $value) {
+            $filtersSorted[$key] = [$value];
+        }
 
         $body = [
             'all' => true,
@@ -232,7 +232,7 @@ class DockerAPI extends Adapter
             throw new DockerAPIException($result['response']);
         }
 
-        \array_map(function(array $value) use (&$list) {
+        foreach (\json_decode($result['response'], true) as $value) {
             if(isset($value['Names'][0])) {
                 $parsedContainer = new Container(
                     \str_replace('/', '', $value['Names'][0]), 
@@ -244,7 +244,7 @@ class DockerAPI extends Adapter
             
                 array_push($list, $parsedContainer);
             }
-        }, \json_decode($result['response'], true));
+        }
 
         return $list;
     }
@@ -266,12 +266,12 @@ class DockerAPI extends Adapter
      * 
      * @return string
      */
-    public function run(string $image, string $name, string $entrypoint = '', array $command = [], string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
+    public function run(string $image, string $name, string $entrypoint = '', array $command, string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
     {
-        \array_walk($vars, function (string &$value, string $key) {
+        foreach ($vars as $key => $value) {
             $key = $this->filterEnvKey($key);
             $value = $key.'='.$value;
-        });
+        }
 
         $body = [
             'Entrypoint' => '',
@@ -323,12 +323,12 @@ class DockerAPI extends Adapter
      * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
+    public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool
     {
-        \array_walk($vars, function (string &$value, string $key) {
+        foreach ($vars as $key => &$value) {
             $key = $this->filterEnvKey($key);
             $value = $key.'='.$value;
-        });
+        }
 
         $body = [
             'Env' => \array_values($vars),

@@ -1,3 +1,3 @@
 <?php
 
-echo 'Hello World! ' . $_ENV["test"];
+echo 'Hello World! ' . $_ENV['test'];

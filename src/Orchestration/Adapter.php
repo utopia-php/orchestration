@@ -61,8 +61,8 @@ abstract class Adapter
      * 
      * @param string $image
      * @param string $name
-     * @param string $entrypoint
      * @param string[] $command
+     * @param string $entrypoint
      * @param string $workdir
      * @param string[] $volumes
      * @param array<string, string> $vars
@@ -70,7 +70,7 @@ abstract class Adapter
      * 
      * @return string
      */
-    abstract public function run(string $image, string $name, string $entrypoint = '', array $command, string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string;
+    abstract public function run(string $image, string $name, array $command, string $entrypoint = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string;
 
     /**
      * Execute Container

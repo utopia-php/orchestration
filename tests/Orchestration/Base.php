@@ -55,10 +55,10 @@ abstract class Base extends TestCase
         $response = static::getOrchestration()->run(
             'appwrite/runtime-for-php:8.0',
             'TestContainer',
-            '',
             ['sh',
             '-c',
             'cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null'],
+            '',
             '/usr/local/src/',
             [],
             [],
@@ -75,10 +75,10 @@ abstract class Base extends TestCase
         $response = static::getOrchestration()->run(
             'appwrite/tXDytMhecKCuz5B4PlITXL1yKhZXDP', // Non-Existent Image
             'TestContainer',
-            '',
             ['sh',
             '-c',
             'cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null'],
+            '',
             '/usr/local/src/',
             [],
             [],
@@ -142,10 +142,10 @@ abstract class Base extends TestCase
         $response = static::getOrchestration()->run(
             'appwrite/runtime-for-php:8.0',
             'TestContainerTimeout',
-            '',
             ['sh',
             '-c',
             'cp /tmp/timeout.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null'],
+            '',
             '/usr/local/src/',
             [],
             [],

@@ -45,7 +45,7 @@ class DockerCLI extends Adapter
         $result = Console::execute('docker pull '.$image, '', $stdout, $stderr);
 
         if ($result !== 0) {
-            throw new Orchestration("Docker Error: {$stderr}");
+            return false;
         }
 
         return !$result;

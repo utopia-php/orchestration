@@ -2,7 +2,9 @@
 
 namespace Utopia\Tests;
 
+use Exception;
 use PHPUnit\Framework\TestCase;
+use Utopia\Orchestration\Exception\Timeout;
 use Utopia\Orchestration\Orchestration;
 
 abstract class Base extends TestCase
@@ -39,9 +41,8 @@ abstract class Base extends TestCase
          * Test for Failure
          */
 
-        $this->expectException(\Exception::class);
-
         $response = static::getOrchestration()->pull('appwrite/tXDytMhecKCuz5B4PlITXL1yKhZXDP'); // Pull non-existent Container
+        $this->assertEquals(false, $response);
     }
 
     /**

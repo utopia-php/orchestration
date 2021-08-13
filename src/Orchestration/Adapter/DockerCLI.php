@@ -44,11 +44,7 @@ class DockerCLI extends Adapter
 
         $result = Console::execute('docker pull '.$image, '', $stdout, $stderr);
 
-        if ($result !== 0) {
-            return false;
-        }
-
-        return !$result;
+        return $result === 0;
     }
 
     /**

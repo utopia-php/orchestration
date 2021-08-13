@@ -2,9 +2,7 @@
 
 namespace Utopia\Tests;
 
-use Exception;
 use PHPUnit\Framework\TestCase;
-use Utopia\Orchestration\Exceptions\TimeoutException;
 use Utopia\Orchestration\Orchestration;
 
 abstract class Base extends TestCase
@@ -113,8 +111,6 @@ abstract class Base extends TestCase
         /**
          * Test for Failure
          */
-
-        $testFailed = false;
 
         $stdout = '';
         $stderr = '';

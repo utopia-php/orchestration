@@ -5,8 +5,8 @@ namespace Utopia\Orchestration\Adapter;
 use Utopia\CLI\Console;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
-use Utopia\Orchestration\Exceptions\DockerCLIException;
-use Utopia\Orchestration\Exceptions\TimeoutException;
+use Utopia\Orchestration\Exception\Orchestration;
+use Utopia\Orchestration\Exception\Timeout;
 
 class DockerCLI extends Adapter
 {
@@ -24,7 +24,7 @@ class DockerCLI extends Adapter
             $stderr = '';
 
             if (!Console::execute('docker login --username '.$username.' --password-stdin', $password, $stdout, $stderr)) {
-                throw new DockerCLIException("Docker Error: {$stderr}");
+                throw new Orchestration("Docker Error: {$stderr}");
             };
         }
     }
@@ -45,7 +45,7 @@ class DockerCLI extends Adapter
         $result = Console::execute('docker pull '.$image, '', $stdout, $stderr);
 
         if ($result !== 0) {
-            throw new DockerCLIException("Docker Error: {$stderr}");
+            throw new Orchestration("Docker Error: {$stderr}");
         }
 
         return !$result;
@@ -71,7 +71,7 @@ class DockerCLI extends Adapter
         $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"'.$filterString, '', $stdout, $stderr);
 
         if ($result !== 0) {
-            throw new DockerCLIException("Docker Error: {$stderr}");
+            throw new Orchestration("Docker Error: {$stderr}");
         }
 
         $list = [];
@@ -158,7 +158,7 @@ class DockerCLI extends Adapter
             , '', $stdout, $stderr, 30);
 
         if (!empty($stderr) || $result !== 0) {
-            throw new DockerCLIException("Docker Error: {$stderr}");
+            throw new Orchestration("Docker Error: {$stderr}");
         }
 
         return rtrim($stdout);
@@ -195,9 +195,9 @@ class DockerCLI extends Adapter
             
         if ($result !== 0) {
             if ($result == 1) {
-                throw new TimeoutException("Command timed out");
+                throw new Timeout("Command timed out");
             } else {
-                throw new DockerCLIException("Docker Error: {$stderr}");
+                throw new Orchestration("Docker Error: {$stderr}");
             }
         }
 
@@ -219,7 +219,7 @@ class DockerCLI extends Adapter
         $result = Console::execute("docker rm " . ($force ? '--force': '') . " {$name}", '', $stdout, $stderr);
 
         if (!str_contains($stdout, $name)) {
-            throw new DockerCLIException("Docker Error: {$stderr}");
+            throw new Orchestration("Docker Error: {$stderr}");
         }
 
         return !$result;

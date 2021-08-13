@@ -6,8 +6,8 @@ use CurlHandle;
 use stdClass;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
-use Utopia\Orchestration\Exceptions\DockerAPIException;
-use Utopia\Orchestration\Exceptions\TimeoutException;
+use Utopia\Orchestration\Exception\Orchestration;
+use Utopia\Orchestration\Exception\Timeout;
 
 class DockerAPI extends Adapter
 {
@@ -161,9 +161,9 @@ class DockerAPI extends Adapter
         if(curl_errno($ch))
         {
             if (\curl_errno($ch) == CURLE_OPERATION_TIMEOUTED) {
-                throw new TimeoutException('Curl Error: ' . curl_error($ch));
+                throw new Timeout('Curl Error: ' . curl_error($ch));
             } else {
-                throw new DockerAPIException('Curl Error: ' . curl_error($ch));
+                throw new Orchestration('Curl Error: ' . curl_error($ch));
             }
         }
 
@@ -193,12 +193,6 @@ class DockerAPI extends Adapter
         ]);
 
         if ($result['code'] !== 200 && $result['code'] !== 204) {
-            $data = json_decode($result['response'], true);
-            if (isset($data['message'])) {
-                throw new DockerAPIException('Failed to pull container: ' . $data['message']);
-            } else {
-                throw new DockerAPIException('Failed to pull container: Internal Docker Error');
-            }
             return false;
         } else {
             return true;
@@ -229,7 +223,7 @@ class DockerAPI extends Adapter
         $list = [];
 
         if ($result['code'] !== 200) {
-            throw new DockerAPIException($result['response']);
+            throw new Orchestration($result['response']);
         }
 
         foreach (\json_decode($result['response'], true) as $value) {
@@ -297,7 +291,7 @@ class DockerAPI extends Adapter
         ]);
 
         if ($result['code'] !== 201) {
-            throw new DockerAPIException('Failed to create function environment: '. $result['response']. ' Response Code: '. $result['code']);
+            throw new Orchestration('Failed to create function environment: '. $result['response']. ' Response Code: '. $result['code']);
         }
 
         $parsedResponse = json_decode($result['response'], true);
@@ -306,7 +300,7 @@ class DockerAPI extends Adapter
         $result = $this->call('http://localhost/containers/'.$parsedResponse['Id'].'/start', 'POST', '{}');
         
         if ($result['code'] !== 204) {
-            throw new DockerAPIException('Failed to create function environment: '.$result['response'].' Response Code: '.$result['code']);
+            throw new Orchestration('Failed to create function environment: '.$result['response'].' Response Code: '.$result['code']);
         } else {
             return $parsedResponse['Id'];
         }
@@ -343,7 +337,7 @@ class DockerAPI extends Adapter
         ], $timeout);
 
         if ($result['code'] !== 201) {
-            throw new DockerAPIException('Failed to create execute command: '.$result['response'].' Response Code: '.$result['code']);
+            throw new Orchestration('Failed to create execute command: '.$result['response'].' Response Code: '.$result['code']);
         }
 
         $parsedResponse = json_decode($result['response'], true);
@@ -354,7 +348,7 @@ class DockerAPI extends Adapter
         $stderr = $result['stderr'];
 
         if ($result['code'] !== 200) {
-            throw new DockerAPIException('Failed to create execute command: '.$result['response'].' Response Code: '. $result['code']);
+            throw new Orchestration('Failed to create execute command: '.$result['response'].' Response Code: '. $result['code']);
         } else {
             return true;
         }
@@ -372,7 +366,7 @@ class DockerAPI extends Adapter
         $result = $this->call('http://localhost/containers/'.$name.($force ? '?force=true': ''), 'DELETE');
 
         if ($result['code'] !== 204) {
-            throw new DockerAPIException('Failed to remove container: '.$result['response'].' Response Code: '.$result['code']);
+            throw new Orchestration('Failed to remove container: '.$result['response'].' Response Code: '.$result['code']);
         } else {
             return true;
         }

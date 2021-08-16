@@ -1,10 +1,11 @@
 <?php
 
-namespace Utopia\Orchestartion;
+namespace Utopia\Orchestration;
 
 use Utopia\Orchestration\Adapter;
+use Exception;
 
-class Orchestartion
+class Orchestration
 {
     /**
      * @var Adapter
@@ -17,6 +18,64 @@ class Orchestartion
     public function __construct(Adapter $adapter)
     {
         $this->adapter = $adapter;
+    }
+
+    /**
+     * Command Line String into Array
+     * 
+     * This function will convert a string containing a command into an array of arguments.
+     * It will go through the string and find all instances of spaces, and will split the string
+     * however if it detects a apostrophe comes after the space it will find the next apostrophe and split the entire thing
+     * and add it to the array. This is so arguments with spaces in them can be passed such as scripts for sh or bash.
+     * 
+     * If there are no spaces detected in the first place it will just return the string as an array.
+     *
+     * @param string $command
+     *
+     * @return (false|string)[]
+     */
+    public function parseCommandString(string $command): array {
+        $currentPos = 0;
+        $commandProcessed = [];
+
+        if (strpos($command, ' ', $currentPos) === false) {
+            return [$command];
+        }
+        
+        while (true) {
+            if (strpos($command, ' ', $currentPos) !== false) {
+                $place = (int) strpos($command, ' ', $currentPos);
+    
+                if ($command[$place + 1] !== "'") {
+                    array_push($commandProcessed, substr($command, $currentPos, $place - $currentPos));
+                    $place = $place + 1;
+                } else {
+                    array_push($commandProcessed, substr($command, $currentPos, $place - $currentPos));
+                    
+    
+                    $closingString = strpos($command, "'", $place + 2);
+
+                    if ($closingString == false) {
+                        throw new Exception("Invalid Command given, are you missing an `'` at the end?");
+                    }
+
+                    array_push($commandProcessed, substr($command, $place + 1, $closingString));
+                    $place = $closingString + 1;
+                }
+                
+                if (strpos($command, ' ', $place) === false) {
+                   if (!empty(substr($command, $place, strlen($command) - $currentPos))) {
+                        array_push($commandProcessed, substr($command, $place, strlen($command) - $currentPos));
+                    }
+                }
+                
+                $currentPos = $place;
+            } else {
+                break;
+            }
+        }
+
+        return $commandProcessed;
     }
 
     /**
@@ -33,44 +92,63 @@ class Orchestartion
         
     /**
      * List Containers
+     * @param array<string, string> $filters
      *
-     * @return bool
+     * @return Container[]
      */
-    public function list(): bool
+    public function list(array $filters = []): array
     {
-        return $this->adapter->list();
+        return $this->adapter->list($filters);
     }
 
     /**
      * Run Container
+     * 
+     * Creates and runs a new container, On success it will return a string containing the container ID.
+     * On fail it will throw an exception.
+     * 
+     * @param string $image
+     * @param string $name
+     * @param string $entrypoint
+     * @param string[] $command
+     * @param string $workdir
+     * @param string[] $volumes
+     * @param array<string, string> $vars
+     * @param string $mountFolder
+     * 
+     * @return string
      */
-    public function run(string $image, string $name, string $entrypoint = '', string $command = '', string $workdir = '/', array $volumes = [], array $vars = []): bool
+    public function run(string $image, string $name, array $command, string $entrypoint = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
     {
-        return $this->adapter->run($image, $name, $entrypoint, $command, $workdir, $volumes, $vars);
+        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels);
     }
 
     /**
      * Execute Container
      *
-     * @param  mixed $name
-     * @param  mixed $command
-     * @param  mixed $vars
+     * @param string $name
+     * @param string[] $command
+     * @param string &$stdout
+     * @param string &$stderr
+     * @param array<string, string> $vars
+     * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, string $command, array $vars = []): bool
+    public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool
     {
-        return $this->adapter->execute($name, $command, $vars);
+        return $this->adapter->execute($name, $command, $stdout, $stderr, $vars, $timeout);
     }
     
     /**
      * Remove Container
      *
-     * @param  mixed $name
+     * @param string $name
+     * @param bool $force
      * @return bool
      */
-    public function remove($name): bool
+    public function remove(string $name, bool $force = false): bool
     {
-        return $this->adapter->remove($name);
+        return $this->adapter->remove($name, $force);
     }
 
     /**

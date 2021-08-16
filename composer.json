@@ -14,6 +14,9 @@
     "autoload": {
         "psr-4": {"Utopia\\Orchestration\\": "src/Orchestration"}
     },
+    "autoload-dev": {
+        "psr-4": {"Utopia\\Tests\\": "tests/Orchestration"}
+    },
     "require": {
         "php": ">=8.0",
         "utopia-php/cli": "0.11.*"

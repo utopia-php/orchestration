@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+    tests:
+        container_name: tests
+        build: 
+            context: .
+        networks:
+            - orchestration
+        volumes: 
+            - ./:/usr/src/code
+
+networks:
+    orchestration:

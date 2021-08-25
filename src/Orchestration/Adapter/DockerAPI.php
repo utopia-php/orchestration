@@ -260,7 +260,7 @@ class DockerAPI extends Adapter
      * 
      * @return string
      */
-    public function run(string $image, string $name, array $command, string $entrypoint = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
+    public function run(string $image, string $name, array $command = [], string $entrypoint = '', string $workdir = '', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
     {
         foreach ($vars as $key => &$value) {
             $key = $this->filterEnvKey($key);
@@ -268,22 +268,28 @@ class DockerAPI extends Adapter
         }
 
         $body = [
-            'Entrypoint' => '',
+            'Entrypoint' => $entrypoint,
             'Image' => $image,
             'Cmd' => $command,
-            'WorkingDir' => '/usr/local/src',
+            'WorkingDir' => $workdir,
             'Labels' => (object) $labels,
             'Env' => array_values($vars),
             'HostConfig' => [
-                'Binds' => [
-                    $mountFolder.':/tmp'
-                ],
+                'Binds' => $volumes,
                 'CpuQuota' => floatval($this->cpus) * 100000,
                 'CpuPeriod' => 100000,
                 'Memory' => intval($this->memory) * 1e+6, // Convert into bytes
                 'MemorySwap' => intval($this->swap) * 1e+6 // Convert into bytes
             ],
         ];
+
+        if (!empty($mountFolder)) {
+            $body['HostConfig']['Binds'][] = $mountFolder.':/tmp';
+        }
+
+        $body = array_filter($body, function($value) {
+            return !empty($value);
+        });
 
         $result = $this->call('http://localhost/containers/create?name='.$name, 'POST', json_encode($body), [
             'Content-Type: application/json',
@@ -317,7 +323,7 @@ class DockerAPI extends Adapter
      * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool
+    public function execute(string $name, array $command = [], string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool
     {
         foreach ($vars as $key => &$value) {
             $key = $this->filterEnvKey($key);

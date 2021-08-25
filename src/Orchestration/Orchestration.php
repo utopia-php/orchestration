@@ -78,6 +78,38 @@ class Orchestration
         return $commandProcessed;
     }
 
+
+    /**
+     * Create Network
+     * 
+     * @param string $name
+     * @param bool $internal
+     * 
+     * @return bool
+     */
+    public function createNetwork(string $name, bool $internal = false): bool {
+        return $this->adapter->createNetwork($name, $internal);
+    }
+
+    /**
+     * Remove Network
+     * 
+     * @param string $name
+     * @return bool
+     */
+    public function removeNetwork(string $name): bool {
+        return $this->adapter->removeNetwork($name);
+    }
+
+    /**
+     * List Networks
+     * 
+     * @return array
+     */
+    public function listNetworks(): array {
+        return $this->adapter->listNetworks();
+    }
+
     /**
      * Pull Image
      * 

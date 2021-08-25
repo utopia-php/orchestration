@@ -37,6 +37,30 @@ abstract class Adapter
     }
 
     /**
+     * Create Network
+     * 
+     * @param string $name
+     * 
+     * @return bool
+     */
+    abstract public function createNetwork(string $name, bool $internal = false): bool;
+
+    /**
+     * Remove Network
+     * 
+     * @param string $name
+     * @return bool
+     */
+    abstract public function removeNetwork(string $name): bool;
+
+    /**
+     * List Networks
+     * 
+     * @return array
+     */
+    abstract public function listNetworks(): array;
+
+    /**
      * Pull Image
      * 
      * @param string $image

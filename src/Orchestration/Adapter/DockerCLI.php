@@ -7,6 +7,7 @@ use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
 use Utopia\Orchestration\Exception\Orchestration;
 use Utopia\Orchestration\Exception\Timeout;
+use Utopia\Orchestration\Network;
 
 class DockerCLI extends Adapter
 {
@@ -29,6 +30,73 @@ class DockerCLI extends Adapter
         }
     }
 
+    /**
+     * Create Network
+     * 
+     * @param string $name
+     * @param bool $internal
+     * 
+     * @return bool
+     */
+    public function createNetwork(string $name, bool $internal = false): bool
+    {
+        $stdout = '';
+        $stderr = '';
+
+        $result = Console::execute('docker network create '.$name . ($internal ? '--internal' : ''), '', $stdout, $stderr);
+        
+        return $result === 0;
+    }
+
+    /**
+     * Remove Network
+     * 
+     * @param string $name
+     * @return bool
+     */
+    public function removeNetwork(string $name): bool
+    {
+        $stdout = '';
+        $stderr = '';
+        
+        $result = Console::execute('docker network rm '.$name, '', $stdout, $stderr);
+
+        return $result === 0;
+    }
+
+    /**
+     * List Networks
+     * 
+     * @return array
+     */
+    public function listNetworks(): array
+    {
+        $stdout = '';
+        $stderr = '';
+        
+        $result = Console::execute('docker network ls --format "id={{.ID}}&name={{.Name}}&driver={{.Driver}}&scope={{.Scope}}"', '', $stdout, $stderr);
+
+        if($result !== 0) {
+            throw new Orchestration("Docker Error: {$stderr}");
+        }
+
+        $list = [];
+        $stdoutArray = \explode("\n", $stdout);
+
+        foreach($stdoutArray as $value) {
+            $network = [];
+        
+            \parse_str($value, $network);
+        
+            if(isset($network['name'])) {
+                $parsedNetwork = new Network($network['name'], $network['id'], $network['driver'], $network['scope']);
+            
+                array_push($list, $parsedNetwork);
+            }
+        }
+
+        return $list;
+    }
 
     /**
      * Pull Image

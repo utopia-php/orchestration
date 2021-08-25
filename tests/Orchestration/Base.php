@@ -313,4 +313,43 @@ abstract class Base extends TestCase
 
         $test = static::getOrchestration()->parseCommandString("sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null");
     }
+
+    // Network Tests
+    public function testCreateNetwork(): void
+    {
+        $response = static::getOrchestration()->createNetwork('TestNetwork');
+
+        $this->assertEquals(true, $response);
+    }
+
+    /**
+     * @return void
+     * @depends testCreateNetwork
+     */
+    public function testListNetworks(): void
+    {
+        $response = static::getOrchestration()->listNetworks();
+
+        $foundNetwork = false;
+
+        foreach ($response as $value) {
+            if ($value->getName() == 'TestNetwork') {
+                $foundNetwork = true;
+            }
+        }
+
+        $this->assertEquals(true, $foundNetwork);
+    }
+
+
+    /**
+     * @return void
+     * @depends testCreateNetwork
+     */
+    public function testRemoveNetwork(): void
+    {
+        $response = static::getOrchestration()->removeNetwork('TestNetwork');
+
+        $this->assertEquals(true, $response);
+    }
 }

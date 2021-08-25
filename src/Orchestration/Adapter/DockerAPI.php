@@ -8,6 +8,7 @@ use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
 use Utopia\Orchestration\Exception\Orchestration;
 use Utopia\Orchestration\Exception\Timeout;
+use Utopia\Orchestration\Network;
 
 class DockerAPI extends Adapter
 {
@@ -178,6 +179,79 @@ class DockerAPI extends Adapter
     }
 
     /**
+     * Create Network
+     * 
+     * @param string $name
+     * @param bool $internal
+     * 
+     * @return bool
+     */
+    public function createNetwork(string $name, bool $internal = false): bool {
+        $body = \json_encode([
+            'Name' => $name,
+            "Internal" => $internal
+        ]);
+
+        $result = $this->call('http://localhost/networks/create', 'POST', $body, [
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen($body)
+        ]);
+
+        if ($result['code'] != 201) {
+            throw new Orchestration('Error creating network: ' . $result['response']);
+        }
+
+        return $result['response'];
+    }
+
+    /**
+     * Remove Network
+     * 
+     * @param string $name
+     * @return bool
+     */
+    public function removeNetwork(string $name): bool {
+        $result = $this->call('http://localhost/networks/' . $name, 'DELETE');
+
+        if ($result['code'] != 204) {
+            throw new Orchestration('Error removing network: ' . $result['response']);
+        }
+
+        return $result['code'] == 204;
+    }
+
+    /**
+     * List Networks
+     * 
+     * @return array
+     */
+    public function listNetworks(): array {
+        $result = $this->call('http://localhost/networks', 'GET');
+
+        $list = [];
+
+        if ($result['code'] !== 200) {
+            throw new Orchestration($result['response']);
+        }
+
+        foreach (\json_decode($result['response'], true) as $value) {
+            if(isset($value['Name'])) {
+                $parsedContainer = new Network(
+                    \str_replace('/', '', $value['Name']), 
+                    $value['Id'],
+                    $value['Driver'],
+                    $value['Scope']
+                );
+
+            
+                array_push($list, $parsedContainer);
+            }
+        }
+
+        return $list;
+    }
+
+    /**
      * Pull Image
      * 
      * @param string $image
@@ -268,6 +342,7 @@ class DockerAPI extends Adapter
         }
 
         $body = [
+            'Hostname' => $name,
             'Entrypoint' => $entrypoint,
             'Image' => $image,
             'Cmd' => $command,

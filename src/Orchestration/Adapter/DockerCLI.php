@@ -171,7 +171,7 @@ class DockerCLI extends Adapter
      * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command = [], string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
+    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
     {
         foreach ($command as &$value) {
             if (str_contains($value, " ")) {

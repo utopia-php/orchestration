@@ -388,7 +388,7 @@ class DockerAPI extends Adapter
      * 
      * @return string
      */
-    public function run(string $image, string $name, array $command = [], string $entrypoint = '', string $workdir = '', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
+    public function run(string $image, string $name, array $command = [], string $entrypoint = '', string $workdir = '', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = [], string $hostname = ''): string
     {
         foreach ($vars as $key => &$value) {
             $key = $this->filterEnvKey($key);
@@ -396,7 +396,7 @@ class DockerAPI extends Adapter
         }
 
         $body = [
-            'Hostname' => $name,
+            'Hostname' => $hostname,
             'Entrypoint' => $entrypoint,
             'Image' => $image,
             'Cmd' => $command,

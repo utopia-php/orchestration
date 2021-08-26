@@ -216,7 +216,7 @@ class DockerCLI extends Adapter
      * 
      * @return string
      */
-    public function run(string $image, string $name, array $command = [], string $entrypoint = '', string $workdir = '', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
+    public function run(string $image, string $name, array $command = [], string $entrypoint = '', string $workdir = '', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = [], string $hostname = ''): string
     {
         $stdout = '';
         $stderr = '';
@@ -249,6 +249,7 @@ class DockerCLI extends Adapter
             (empty($mountFolder) ? "" : " --volume {$mountFolder}:/tmp:rw").
             $labelString .
             (empty($workdir) ? "" : " --workdir {$workdir}").
+            (empty($hostname) ? "" : " --hostname {$hostname}").
             (empty($vars) ? "" : " ".\implode(" ", $vars)).
             " {$image}".
             (empty($command) ? "" : " ".implode(" ", $command))

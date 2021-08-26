@@ -111,6 +111,31 @@ class Orchestration
     }
 
     /**
+     * Attach Network to Container
+     * 
+     * @param string $container
+     * @param string $network
+     * 
+     * @return bool
+     */
+    public function attachNetwork(string $container, string $network): bool {
+        return $this->adapter->attachNetwork($container, $network);
+    }
+
+    /**
+     * Detach Network from Container
+     * 
+     * @param string $container
+     * @param string $network
+     * @param bool $force
+     * 
+     * @return bool
+     */
+    public function detachNetwork(string $container, string $network, bool $force = false): bool {
+        return $this->adapter->detachNetwork($container, $network, $force);
+    }
+
+    /**
      * Pull Image
      * 
      * @param string $image

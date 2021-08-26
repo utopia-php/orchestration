@@ -65,6 +65,39 @@ class DockerCLI extends Adapter
     }
 
     /**
+     * Attach Network to Container
+     * 
+     * @param string $container
+     * @param string $network
+     * 
+     * @return bool
+     */
+    public function attachNetwork(string $container, string $network): bool {
+        $stdout = '';
+        $stderr = '';
+        
+        $result = Console::execute('docker network connect '.$network . ' ' . $container, '', $stdout, $stderr);
+
+        return $result === 0;
+    }
+
+    /**
+     * Detach Network from Container
+     * 
+     * @param string $container
+     * @param string $network
+     * @param string $force
+    */
+    public function detachNetwork(string $container, string $network, bool $force = false): bool {
+        $stdout = '';
+        $stderr = '';
+
+        $result = Console::execute('docker network disconnect '.$network . ' ' . $container . ($force ? ' --force' : ''), '', $stdout, $stderr);
+
+        return $result === 0;
+    }
+
+    /**
      * List Networks
      * 
      * @return array

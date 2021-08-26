@@ -54,6 +54,27 @@ abstract class Adapter
     abstract public function removeNetwork(string $name): bool;
 
     /**
+     * Attach Network to Container
+     * 
+     * @param string $container
+     * @param string $network
+     * 
+     * @return bool
+     */
+    abstract public function attachNetwork(string $container, string $network): bool;
+
+    /**
+     * Detach Network from Container
+     * 
+     * @param string $container
+     * @param string $network
+     * @param bool $force
+     * 
+     * @return bool
+     */
+    abstract public function detachNetwork(string $container, string $network, bool $force = false): bool;
+
+    /**
      * List Networks
      * 
      * @return array

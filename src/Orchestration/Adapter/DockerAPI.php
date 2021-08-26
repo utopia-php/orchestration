@@ -220,6 +220,60 @@ class DockerAPI extends Adapter
         return $result['code'] == 204;
     }
 
+
+    /**
+     * Attach Network to Container
+     * 
+     * @param string $container
+     * @param string $network
+     * 
+     * @return bool
+     */
+    public function attachNetwork(string $container, string $network): bool {
+        $body = \json_encode([
+            'Container' => $container,
+        ]);
+
+        $result = $this->call('http://localhost/networks/' . $network . '/connect', 'POST', $body, [
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen($body)
+        ]);
+
+        if ($result['code'] != 200) {
+            throw new Orchestration('Error attaching network: ' . $result['response']);
+        }
+
+        return $result['code'] == 200;
+    }
+
+    /**
+     * Detach Network to Container
+     * 
+     * @param string $container
+     * @param string $network
+     * @param bool $force
+     * 
+     * @return bool
+     */
+    public function detachNetwork(string $container, string $network, bool $force = false): bool
+    {
+        $body = \json_encode([
+            'Container' => $container,
+            'Force' => $force
+        ]);
+
+        $result = $this->call('http://localhost/networks/' . $network . '/disconnect', 'POST', $body, [
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen($body)
+        ]);
+
+        if ($result['code'] != 200) {
+            throw new Orchestration('Error detatching network: ' . $result['response']);
+        }
+
+        return $result['code'] == 200;
+    }
+
     /**
      * List Networks
      * 

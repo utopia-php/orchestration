@@ -95,6 +95,7 @@ class Orchestration
      * Remove Network
      * 
      * @param string $name
+     * 
      * @return bool
      */
     public function removeNetwork(string $name): bool {
@@ -111,19 +112,19 @@ class Orchestration
     }
 
     /**
-     * Attach Network to Container
+     * Connect a container to a network
      * 
      * @param string $container
      * @param string $network
      * 
      * @return bool
      */
-    public function attachNetwork(string $container, string $network): bool {
-        return $this->adapter->attachNetwork($container, $network);
+    public function networkConnect(string $container, string $network): bool {
+        return $this->adapter->networkConnect($container, $network);
     }
 
     /**
-     * Detach Network from Container
+     * Disconnect a container from a network
      * 
      * @param string $container
      * @param string $network
@@ -131,8 +132,8 @@ class Orchestration
      * 
      * @return bool
      */
-    public function detachNetwork(string $container, string $network, bool $force = false): bool {
-        return $this->adapter->detachNetwork($container, $network, $force);
+    public function networkDisconnect(string $container, string $network, bool $force = false): bool {
+        return $this->adapter->networkDisconnect($container, $network, $force);
     }
 
     /**

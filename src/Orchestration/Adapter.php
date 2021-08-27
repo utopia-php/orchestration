@@ -49,22 +49,23 @@ abstract class Adapter
      * Remove Network
      * 
      * @param string $name
+     * 
      * @return bool
      */
     abstract public function removeNetwork(string $name): bool;
 
     /**
-     * Attach Network to Container
+     * Connect a container to a network
      * 
      * @param string $container
      * @param string $network
      * 
      * @return bool
      */
-    abstract public function attachNetwork(string $container, string $network): bool;
+    abstract public function networkConnect(string $container, string $network): bool;
 
     /**
-     * Detach Network from Container
+     * Disconnect a container from a network
      * 
      * @param string $container
      * @param string $network
@@ -72,7 +73,7 @@ abstract class Adapter
      * 
      * @return bool
      */
-    abstract public function detachNetwork(string $container, string $network, bool $force = false): bool;
+    abstract public function networkDisconnect(string $container, string $network, bool $force = false): bool;
 
     /**
      * List Networks

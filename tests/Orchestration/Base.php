@@ -124,20 +124,20 @@ abstract class Base extends TestCase
      * @return void
      * @depends testCreateNetwork
      */
-    public function testAttachNetwork(): void
+    public function testnetworkConnect(): void
     {
-        $response = static::getOrchestration()->attachNetwork('TestContainer', 'TestNetwork');
+        $response = static::getOrchestration()->networkConnect('TestContainer', 'TestNetwork');
 
         $this->assertEquals(true, $response);
     }
 
     /**
      * @return void
-     * @depends testAttachNetwork
+     * @depends testnetworkConnect
      */
-    public function testDetachNetwork(): void
+    public function testnetworkDisconnect(): void
     {
-        $response = static::getOrchestration()->detachNetwork('TestContainer', 'TestNetwork', true);
+        $response = static::getOrchestration()->networkDisconnect('TestContainer', 'TestNetwork', true);
 
         $this->assertEquals(true, $response);
     }

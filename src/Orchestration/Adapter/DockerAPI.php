@@ -208,6 +208,7 @@ class DockerAPI extends Adapter
      * Remove Network
      * 
      * @param string $name
+     * 
      * @return bool
      */
     public function removeNetwork(string $name): bool {
@@ -220,16 +221,15 @@ class DockerAPI extends Adapter
         return $result['code'] == 204;
     }
 
-
     /**
-     * Attach Network to Container
+     * Connect a container to a network
      * 
      * @param string $container
      * @param string $network
      * 
      * @return bool
      */
-    public function attachNetwork(string $container, string $network): bool {
+    public function networkConnect(string $container, string $network): bool {
         $body = \json_encode([
             'Container' => $container,
         ]);
@@ -255,7 +255,7 @@ class DockerAPI extends Adapter
      * 
      * @return bool
      */
-    public function detachNetwork(string $container, string $network, bool $force = false): bool
+    public function networkDisconnect(string $container, string $network, bool $force = false): bool
     {
         $body = \json_encode([
             'Container' => $container,
@@ -297,7 +297,6 @@ class DockerAPI extends Adapter
                     $value['Scope']
                 );
 
-            
                 array_push($list, $parsedContainer);
             }
         }

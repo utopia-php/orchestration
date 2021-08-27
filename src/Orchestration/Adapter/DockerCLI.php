@@ -52,6 +52,7 @@ class DockerCLI extends Adapter
      * Remove Network
      * 
      * @param string $name
+     * 
      * @return bool
      */
     public function removeNetwork(string $name): bool
@@ -65,14 +66,14 @@ class DockerCLI extends Adapter
     }
 
     /**
-     * Attach Network to Container
+     * Connect a container to a network
      * 
      * @param string $container
      * @param string $network
      * 
      * @return bool
      */
-    public function attachNetwork(string $container, string $network): bool {
+    public function networkConnect(string $container, string $network): bool {
         $stdout = '';
         $stderr = '';
         
@@ -82,13 +83,15 @@ class DockerCLI extends Adapter
     }
 
     /**
-     * Detach Network from Container
+     * Disconnect a container from a network
      * 
      * @param string $container
      * @param string $network
      * @param string $force
+     * 
+     * @return bool
     */
-    public function detachNetwork(string $container, string $network, bool $force = false): bool {
+    public function networkDisconnect(string $container, string $network, bool $force = false): bool {
         $stdout = '';
         $stderr = '';
 

@@ -115,7 +115,7 @@ class DockerCLI extends Adapter
      * 
      * @return string
      */
-    public function run(string $image, string $name, array $command, string $entrypoint = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
+    public function run(string $image, string $name, array $command = [], string $entrypoint = '', string $workdir = '', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
     {
         $stdout = '';
         $stderr = '';
@@ -138,19 +138,19 @@ class DockerCLI extends Adapter
         $time = time();
         $result = Console::execute("docker run ".
             " -d".
-            " --entrypoint=\"{$entrypoint}\"".
+            (empty($entrypoint) ? "" : " --entrypoint=\"{$entrypoint}\"").
             (empty($this->cpus) ? "" : (" --cpus=".$this->cpus)).
             (empty($this->memory) ? "" : (" --memory=".$this->memory."m")).
             (empty($this->swap) ? "" : (" --memory-swap=".$this->swap."m")).
             " --name={$name}".
             " --label {$this->namespace}-type=runtime".
             " --label {$this->namespace}-created={$time}".
-            " --volume {$mountFolder}:/tmp:rw".
+            (empty($mountFolder) ? "" : " --volume {$mountFolder}:/tmp:rw").
             $labelString .
-            " --workdir {$workdir}".
-            " ".\implode(" ", $vars).
+            (empty($workdir) ? "" : " --workdir {$workdir}").
+            (empty($vars) ? "" : " ".\implode(" ", $vars)).
             " {$image}".
-            " ".implode(" ", $command)
+            (empty($command) ? "" : " ".implode(" ", $command))
             , '', $stdout, $stderr, 30);
 
         if (!empty($stderr) || $result !== 0) {

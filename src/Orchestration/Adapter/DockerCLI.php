@@ -120,20 +120,28 @@ class DockerCLI extends Adapter
         $stdout = '';
         $stderr = '';
 
+        $parsedCommands = [];
+
         foreach ($command as $key => $value) {
             if (str_contains($value, " ")) {
                 $command[$key] = "'".$value."'";
             }
         }
 
+        $command = $parsedCommands;
+
         $labelString = ' ';
+
+        $parsedVariables = [];
 
         foreach ($vars as $key => $value) {
             $key = $this->filterEnvKey($key);
 
             $value = \escapeshellarg((empty($value)) ? '' : $value);
-            $vars[$key] = "--env {$key}={$value}";
+            $parsedVariables[$key] = "--env {$key}={$value}";
         }
+
+        $vars = $parsedVariables;
 
         $time = time();
         $result = Console::execute("docker run ".

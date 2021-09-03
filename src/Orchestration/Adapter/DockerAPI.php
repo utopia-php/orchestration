@@ -319,10 +319,14 @@ class DockerAPI extends Adapter
      */
     public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool
     {
+        $parsedVariables = [];
+
         foreach ($vars as $key => $value) {
             $key = $this->filterEnvKey($key);
-            $vars[$key] = $key.'='.$value;
+            $parsedVariables[$key] = $key.'='.$value;
         }
+
+        $vars = $parsedVariables;
 
         $body = [
             'Env' => \array_values($vars),

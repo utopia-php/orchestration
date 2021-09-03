@@ -182,7 +182,7 @@ class DockerCLI extends Adapter
         foreach ($vars as $key => $value) {
             $key = $this->filterEnvKey($key);
 
-            $vars[$key] = \escapeshellarg((empty($value)) ? '' : $value);
+            $value = \escapeshellarg((empty($value)) ? '' : $value);
             $vars[$key] = "--env {$key}={$value}";
         }
 

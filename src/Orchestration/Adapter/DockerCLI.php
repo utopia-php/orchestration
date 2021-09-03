@@ -120,19 +120,19 @@ class DockerCLI extends Adapter
         $stdout = '';
         $stderr = '';
 
-        foreach ($command as &$value) {
+        foreach ($command as $key => $value) {
             if (str_contains($value, " ")) {
-                $value = "'".$value."'";
+                $command[$key] = "'".$value."'";
             }
         }
 
         $labelString = ' ';
 
-        foreach ($vars as $key => &$value) {
+        foreach ($vars as $key => $value) {
             $key = $this->filterEnvKey($key);
 
-            $value = \escapeshellarg((empty($value)) ? '' : $value);
-            $value = "--env {$key}={$value}";
+            $vars[$key] = \escapeshellarg((empty($value)) ? '' : $value);
+            $vars[$key] = "--env {$key}={$value}";
         }
 
         $time = time();
@@ -173,17 +173,17 @@ class DockerCLI extends Adapter
      */
     public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
     {
-        foreach ($command as &$value) {
+        foreach ($command as $key => $value) {
             if (str_contains($value, " ")) {
-                $value = "'".$value."'";
+                $command[$key] = "'".$value."'";
             }
         }
 
-        foreach ($vars as $key => &$value) {
+        foreach ($vars as $key => $value) {
             $key = $this->filterEnvKey($key);
 
-            $value = \escapeshellarg((empty($value)) ? '' : $value);
-            $value = "--env {$key}={$value}";
+            $vars[$key] = \escapeshellarg((empty($value)) ? '' : $value);
+            $vars[$key] = "--env {$key}={$value}";
         }
 
         $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)

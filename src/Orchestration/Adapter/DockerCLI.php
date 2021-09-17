@@ -169,9 +169,10 @@ class DockerCLI extends Adapter
      * @param string &$stderr
      * @param array<string, string> $vars
      * @param int $timeout
+     * @param bool $detach
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
+    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1, bool $detach = false): bool
     {
         foreach ($command as &$value) {
             if (str_contains($value, " ")) {
@@ -186,9 +187,9 @@ class DockerCLI extends Adapter
             $value = "--env {$key}={$value}";
         }
 
-        $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)
+        $result = Console::execute("docker exec ".($detach ? '--detach ' : '').\implode(" ", $vars)." {$name} ".implode(" ", $command)
             , '', $stdout, $stderr, $timeout);
-            
+
         if ($result !== 0) {
             if ($result == 1) {
                 throw new Timeout("Command timed out");

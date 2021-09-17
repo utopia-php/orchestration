@@ -133,6 +133,37 @@ abstract class Base extends TestCase
      * @return void
      * @depends testExecContainer
      */
+    public function testExecWithDetach(): void
+    {
+        $stdout = '';
+        $stderr = '';
+
+        $startTime = time();
+
+        $response = static::getOrchestration()->execute(
+            name: 'TestContainer',
+            command: [
+                'sleep',
+                '20'
+            ],
+            stdout: $stdout,
+            stderr: $stderr,
+            vars: [
+                'test' => 'testEnviromentVariable'
+            ],
+            timeout: 10,
+            detach: true
+        );
+
+        $endTime = time();
+
+        $this->assertEquals(true, ($endTime - $startTime) < 20);
+    }
+
+    /**
+     * @return void
+     * @depends testExecContainer
+     */
     public function testTimeoutContainer(): void
     {
         // Create container

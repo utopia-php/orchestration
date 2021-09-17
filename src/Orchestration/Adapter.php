@@ -128,9 +128,10 @@ abstract class Adapter
      * @param string &$stderr
      * @param array<string, string> $vars
      * @param int $timeout
+     * @param bool $detach
      * @return bool
      */
-    abstract public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool;
+    abstract public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1, bool $detach = false): bool;
     
     /**
      * Remove Container

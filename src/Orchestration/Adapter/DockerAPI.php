@@ -449,10 +449,9 @@ class DockerAPI extends Adapter
      * @param string &$stderr
      * @param array<string, string> $vars
      * @param int $timeout
-     * @param bool $detach
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1, bool $detach = false): bool
+    public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool
     {
         foreach ($vars as $key => &$value) {
             $key = $this->filterEnvKey($key);
@@ -462,8 +461,8 @@ class DockerAPI extends Adapter
         $body = [
             'Env' => \array_values($vars),
             'Cmd' => $command,
-            'AttachStdout' => !$detach,
-            'AttachStderr' => !$detach
+            'AttachStdout' => true,
+            'AttachStderr' => true
         ];
 
         $result = $this->call('http://localhost/containers/'.$name.'/exec', 'POST', json_encode($body), [
@@ -476,23 +475,6 @@ class DockerAPI extends Adapter
         }
 
         $parsedResponse = json_decode($result['response'], true);
-
-        if ($detach) {
-            $body = \json_encode([
-                'Detach' => true,
-            ]);
-    
-            $result = $this->call('http://localhost/exec/'.$parsedResponse['Id'].'/start', 'POST', $body, [
-                'Content-Type: application/json',
-                'Content-Length: ' . \strlen($body)
-            ]);
-
-            if ($result['code'] !== 200) {
-                throw new Orchestration('Failed to create execute command: '.$result['response'].' Response Code: '. $result['code']);
-            } else {
-                return true;
-            }
-        }
 
         $result = $this->streamCall('http://localhost/exec/'.$parsedResponse['Id'].'/start', $timeout);
 

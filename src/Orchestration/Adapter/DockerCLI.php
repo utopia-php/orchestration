@@ -230,7 +230,7 @@ class DockerCLI extends Adapter
             }
         }
 
-        $labelString = ' ';
+        $labelString = '';
 
         foreach ($vars as $key => &$value) {
             $key = $this->filterEnvKey($key);
@@ -239,23 +239,32 @@ class DockerCLI extends Adapter
             $value = "--env {$key}={$value}";
         }
 
+        $volumeString = '';
+        foreach ($volumes as $volume) {
+            // $volume = \escapeshellarg($volume);
+
+            $volumeString = $volumeString . '--volume ' . $volume;
+        }
+
         $time = time();
+
         $result = Console::execute("docker run ".
-            " -d".
-            (empty($entrypoint) ? "" : " --entrypoint=\"{$entrypoint}\"").
-            (empty($this->cpus) ? "" : (" --cpus=".$this->cpus)).
-            (empty($this->memory) ? "" : (" --memory=".$this->memory."m")).
-            (empty($this->swap) ? "" : (" --memory-swap=".$this->swap."m")).
-            " --name={$name}".
-            " --label {$this->namespace}-type=runtime".
-            " --label {$this->namespace}-created={$time}".
-            (empty($mountFolder) ? "" : " --volume {$mountFolder}:/tmp:rw").
-            $labelString .
-            (empty($workdir) ? "" : " --workdir {$workdir}").
-            (empty($hostname) ? "" : " --hostname {$hostname}").
-            (empty($vars) ? "" : " ".\implode(" ", $vars)).
-            " {$image}".
-            (empty($command) ? "" : " ".implode(" ", $command))
+        " -d".
+        (empty($entrypoint) ? "" : " --entrypoint=\"{$entrypoint}\"").
+        (empty($this->cpus) ? "" : (" --cpus=".$this->cpus)).
+        (empty($this->memory) ? "" : (" --memory=".$this->memory."m")).
+        (empty($this->swap) ? "" : (" --memory-swap=".$this->swap."m")).
+        " --name={$name}".
+        " --label {$this->namespace}-type=runtime".
+        " --label {$this->namespace}-created={$time}".
+        (empty($mountFolder) ? "" : " --volume {$mountFolder}:/tmp:rw").
+        (empty($volumeString) ? "" : " ".$volumeString).
+        (empty($labelString) ? "" : " ".$labelString) .
+        (empty($workdir) ? "" : " --workdir {$workdir}").
+        (empty($hostname) ? "" : " --hostname {$hostname}").
+        (empty($vars) ? "" : " ".\implode(" ", $vars)).
+        " {$image}".
+        (empty($command) ? "" : " ".implode(" ", $command))
             , '', $stdout, $stderr, 30);
 
         if (!empty($stderr) || $result !== 0) {
@@ -274,10 +283,9 @@ class DockerCLI extends Adapter
      * @param string &$stderr
      * @param array<string, string> $vars
      * @param int $timeout
-     * @param bool $detach
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1, bool $detach = false): bool
+    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
     {
         foreach ($command as &$value) {
             if (str_contains($value, " ")) {
@@ -292,7 +300,7 @@ class DockerCLI extends Adapter
             $value = "--env {$key}={$value}";
         }
 
-        $result = Console::execute("docker exec ".($detach ? '--detach ' : '').\implode(" ", $vars)." {$name} ".implode(" ", $command)
+        $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)
             , '', $stdout, $stderr, $timeout);
 
         if ($result !== 0) {

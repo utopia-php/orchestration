@@ -60,7 +60,9 @@ abstract class Base extends TestCase
             ],
             '',
             '/usr/local/src/',
-            [],
+            [
+                __DIR__ . '/Resources:/test:rw'
+            ],
             [],
             __DIR__ . '/Resources'
         );
@@ -202,31 +204,22 @@ abstract class Base extends TestCase
      * @return void
      * @depends testExecContainer
      */
-    public function testExecWithDetach(): void
+    public function testCheckVolume(): void
     {
         $stdout = '';
         $stderr = '';
 
-        $startTime = time();
-
         $response = static::getOrchestration()->execute(
-            name: 'TestContainer',
-            command: [
-                'sleep',
-                '20'
+            'TestContainer',
+            [
+                'cat',
+                '/test/testfile.txt'
             ],
-            stdout: $stdout,
-            stderr: $stderr,
-            vars: [
-                'test' => 'testEnviromentVariable'
-            ],
-            timeout: 10,
-            detach: true
+            $stdout,
+            $stderr
         );
 
-        $endTime = time();
-
-        $this->assertEquals(true, ($endTime - $startTime) < 20);
+        $this->assertEquals('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper.', $stdout);
     }
 
     /**

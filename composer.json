@@ -11,12 +11,6 @@
             "email": "eldad@appwrite.io"
         }
     ],
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/PineappleIOnic/cli.git"
-        }
-    ],
     "autoload": {
         "psr-4": {"Utopia\\Orchestration\\": "src/Orchestration"}
     },
@@ -25,7 +19,7 @@
     },
     "require": {
         "php": ">=8.0",
-        "utopia-php/cli": "dev-master"
+        "utopia-php/cli": "0.11.*"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.3",

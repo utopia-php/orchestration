@@ -296,7 +296,7 @@ class DockerCLI extends Adapter
             , '', $stdout, $stderr, $timeout);
 
         if ($result !== 0) {
-            if ($result == 1) {
+            if ($result == 124) {
                 throw new Timeout("Command timed out");
             } else {
                 throw new Orchestration("Docker Error: {$stderr}");

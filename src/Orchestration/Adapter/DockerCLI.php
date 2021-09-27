@@ -170,6 +170,10 @@ class DockerCLI extends Adapter
 
         $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"'.$filterString, '', $stdout, $stderr);
 
+        if ($result == -1) {
+            return [];
+        }
+
         if ($result !== 0) {
             throw new Orchestration("Docker Error: {$stderr}");
         }

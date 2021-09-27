@@ -232,6 +232,10 @@ class DockerCLI extends Adapter
 
         $labelString = '';
 
+        foreach ($labels as $labelKey => $label) {
+            $labelString = $labelString . ' --label '.$labelKey.'='.$label;
+        }
+
         foreach ($vars as $key => &$value) {
             $key = $this->filterEnvKey($key);
 

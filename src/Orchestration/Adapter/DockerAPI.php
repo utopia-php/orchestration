@@ -113,6 +113,7 @@ class DockerAPI extends Adapter
         $headers = [
             'Content-Type: application/json',
             'Content-Length: 2',
+            'host: null'
         ];
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 

@@ -233,6 +233,13 @@ class DockerCLI extends Adapter
         $labelString = '';
 
         foreach ($labels as $labelKey => $label) {
+            // sanitize label
+            $label = str_replace("'", '', $label);
+
+            if (str_contains($label, " ")) {
+                $label = "'".$label."'";
+            }
+
             $labelString = $labelString . ' --label '.$labelKey.'='.$label;
         }
 

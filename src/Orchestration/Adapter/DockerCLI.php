@@ -254,7 +254,6 @@ class DockerCLI extends Adapter
 
         $volumeString = '';
         foreach ($volumes as $volume) {
-            // $volume = \escapeshellarg($volume);
 
             $volumeString = $volumeString . '--volume ' . $volume . " ";
         }

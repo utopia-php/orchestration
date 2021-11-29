@@ -224,9 +224,9 @@ class DockerCLI extends Adapter
         $stdout = '';
         $stderr = '';
 
-        foreach ($command as &$value) {
+        foreach ($command as $key => $value) {
             if (str_contains($value, " ")) {
-                $value = "'".$value."'";
+                $command[$key] = "'".$value."'";
             }
         }
 
@@ -243,11 +243,13 @@ class DockerCLI extends Adapter
             $labelString = $labelString . ' --label '.$labelKey.'='.$label;
         }
 
-        foreach ($vars as $key => &$value) {
+        $parsedVariables = [];
+
+        foreach ($vars as $key => $value) {
             $key = $this->filterEnvKey($key);
 
             $value = \escapeshellarg((empty($value)) ? '' : $value);
-            $value = "--env {$key}={$value}";
+            $parsedVariables[$key] = "--env {$key}={$value}";
         }
 
         $volumeString = '';
@@ -256,6 +258,8 @@ class DockerCLI extends Adapter
 
             $volumeString = $volumeString . '--volume ' . $volume . " ";
         }
+
+        $vars = $parsedVariables;
 
         $time = time();
 
@@ -298,18 +302,22 @@ class DockerCLI extends Adapter
      */
     public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
     {
-        foreach ($command as &$value) {
+        foreach ($command as $key => $value) {
             if (str_contains($value, " ")) {
-                $value = "'".$value."'";
+                $command[$key] = "'".$value."'";
             }
         }
 
-        foreach ($vars as $key => &$value) {
+        $parsedVariables = [];
+
+        foreach ($vars as $key => $value) {
             $key = $this->filterEnvKey($key);
 
             $value = \escapeshellarg((empty($value)) ? '' : $value);
-            $value = "--env {$key}={$value}";
+            $parsedVariables[$key] = "--env {$key}={$value}";
         }
+
+        $vars = $parsedVariables;
 
         $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)
             , '', $stdout, $stderr, $timeout);

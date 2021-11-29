@@ -390,10 +390,14 @@ class DockerAPI extends Adapter
      */
     public function run(string $image, string $name, array $command = [], string $entrypoint = '', string $workdir = '', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = [], string $hostname = ''): string
     {
-        foreach ($vars as $key => &$value) {
+        $parsedVariables = [];
+
+        foreach ($vars as $key => $value) {
             $key = $this->filterEnvKey($key);
-            $value = $key.'='.$value;
+            $parsedVariables[$key] = $key.'='.$value;
         }
+
+        $vars = $parsedVariables;
 
         $body = [
             'Hostname' => $hostname,
@@ -454,10 +458,14 @@ class DockerAPI extends Adapter
      */
     public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool
     {
-        foreach ($vars as $key => &$value) {
+        $parsedVariables = [];
+
+        foreach ($vars as $key => $value) {
             $key = $this->filterEnvKey($key);
-            $value = $key.'='.$value;
+            $parsedVariables[$key] = $key.'='.$value;
         }
+
+        $vars = $parsedVariables;
 
         $body = [
             'Env' => \array_values($vars),

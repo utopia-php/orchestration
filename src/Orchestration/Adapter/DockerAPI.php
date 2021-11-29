@@ -490,25 +490,6 @@ class DockerAPI extends Adapter
     }
 
     /**
-     * Get Execution Exit Code
-     *
-     * @param string $id
-     * @return int
-    */
-    public function getExecExitCode(string $id): int
-    {
-        $result = $this->call('http://localhost/exec/'.$id.'/json', 'GET');
-
-        if ($result['code'] !== 200) {
-            throw new Orchestration('Failed to get execution exit code: '.$result['response'].' Response Code: '. $result['code']);
-        }
-
-        $parsedResponse = json_decode($result['response'], true);
-        
-        return $parsedResponse['ExitCode'];
-    }
-
-    /**
      * Remove Container
      *
      * @param string $name

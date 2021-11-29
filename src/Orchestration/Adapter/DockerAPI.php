@@ -248,7 +248,7 @@ class DockerAPI extends Adapter
     }
 
     /**
-     * Detach Network to Container
+     * Disconnect a container from a network
      * 
      * @param string $container
      * @param string $network

@@ -193,8 +193,7 @@ class Orchestration
         array $vars = [],
         string $mountFolder = '',
         array $labels = [],
-        string $hostname = ''): string
-    {
+        string $hostname = ''): string {
         return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname);
     }
 

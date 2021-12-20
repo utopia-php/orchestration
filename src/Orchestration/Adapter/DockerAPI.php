@@ -476,8 +476,7 @@ class DockerAPI extends Adapter
         string &$stdout,
         string &$stderr,
         array $vars = [],
-        int $timeout = -1): bool
-    {
+        int $timeout = -1): bool {
         $parsedVariables = [];
 
         foreach ($vars as $key => $value) {

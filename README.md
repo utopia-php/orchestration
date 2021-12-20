@@ -1,6 +1,6 @@
 # Utopia Orchestration
 
-[![Build Status](https://travis-ci.org/utopia-php/orchestration.svg?branch=master)](https://travis-ci.com/utopia-php/orchestration)
+[![Build Status](https://app.travis-ci.com/utopia-php/orchestration.svg?branch=main)](https://app.travis-ci.com/github/utopia-php/orchestration)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/orchestration.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 

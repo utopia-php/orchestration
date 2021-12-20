@@ -317,8 +317,7 @@ class DockerCLI extends Adapter
         string &$stdout = '',
         string &$stderr = '',
         array $vars = [],
-        int $timeout = -1): bool
-    {
+        int $timeout = -1): bool {
         foreach ($command as $key => $value) {
             if (str_contains($value, " ")) {
                 $command[$key] = "'".$value."'";

@@ -233,8 +233,7 @@ class DockerCLI extends Adapter
         array $vars = [],
         string $mountFolder = '',
         array $labels = [],
-        string $hostname = ''): string
-    {
+        string $hostname = ''): string {
         $stdout = '';
         $stderr = '';
 

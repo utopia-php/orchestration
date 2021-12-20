@@ -41,7 +41,8 @@ class Container {
      * 
      * @return string
      */
-    public function getName(): string {
+    public function getName(): string 
+    {
         return $this->name;
     }
 
@@ -50,7 +51,8 @@ class Container {
      * 
      * @return string
      */
-    public function getId(): string {
+    public function getId(): string 
+    {
         return $this->id;
     }
 
@@ -59,7 +61,8 @@ class Container {
      * 
      * @return string
      */
-    public function getStatus(): string {
+    public function getStatus(): string 
+    {
         return $this->status;
     }
 
@@ -68,7 +71,8 @@ class Container {
      *  
      * @return array<string, string>
      */
-    public function getLabels(): array {
+    public function getLabels(): array 
+    {
         return $this->labels;
     }
 
@@ -78,7 +82,8 @@ class Container {
      * @param string $name
      * @return $this
      */
-    public function setName(string $name): self {
+    public function setName(string $name): self 
+    {
         $this->name = $name;
         return $this;
     }
@@ -89,7 +94,8 @@ class Container {
      * @param string $id
      * @return $this
      */
-    public function setId(string $id): self {
+    public function setId(string $id): self 
+    {
         $this->id = $id;
         return $this;
     }
@@ -100,7 +106,8 @@ class Container {
      * @param string $status
      * @return $this
      */
-    public function setStatus(string $status): self {
+    public function setStatus(string $status): self 
+    {
         $this->status = $status;
         return $this;
     }
@@ -111,7 +118,8 @@ class Container {
      * @param array<string, string>  $labels
      * @return $this
      */
-    public function setLabels(array $labels): self {
+    public function setLabels(array $labels): self 
+    {
         $this->labels = $labels;
         return $this;
     }

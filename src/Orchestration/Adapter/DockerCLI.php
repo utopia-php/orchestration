@@ -73,7 +73,8 @@ class DockerCLI extends Adapter
      * 
      * @return bool
      */
-    public function networkConnect(string $container, string $network): bool {
+    public function networkConnect(string $container, string $network): bool 
+    {
         $stdout = '';
         $stderr = '';
         
@@ -91,7 +92,8 @@ class DockerCLI extends Adapter
      * 
      * @return bool
     */
-    public function networkDisconnect(string $container, string $network, bool $force = false): bool {
+    public function networkDisconnect(string $container, string $network, bool $force = false): bool 
+    {
         $stdout = '';
         $stderr = '';
 
@@ -222,7 +224,16 @@ class DockerCLI extends Adapter
      * 
      * @return string
      */
-    public function run(string $image, string $name, array $command = [], string $entrypoint = '', string $workdir = '', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = [], string $hostname = ''): string
+    public function run(string $image, 
+        string $name,
+        array $command = [],
+        string $entrypoint = '',
+        string $workdir = '',
+        array $volumes = [],
+        array $vars = [],
+        string $mountFolder = '',
+        array $labels = [],
+        string $hostname = ''): string
     {
         $stdout = '';
         $stderr = '';
@@ -302,7 +313,13 @@ class DockerCLI extends Adapter
      * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
+    public function execute(
+        string $name,
+        array $command,
+        string &$stdout = '',
+        string &$stderr = '',
+        array $vars = [],
+        int $timeout = -1): bool
     {
         foreach ($command as $key => $value) {
             if (str_contains($value, " ")) {

@@ -34,7 +34,8 @@ class Orchestration
      *
      * @return (false|string)[]
      */
-    public function parseCommandString(string $command): array {
+    public function parseCommandString(string $command): array 
+    {
         $currentPos = 0;
         $commandProcessed = [];
 
@@ -87,7 +88,8 @@ class Orchestration
      * 
      * @return bool
      */
-    public function createNetwork(string $name, bool $internal = false): bool {
+    public function createNetwork(string $name, bool $internal = false): bool 
+    {
         return $this->adapter->createNetwork($name, $internal);
     }
 
@@ -98,7 +100,8 @@ class Orchestration
      * 
      * @return bool
      */
-    public function removeNetwork(string $name): bool {
+    public function removeNetwork(string $name): bool 
+    {
         return $this->adapter->removeNetwork($name);
     }
 
@@ -107,7 +110,8 @@ class Orchestration
      * 
      * @return array
      */
-    public function listNetworks(): array {
+    public function listNetworks(): array 
+    {
         return $this->adapter->listNetworks();
     }
 
@@ -119,7 +123,8 @@ class Orchestration
      * 
      * @return bool
      */
-    public function networkConnect(string $container, string $network): bool {
+    public function networkConnect(string $container, string $network): bool 
+    {
         return $this->adapter->networkConnect($container, $network);
     }
 
@@ -132,7 +137,8 @@ class Orchestration
      * 
      * @return bool
      */
-    public function networkDisconnect(string $container, string $network, bool $force = false): bool {
+    public function networkDisconnect(string $container, string $network, bool $force = false): bool 
+    {
         return $this->adapter->networkDisconnect($container, $network, $force);
     }
 
@@ -177,7 +183,17 @@ class Orchestration
      * 
      * @return string
      */
-    public function run(string $image, string $name, array $command = [], string $entrypoint = '', string $workdir = '', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = [], string $hostname = ''): string
+    public function run(
+        string $image,
+        string $name,
+        array $command = [],
+        string $entrypoint = '',
+        string $workdir = '',
+        array $volumes = [],
+        array $vars = [],
+        string $mountFolder = '',
+        array $labels = [],
+        string $hostname = ''): string
     {
         return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname);
     }
@@ -193,7 +209,13 @@ class Orchestration
      * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool
+    public function execute(
+        string $name, 
+        array $command, 
+        string &$stdout, 
+        string &$stderr, 
+        array $vars = [], 
+        int $timeout = -1): bool
     {
         return $this->adapter->execute($name, $command, $stdout, $stderr, $vars, $timeout);
     }

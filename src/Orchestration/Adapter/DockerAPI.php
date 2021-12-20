@@ -187,7 +187,8 @@ class DockerAPI extends Adapter
      * 
      * @return bool
      */
-    public function createNetwork(string $name, bool $internal = false): bool {
+    public function createNetwork(string $name, bool $internal = false): bool 
+    {
         $body = \json_encode([
             'Name' => $name,
             "Internal" => $internal
@@ -212,7 +213,8 @@ class DockerAPI extends Adapter
      * 
      * @return bool
      */
-    public function removeNetwork(string $name): bool {
+    public function removeNetwork(string $name): bool 
+    {
         $result = $this->call('http://localhost/networks/' . $name, 'DELETE');
 
         if ($result['code'] != 204) {
@@ -230,7 +232,8 @@ class DockerAPI extends Adapter
      * 
      * @return bool
      */
-    public function networkConnect(string $container, string $network): bool {
+    public function networkConnect(string $container, string $network): bool 
+    {
         $body = \json_encode([
             'Container' => $container,
         ]);
@@ -280,7 +283,8 @@ class DockerAPI extends Adapter
      * 
      * @return array
      */
-    public function listNetworks(): array {
+    public function listNetworks(): array 
+    {
         $result = $this->call('http://localhost/networks', 'GET');
 
         $list = [];
@@ -388,7 +392,17 @@ class DockerAPI extends Adapter
      * 
      * @return string
      */
-    public function run(string $image, string $name, array $command = [], string $entrypoint = '', string $workdir = '', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = [], string $hostname = ''): string
+    public function run(
+        string $image,
+        string $name,
+        array $command = [],
+        string $entrypoint = '',
+        string $workdir = '',
+        array $volumes = [],
+        array $vars = [],
+        string $mountFolder = '',
+        array $labels = [],
+        string $hostname = ''): string
     {
         $parsedVariables = [];
 
@@ -456,7 +470,13 @@ class DockerAPI extends Adapter
      * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool
+    public function execute(
+        string $name,
+        array $command,
+        string &$stdout,
+        string &$stderr,
+        array $vars = [],
+        int $timeout = -1): bool
     {
         $parsedVariables = [];
 

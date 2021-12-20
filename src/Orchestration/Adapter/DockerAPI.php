@@ -402,7 +402,8 @@ class DockerAPI extends Adapter
         array $vars = [],
         string $mountFolder = '',
         array $labels = [],
-        string $hostname = ''): string {
+        string $hostname = ''
+    ): string {
         $parsedVariables = [];
 
         foreach ($vars as $key => $value) {
@@ -475,7 +476,8 @@ class DockerAPI extends Adapter
         string &$stdout,
         string &$stderr,
         array $vars = [],
-        int $timeout = -1): bool {
+        int $timeout = -1
+    ): bool {
         $parsedVariables = [];
 
         foreach ($vars as $key => $value) {

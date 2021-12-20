@@ -37,6 +37,52 @@ abstract class Adapter
     }
 
     /**
+     * Create Network
+     * 
+     * @param string $name
+     * 
+     * @return bool
+     */
+    abstract public function createNetwork(string $name, bool $internal = false): bool;
+
+    /**
+     * Remove Network
+     * 
+     * @param string $name
+     * 
+     * @return bool
+     */
+    abstract public function removeNetwork(string $name): bool;
+
+    /**
+     * Connect a container to a network
+     * 
+     * @param string $container
+     * @param string $network
+     * 
+     * @return bool
+     */
+    abstract public function networkConnect(string $container, string $network): bool;
+
+    /**
+     * Disconnect a container from a network
+     * 
+     * @param string $container
+     * @param string $network
+     * @param bool $force
+     * 
+     * @return bool
+     */
+    abstract public function networkDisconnect(string $container, string $network, bool $force = false): bool;
+
+    /**
+     * List Networks
+     * 
+     * @return array
+     */
+    abstract public function listNetworks(): array;
+
+    /**
      * Pull Image
      * 
      * @param string $image
@@ -67,10 +113,21 @@ abstract class Adapter
      * @param string[] $volumes
      * @param array<string, string> $vars
      * @param string $mountFolder
+     * @param string $hostname
      * 
      * @return string
      */
-    abstract public function run(string $image, string $name, array $command, string $entrypoint = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string;
+    abstract public function run(
+        string $image,
+        string $name,
+        array $command = [],
+        string $entrypoint = '',
+        string $workdir = '',
+        array $volumes = [],
+        array $vars = [],
+        string $mountFolder = '',
+        array $labels = [],
+        string $hostname = ''): string;
 
     /**
      * Execute Container

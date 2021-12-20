@@ -7,6 +7,7 @@ use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
 use Utopia\Orchestration\Exception\Orchestration;
 use Utopia\Orchestration\Exception\Timeout;
+use Utopia\Orchestration\Network;
 
 class DockerCLI extends Adapter
 {
@@ -29,6 +30,111 @@ class DockerCLI extends Adapter
         }
     }
 
+    /**
+     * Create Network
+     * 
+     * @param string $name
+     * @param bool $internal
+     * 
+     * @return bool
+     */
+    public function createNetwork(string $name, bool $internal = false): bool
+    {
+        $stdout = '';
+        $stderr = '';
+
+        $result = Console::execute('docker network create '.$name . ($internal ? '--internal' : ''), '', $stdout, $stderr);
+        
+        return $result === 0;
+    }
+
+    /**
+     * Remove Network
+     * 
+     * @param string $name
+     * 
+     * @return bool
+     */
+    public function removeNetwork(string $name): bool
+    {
+        $stdout = '';
+        $stderr = '';
+        
+        $result = Console::execute('docker network rm '.$name, '', $stdout, $stderr);
+
+        return $result === 0;
+    }
+
+    /**
+     * Connect a container to a network
+     * 
+     * @param string $container
+     * @param string $network
+     * 
+     * @return bool
+     */
+    public function networkConnect(string $container, string $network): bool 
+    {
+        $stdout = '';
+        $stderr = '';
+        
+        $result = Console::execute('docker network connect '.$network . ' ' . $container, '', $stdout, $stderr);
+
+        return $result === 0;
+    }
+
+    /**
+     * Disconnect a container from a network
+     * 
+     * @param string $container
+     * @param string $network
+     * @param bool $force
+     * 
+     * @return bool
+    */
+    public function networkDisconnect(string $container, string $network, bool $force = false): bool 
+    {
+        $stdout = '';
+        $stderr = '';
+
+        $result = Console::execute('docker network disconnect '.$network . ' ' . $container . ($force ? ' --force' : ''), '', $stdout, $stderr);
+
+        return $result === 0;
+    }
+
+    /**
+     * List Networks
+     * 
+     * @return array
+     */
+    public function listNetworks(): array
+    {
+        $stdout = '';
+        $stderr = '';
+        
+        $result = Console::execute('docker network ls --format "id={{.ID}}&name={{.Name}}&driver={{.Driver}}&scope={{.Scope}}"', '', $stdout, $stderr);
+
+        if($result !== 0) {
+            throw new Orchestration("Docker Error: {$stderr}");
+        }
+
+        $list = [];
+        $stdoutArray = \explode("\n", $stdout);
+
+        foreach($stdoutArray as $value) {
+            $network = [];
+        
+            \parse_str($value, $network);
+        
+            if(isset($network['name'])) {
+                $parsedNetwork = new Network($network['name'], $network['id'], $network['driver'], $network['scope']);
+            
+                array_push($list, $parsedNetwork);
+            }
+        }
+
+        return $list;
+    }
 
     /**
      * Pull Image
@@ -66,7 +172,7 @@ class DockerCLI extends Adapter
 
         $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"'.$filterString, '', $stdout, $stderr);
 
-        if ($result !== 0) {
+        if ($result !== 0 && $result !== -1) {
             throw new Orchestration("Docker Error: {$stderr}");
         }
 
@@ -82,6 +188,9 @@ class DockerCLI extends Adapter
                 $labelsParsed = [];
 
                 foreach (\explode(',', $container['labels']) as $value) {
+                    if (is_array($value)) {
+                        $value = implode('', $value);
+                    }
                     $value = \explode('=', $value);
 
                     if(isset($value[0]) && isset($value[1])) {
@@ -115,8 +224,17 @@ class DockerCLI extends Adapter
      * 
      * @return string
      */
-    public function run(string $image, string $name, array $command, string $entrypoint = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
-    {
+    public function run(string $image, 
+        string $name,
+        array $command = [],
+        string $entrypoint = '',
+        string $workdir = '',
+        array $volumes = [],
+        array $vars = [],
+        string $mountFolder = '',
+        array $labels = [],
+        string $hostname = ''
+    ): string {
         $stdout = '';
         $stderr = '';
 
@@ -126,7 +244,18 @@ class DockerCLI extends Adapter
             }
         }
 
-        $labelString = ' ';
+        $labelString = '';
+
+        foreach ($labels as $labelKey => $label) {
+            // sanitize label
+            $label = str_replace("'", '', $label);
+
+            if (str_contains($label, " ")) {
+                $label = "'".$label."'";
+            }
+
+            $labelString = $labelString . ' --label '.$labelKey.'='.$label;
+        }
 
         $parsedVariables = [];
 
@@ -137,24 +266,32 @@ class DockerCLI extends Adapter
             $parsedVariables[$key] = "--env {$key}={$value}";
         }
 
+        $volumeString = '';
+        foreach ($volumes as $volume) {
+            $volumeString = $volumeString . '--volume ' . $volume . " ";
+        }
+
         $vars = $parsedVariables;
 
         $time = time();
+
         $result = Console::execute("docker run ".
-            " -d".
-            " --entrypoint=\"{$entrypoint}\"".
-            (empty($this->cpus) ? "" : (" --cpus=".$this->cpus)).
-            (empty($this->memory) ? "" : (" --memory=".$this->memory."m")).
-            (empty($this->swap) ? "" : (" --memory-swap=".$this->swap."m")).
-            " --name={$name}".
-            " --label {$this->namespace}-type=runtime".
-            " --label {$this->namespace}-created={$time}".
-            " --volume {$mountFolder}:/tmp:rw".
-            $labelString .
-            " --workdir {$workdir}".
-            " ".\implode(" ", $vars).
-            " {$image}".
-            " ".implode(" ", $command)
+        " -d".
+        (empty($entrypoint) ? "" : " --entrypoint=\"{$entrypoint}\"").
+        (empty($this->cpus) ? "" : (" --cpus=".$this->cpus)).
+        (empty($this->memory) ? "" : (" --memory=".$this->memory."m")).
+        (empty($this->swap) ? "" : (" --memory-swap=".$this->swap."m")).
+        " --name={$name}".
+        " --label {$this->namespace}-type=runtime".
+        " --label {$this->namespace}-created={$time}".
+        (empty($mountFolder) ? "" : " --volume {$mountFolder}:/tmp:rw").
+        (empty($volumeString) ? "" : " ".$volumeString).
+        (empty($labelString) ? "" : " ".$labelString) .
+        (empty($workdir) ? "" : " --workdir {$workdir}").
+        (empty($hostname) ? "" : " --hostname {$hostname}").
+        (empty($vars) ? "" : " ".\implode(" ", $vars)).
+        " {$image}".
+        (empty($command) ? "" : " ".implode(" ", $command))
             , '', $stdout, $stderr, 30);
 
         if (!empty($stderr) || $result !== 0) {
@@ -175,8 +312,14 @@ class DockerCLI extends Adapter
      * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout = '', string &$stderr = '', array $vars = [], int $timeout = -1): bool
-    {
+    public function execute(
+        string $name,
+        array $command,
+        string &$stdout = '',
+        string &$stderr = '',
+        array $vars = [],
+        int $timeout = -1
+    ): bool {
         foreach ($command as $key => $value) {
             if (str_contains($value, " ")) {
                 $command[$key] = "'".$value."'";
@@ -196,9 +339,9 @@ class DockerCLI extends Adapter
 
         $result = Console::execute("docker exec ".\implode(" ", $vars)." {$name} ".implode(" ", $command)
             , '', $stdout, $stderr, $timeout);
-            
+
         if ($result !== 0) {
-            if ($result == 1) {
+            if ($result == 124) {
                 throw new Timeout("Command timed out");
             } else {
                 throw new Orchestration("Docker Error: {$stderr}");

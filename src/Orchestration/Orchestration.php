@@ -34,7 +34,8 @@ class Orchestration
      *
      * @return (false|string)[]
      */
-    public function parseCommandString(string $command): array {
+    public function parseCommandString(string $command): array 
+    {
         $currentPos = 0;
         $commandProcessed = [];
 
@@ -78,6 +79,69 @@ class Orchestration
         return $commandProcessed;
     }
 
+
+    /**
+     * Create Network
+     * 
+     * @param string $name
+     * @param bool $internal
+     * 
+     * @return bool
+     */
+    public function createNetwork(string $name, bool $internal = false): bool 
+    {
+        return $this->adapter->createNetwork($name, $internal);
+    }
+
+    /**
+     * Remove Network
+     * 
+     * @param string $name
+     * 
+     * @return bool
+     */
+    public function removeNetwork(string $name): bool 
+    {
+        return $this->adapter->removeNetwork($name);
+    }
+
+    /**
+     * List Networks
+     * 
+     * @return array
+     */
+    public function listNetworks(): array 
+    {
+        return $this->adapter->listNetworks();
+    }
+
+    /**
+     * Connect a container to a network
+     * 
+     * @param string $container
+     * @param string $network
+     * 
+     * @return bool
+     */
+    public function networkConnect(string $container, string $network): bool 
+    {
+        return $this->adapter->networkConnect($container, $network);
+    }
+
+    /**
+     * Disconnect a container from a network
+     * 
+     * @param string $container
+     * @param string $network
+     * @param bool $force
+     * 
+     * @return bool
+     */
+    public function networkDisconnect(string $container, string $network, bool $force = false): bool 
+    {
+        return $this->adapter->networkDisconnect($container, $network, $force);
+    }
+
     /**
      * Pull Image
      * 
@@ -115,12 +179,23 @@ class Orchestration
      * @param string[] $volumes
      * @param array<string, string> $vars
      * @param string $mountFolder
+     * @param string $hostname
      * 
      * @return string
      */
-    public function run(string $image, string $name, array $command, string $entrypoint = '', string $workdir = '/', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = []): string
-    {
-        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels);
+    public function run(
+        string $image,
+        string $name,
+        array $command = [],
+        string $entrypoint = '',
+        string $workdir = '',
+        array $volumes = [],
+        array $vars = [],
+        string $mountFolder = '',
+        array $labels = [],
+        string $hostname = ''
+    ): string {
+        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname);
     }
 
     /**
@@ -134,8 +209,14 @@ class Orchestration
      * @param int $timeout
      * @return bool
      */
-    public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool
-    {
+    public function execute(
+        string $name, 
+        array $command, 
+        string &$stdout, 
+        string &$stderr, 
+        array $vars = [], 
+        int $timeout = -1
+    ): bool {
         return $this->adapter->execute($name, $command, $stdout, $stderr, $vars, $timeout);
     }
     

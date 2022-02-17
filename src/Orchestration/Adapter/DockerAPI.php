@@ -402,7 +402,8 @@ class DockerAPI extends Adapter
         array $vars = [],
         string $mountFolder = '',
         array $labels = [],
-        string $hostname = ''
+        string $hostname = '',
+        bool $remove = false
     ): string {
         $parsedVariables = [];
 

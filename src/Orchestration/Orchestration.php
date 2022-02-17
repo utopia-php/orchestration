@@ -180,6 +180,7 @@ class Orchestration
      * @param array<string, string> $vars
      * @param string $mountFolder
      * @param string $hostname
+     * @param bool $remove
      * 
      * @return string
      */
@@ -193,9 +194,10 @@ class Orchestration
         array $vars = [],
         string $mountFolder = '',
         array $labels = [],
-        string $hostname = ''
+        string $hostname = '',
+        bool $remove = false
     ): string {
-        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname);
+        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname, $remove);
     }
 
     /**

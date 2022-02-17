@@ -114,6 +114,7 @@ abstract class Adapter
      * @param array<string, string> $vars
      * @param string $mountFolder
      * @param string $hostname
+     * @param bool $remove
      * 
      * @return string
      */
@@ -127,7 +128,8 @@ abstract class Adapter
         array $vars = [],
         string $mountFolder = '',
         array $labels = [],
-        string $hostname = ''): string;
+        string $hostname = '',
+        bool $remove = false): string;
 
     /**
      * Execute Container

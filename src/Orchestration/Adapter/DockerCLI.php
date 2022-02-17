@@ -233,7 +233,8 @@ class DockerCLI extends Adapter
         array $vars = [],
         string $mountFolder = '',
         array $labels = [],
-        string $hostname = ''
+        string $hostname = '',
+        bool $remove = false
     ): string {
         $stdout = '';
         $stderr = '';
@@ -275,8 +276,9 @@ class DockerCLI extends Adapter
 
         $time = time();
 
-        $result = Console::execute("docker run ".
+        $result = Console::execute("docker run".
         " -d".
+        ($remove ? " --rm" : "").
         (empty($entrypoint) ? "" : " --entrypoint=\"{$entrypoint}\"").
         (empty($this->cpus) ? "" : (" --cpus=".$this->cpus)).
         (empty($this->memory) ? "" : (" --memory=".$this->memory."m")).

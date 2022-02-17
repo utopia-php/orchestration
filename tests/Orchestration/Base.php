@@ -408,4 +408,41 @@ abstract class Base extends TestCase
 
         $test = static::getOrchestration()->parseCommandString("sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null");
     }
+
+    public function testRunRemove():void
+    {
+        /**
+         * Test for success
+         */
+        $response = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            'TestContainerRM',
+            [
+                'sh',
+                '-c',
+                'echo Hello World!'
+            ],
+            '',
+            '/usr/local/src/',
+            [],
+            [
+                'teasdsa' => '',
+            ],
+            __DIR__ . '/Resources',
+            [
+                'test2' => 'Hello World!'
+            ],
+            '',
+            true
+        );
+
+        $this->assertNotEmpty($response);
+
+        sleep(1);
+
+        // Check if container exists
+        $statusResponse = static::getOrchestration()->list(['id' => $response]);
+
+        $this->assertEquals(0, count($statusResponse));
+    }
 }

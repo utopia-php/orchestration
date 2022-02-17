@@ -427,7 +427,8 @@ class DockerAPI extends Adapter
                 'CpuQuota' => floatval($this->cpus) * 100000,
                 'CpuPeriod' => 100000,
                 'Memory' => intval($this->memory) * 1e+6, // Convert into bytes
-                'MemorySwap' => intval($this->swap) * 1e+6 // Convert into bytes
+                'MemorySwap' => intval($this->swap) * 1e+6, // Convert into bytes
+                'AutoRemove' => $remove
             ],
         ];
 

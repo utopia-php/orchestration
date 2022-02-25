@@ -296,7 +296,7 @@ class DockerCLI extends Adapter
         (empty($command) ? "" : " ".implode(" ", $command))
             , '', $stdout, $stderr, 30);
 
-        if (!empty($stderr) || $result !== 0) {
+        if ((!empty($stderr) && $stderr !== 'WARNING: Your kernel does not support swap limit capabilities or the cgroup is not mounted. Memory limited without swap.') || $result !== 0) {
             throw new Orchestration("Docker Error: {$stderr}");
         }
 

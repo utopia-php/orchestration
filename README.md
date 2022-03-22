@@ -327,7 +327,7 @@ Once you have initialised your Orchestration object the following methods can be
 
     </details>
 
-- ### Disconnect a container from a network
+- ### Disconnect a container from a network
 
     This method disconnects a container from a network and returns a boolean value indicating if the removal was successful.
 

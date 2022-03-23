@@ -57,7 +57,7 @@ $orchestration->remove($containerID, true);
 
 ### Initialisation
 
-There are currently two orchestrator adapters available and each of them have slightly different parameters:
+There are currently two orchestrator adapters available and each of them has slightly different parameters:
 
 - ### DockerAPI
     Directly communicates to the Docker Daemon using the Docker UNIX socket.

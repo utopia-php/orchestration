@@ -49,7 +49,7 @@ $stderr = '';
 $stdout = '';
 
 // Execute a hello world command in the container
-$orchestration->execute($containerID, ['echo', 'Hello World!'], $stderr, $stdout);
+$orchestration->execute($containerID, ['echo', 'Hello World!'], $stdout, $stderr);
 
 // Remove the container forcefully since it's still running.
 $orchestration->remove($containerID, true);

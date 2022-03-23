@@ -296,7 +296,7 @@ class DockerCLI extends Adapter
         (empty($command) ? "" : " ".implode(" ", $command))
             , '', $stdout, $stderr, 30);
 
-        if (!empty($stderr) || $result !== 0) {
+        if ($result !== 0) {
             throw new Orchestration("Docker Error: {$stderr}");
         }
 

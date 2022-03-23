@@ -33,6 +33,8 @@ use Utopia\Orchestration\Orchestration;
 ```php
 <?php
 
+require_once 'vendor/autoload.php';
+
 use Utopia\Orchestration\Orchestration;
 use Utopia\Orchestration\Adapter\DockerCLI;
 

@@ -133,7 +133,7 @@ Once you have initialised your Orchestration object the following methods can be
 
     - `name` [String] [Required]
 
-        The Name given to the container.
+        The name given to the container.
 
     - `command` [Array]
 

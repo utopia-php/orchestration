@@ -34,7 +34,7 @@ use Utopia\Orchestration\Orchestration;
 <?php
 
 use Utopia\Orchestration\Orchestration;
-use Utopia\Orchestration\Adapter\DockerAPI;
+use Utopia\Orchestration\Adapter\DockerCLI;
 
 // Initialise Orchestration with Docker API adapter.
 $orchestration = new Orchestration(new DockerAPI());

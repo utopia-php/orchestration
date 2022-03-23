@@ -28,6 +28,33 @@ use Utopia\Orchestration\Orchestration;
 ```
 
 ## Usage
+
+### Example
+```php
+<?php
+
+use Utopia\Orchestration\Orchestration;
+use Utopia\Orchestration\Adapter\DockerAPI;
+
+// Initialise Orchestration with Docker API adapter.
+$orchestration = new Orchestration(new DockerAPI());
+
+// Pull the image.
+$orchestration->pull('ubuntu:latest');
+
+// Launch a ubuntu container that doesn't end using the tail command.
+$containerID = $orchestration->run('ubuntu:latest', 'testContainer', ['tail', '-f', '/dev/null']);
+
+$stderr = '';
+$stdout = '';
+
+// Execute a hello world command in the container
+$orchestration->execute($containerID, ['echo', 'Hello World!'], $stderr, $stdout);
+
+// Remove the container forcefully since it's still running.
+$orchestration->remove($containerID, true);
+```
+
 ### Initialisation
 
 There are currently two orchestrator adapters available and each of them have slightly different parameters:

@@ -244,7 +244,7 @@ Once you have initialised your Orchestration object the following methods can be
 
     - `force` [Boolean]
 
-        Whether to force remove the container.
+        Whether to remove the container forcefully.
 
     </details>
 

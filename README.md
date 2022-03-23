@@ -378,7 +378,7 @@ Once you have initialised your Orchestration object the following methods can be
 
     - `force` [Boolean]
 
-        Whether to force disconnect the container.
+        Whether to disconnect the container forcefully.
 
     </details>
 

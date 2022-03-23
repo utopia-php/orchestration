@@ -36,8 +36,8 @@ use Utopia\Orchestration\Orchestration;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Orchestration\Adapter\DockerCLI;
 
-// Initialise Orchestration with Docker API adapter.
-$orchestration = new Orchestration(new DockerAPI());
+// Initialise Orchestration with Docker CLI adapter.
+$orchestration = new Orchestration(new DockerCLI());
 
 // Pull the image.
 $orchestration->pull('ubuntu:latest');

@@ -176,7 +176,7 @@ Once you have initialised your Orchestration object the following methods can be
 
 - ### Executing a command in a running container
 
-    This method executes a command in a already running container and returns a boolean value indicating if the command was executed successfully.
+    This method executes a command in an already running container and returns a boolean value indicating if the command was executed successfully.
 
     ```php
     $stdout = '';

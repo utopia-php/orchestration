@@ -15,20 +15,6 @@ Install using composer:
 composer require utopia-php/orchestration
 ```
 
-Init in your application:
-```php
-<?php
-
-require_once __DIR__ . '/../../vendor/autoload.php';
-
-use Utopia\Orchestration\Orchestration;
-
-// Init
-
-```
-
-## Usage
-
 ### Example
 ```php
 <?php
@@ -56,6 +42,8 @@ $orchestration->execute($containerID, ['echo', 'Hello World!'], $stdout, $stderr
 // Remove the container forcefully since it's still running.
 $orchestration->remove($containerID, true);
 ```
+
+## Usage
 
 ### Initialisation
 

@@ -103,7 +103,7 @@ Once you have initialised your Orchestration object the following methods can be
     <br>
 
 - ### Running a container
-    This method creates and runs a new container, On success it will return a string containing the container ID. On failure it will throw an exception.
+    This method creates and runs a new container. On success, it will return a string containing the container ID. On failure, it will throw an exception.
 
     ```php
     $orchestration->run(

@@ -145,7 +145,7 @@ Once you have initialised your Orchestration object the following methods can be
 
     - `workdir` [String]
 
-        The default directory in the container commands will run in.
+        The default directory in which the container commands will run.
 
     - `volumes` [Array]
 

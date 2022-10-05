@@ -3,7 +3,6 @@
 namespace Utopia\Orchestration\Adapter;
 
 use CurlHandle;
-use Exception;
 use stdClass;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;

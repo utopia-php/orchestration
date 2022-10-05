@@ -2,7 +2,6 @@
 
 namespace Utopia\Orchestration\Adapter;
 
-use Exception;
 use Utopia\CLI\Console;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;

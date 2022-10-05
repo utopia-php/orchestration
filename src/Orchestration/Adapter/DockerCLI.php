@@ -2,6 +2,7 @@
 
 namespace Utopia\Orchestration\Adapter;
 
+use Exception;
 use Utopia\CLI\Console;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
@@ -100,6 +101,42 @@ class DockerCLI extends Adapter
         $result = Console::execute('docker network disconnect '.$network . ' ' . $container . ($force ? ' --force' : ''), '', $stdout, $stderr);
 
         return $result === 0;
+    }
+
+     /**
+     * Get usage stats of containers
+     * 
+     * @param string $container
+     * 
+     * @return array
+     */
+    public function getStats(string $container = null): array
+    {
+        $stats = [];
+
+        $stdout = '';
+        $stderr = '';
+
+        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream ' . $container, '', $stdout, $stderr);
+        
+        if($result !== 0) {
+            throw new Orchestration("Docker Error: {$stderr}");
+        }
+
+        $lines = \explode("\n", $stdout);
+
+        foreach($lines as $line) {
+            if(empty($line)) {
+                continue;
+            }
+
+            $stat = [];
+            \parse_str($line, $stat);
+
+            $stats[] = $stat;
+        }
+
+        return $stats;
     }
 
     /**

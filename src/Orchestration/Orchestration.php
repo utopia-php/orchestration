@@ -129,6 +129,18 @@ class Orchestration
     }
 
     /**
+     * Get usage stats of containers
+     * 
+     * @param string $container
+     * 
+     * @return array
+     */
+    public function getStats(string $container = null): array 
+    {
+        return $this->adapter->getStats($container);
+    }
+
+    /**
      * Disconnect a container from a network
      * 
      * @param string $container

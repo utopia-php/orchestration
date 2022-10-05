@@ -3,6 +3,7 @@
 namespace Utopia\Orchestration\Adapter;
 
 use CurlHandle;
+use Exception;
 use stdClass;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
@@ -276,6 +277,18 @@ class DockerAPI extends Adapter
         }
 
         return $result['code'] == 200;
+    }
+
+    /**
+     * Get usage stats of containers
+     * 
+     * @param string $container
+     * 
+     * @return array
+     */
+    public function getStats(string $container = null): array
+    {
+        throw new Exception("Method not implemented yet.");
     }
 
     /**

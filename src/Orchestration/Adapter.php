@@ -83,6 +83,15 @@ abstract class Adapter
     abstract public function listNetworks(): array;
 
     /**
+     * Get usage stats of containers
+     * 
+     * @param string $container
+     * 
+     * @return array
+     */
+    abstract public function getStats(string $container = null): array;
+
+    /**
      * Pull Image
      * 
      * @param string $image

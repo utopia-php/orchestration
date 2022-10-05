@@ -15,6 +15,11 @@ abstract class Base extends TestCase
     abstract static protected function getOrchestration(): Orchestration;
 
     /**
+     * @return string
+     */
+    abstract static protected function getAdapterName(): string;
+
+    /**
      * @var string
      */
     static $containerID;
@@ -444,5 +449,91 @@ abstract class Base extends TestCase
         $statusResponse = static::getOrchestration()->list(['id' => $response]);
 
         $this->assertEquals(0, count($statusResponse));
+    }
+
+    /**
+     * @return void
+     * @depends testPullImage
+     */
+    public function testUsageStats(): void {
+        // Skip tests for Docker CLI - not implemented yet
+        if (static::getAdapterName() === "Docker API") {
+            $this->assertTrue(true);
+            return;
+        }
+
+        /**
+         * Test for Success
+         */
+
+        $stats = static::getOrchestration()->getStats();
+        $this->assertCount(0, $stats);
+
+        $containerId1 = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            'UsageStats1',
+            [
+                'sh',
+                '-c',
+                'tail -f /dev/null'
+            ],
+        );
+
+        $this->assertNotEmpty($containerId1);
+
+        $containerId2 = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            'UsageStats2',
+            [
+                'sh',
+                '-c',
+                'tail -f /dev/null'
+            ],
+        );
+
+        $this->assertNotEmpty($containerId2);
+
+        $stats = static::getOrchestration()->getStats();
+
+        $this->assertCount(2, $stats);
+        $this->assertNotEmpty($stats[0]['id']);
+        $this->assertNotEmpty($stats[0]['name']);
+        $this->assertNotEmpty($stats[0]['cpu']);
+        $this->assertNotEmpty($stats[0]['memory']);
+        $this->assertNotEmpty($stats[0]['diskIO']);
+        $this->assertNotEmpty($stats[0]['memoryIO']);
+        $this->assertNotEmpty($stats[0]['networkIO']);
+
+        $stats1 = static::getOrchestration()->getStats($containerId1);
+        $stats2 = static::getOrchestration()->getStats($containerId2);
+
+        $statsName1 = static::getOrchestration()->getStats('UsageStats1');
+        $statsName2 = static::getOrchestration()->getStats('UsageStats2');
+
+        $this->assertEquals($statsName1[0]['id'], $stats1[0]['id']);
+        $this->assertEquals($statsName1[0]['name'], $stats1[0]['name']);
+        $this->assertEquals($statsName2[0]['name'], $stats2[0]['name']);
+        $this->assertEquals($statsName2[0]['name'], $stats2[0]['name']);
+
+        $this->assertEquals($stats[1]['id'], $stats1[0]['id']);
+        $this->assertEquals($stats[1]['name'], $stats1[0]['name']);
+        $this->assertEquals($stats[0]['id'], $stats2[0]['id']);
+        $this->assertEquals($stats[0]['name'], $stats2[0]['name']);
+
+        $response = static::getOrchestration()->remove('UsageStats1', true);
+
+        $this->assertEquals(true, $response);
+
+        $response = static::getOrchestration()->remove('UsageStats2', true);
+
+        $this->assertEquals(true, $response);
+
+        /**
+         * Test for Failure
+         */
+
+        $this->expectException(\Exception::class);
+
+        $stats = static::getOrchestration()->getStats("IDontExist");
     }
 }

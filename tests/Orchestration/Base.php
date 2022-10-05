@@ -456,12 +456,6 @@ abstract class Base extends TestCase
      * @depends testPullImage
      */
     public function testUsageStats(): void {
-        // Skip tests for Docker CLI - not implemented yet
-        if (static::getAdapterName() === "Docker API") {
-            $this->assertTrue(true);
-            return;
-        }
-
         /**
          * Test for Success
          */
@@ -477,6 +471,11 @@ abstract class Base extends TestCase
                 '-c',
                 'tail -f /dev/null'
             ],
+            '',
+            '/usr/local/src/',
+            [],
+            [],
+            __DIR__ . '/Resources',
         );
 
         $this->assertNotEmpty($containerId1);
@@ -496,13 +495,34 @@ abstract class Base extends TestCase
         $stats = static::getOrchestration()->getStats();
 
         $this->assertCount(2, $stats);
+
         $this->assertNotEmpty($stats[0]['id']);
-        $this->assertNotEmpty($stats[0]['name']);
-        $this->assertNotEmpty($stats[0]['cpu']);
-        $this->assertNotEmpty($stats[0]['memory']);
-        $this->assertNotEmpty($stats[0]['diskIO']);
-        $this->assertNotEmpty($stats[0]['memoryIO']);
-        $this->assertNotEmpty($stats[0]['networkIO']);
+        $this->assertEquals(64, \strlen($stats[0]['id']));
+
+        $this->assertEquals('UsageStats2', $stats[0]['name']);
+
+        $this->assertIsFloat($stats[0]['cpu']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]['cpu']);
+        $this->assertLessThanOrEqual(1, $stats[0]['cpu']);
+
+        $this->assertIsFloat($stats[0]['memory']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]['memory']);
+        $this->assertLessThanOrEqual(1, $stats[0]['memory']);
+
+        $this->assertIsNumeric($stats[0]['diskIO']['in']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]['diskIO']['in']);
+        $this->assertIsNumeric($stats[0]['diskIO']['out']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]['diskIO']['out']);
+
+        $this->assertIsNumeric($stats[0]['memoryIO']['in']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]['memoryIO']['in']);
+        $this->assertIsNumeric($stats[0]['memoryIO']['out']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]['memoryIO']['out']);
+
+        $this->assertIsNumeric($stats[0]['networkIO']['in']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]['networkIO']['in']);
+        $this->assertIsNumeric($stats[0]['networkIO']['out']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]['networkIO']['out']);
 
         $stats1 = static::getOrchestration()->getStats($containerId1);
         $stats2 = static::getOrchestration()->getStats($containerId2);

@@ -133,10 +133,59 @@ class DockerCLI extends Adapter
             $stat = [];
             \parse_str($line, $stat);
 
-            $stats[] = $stat;
+            $stats[] = [
+                'id' => $stat['id'],
+                'name' => $stat['name'],
+                'cpu' => \floatval(\rtrim($stat['cpu'], '%')), // Remove percentage symbol and parse to number
+                'memory' => empty($stat['memory']) ? 0 : \floatval(\rtrim($stat['memory'], '%')), // Remove percentage symbol and parse to number. Value is empty on Windows
+                'diskIO' => $this->parseIOStats($stat['diskIO']),
+                'memoryIO' => $this->parseIOStats($stat['memoryIO']),
+                'networkIO' => $this->parseIOStats($stat['networkIO']),
+            ];
         }
 
         return $stats;
+    }
+
+    private function parseIOStats(string $stats) {
+        $units = [
+            'B' => 1,
+            'KB' => 1000,
+            'MB' => 1000000,
+            'GB' => 1000000000,
+            'TB' => 1000000000000,
+
+            'KiB' => 1000,
+            'MiB' => 1000000,
+            'GiB' => 1000000000,
+            'TiB' => 1000000000000,
+        ];
+
+        [ $inStr, $outStr ] = \explode(' / ', $stats);
+
+        $inUnit = null;
+        $outUnit = null;
+
+        foreach ($units as $unit) {
+            if(\str_ends_with($inStr, $unit)) {
+                $inUnit = $unit;
+            } else if(\str_ends_with($outStr, $unit)) {
+                $outUnit = $unit;
+            }
+        }
+
+        $inMultiply = $inUnit === null ? 1 : $units[$inUnit];
+        $outMultiply = $outUnit === null ? 1 : $units[$outUnit];
+
+        $inValue = \floatval(\rtrim($inStr, $inUnit));
+        $outValue = \floatval(\rtrim($outStr, $outUnit));
+
+        $response = [
+            'in' => $inValue * $inMultiply,
+            'out' => $outValue * $outMultiply,
+        ];
+
+        return $response;
     }
 
     /**

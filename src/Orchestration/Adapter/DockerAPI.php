@@ -288,7 +288,51 @@ class DockerAPI extends Adapter
      */
     public function getStats(string $container = null): array
     {
-        throw new Exception("Method not implemented yet.");
+        // List ahead of time, since API does not allow listing all usage stats
+        $containerIds = [];
+
+        if($container === null) {
+            $containers = \json_decode($this->call('http://localhost/containers/json', 'GET')['response'], true);
+            $containerIds = \array_map(fn($c) => $c['Id'], $containers);
+        } else {
+            $containerIds[] = $container;
+        }
+
+        $list = [];
+
+        foreach($containerIds as $containerId) {
+            $result = $this->call('http://localhost/containers/' . $containerId . '/stats?stream=false', 'GET');
+
+            if ($result['code'] !== 200) {
+                throw new Orchestration($result['response']);
+            }
+
+            $stats = \json_decode($result['response'], true);
+
+            $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
+            $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage']  - $stats['precpu_stats']['system_cpu_usage'];
+
+            $networkIn = 0;
+            $networkOut = 0;
+            foreach ($stats['networks'] as $network) {
+                $networkIn += $network['rx_bytes'];
+                $networkOut += $network['tx_bytes'];
+            }
+
+            // Rx means Receive, and Tx means
+
+            $list[] = [
+                'id' => $stats['id'],
+                'name' => \ltrim($stats['name'], '/'), // Remove '/' prefix
+                'cpu' => ($cpuDelta / $systemCpuDelta) * $stats['cpu_stats']['online_cpus'] * 100.0,
+                'memory' => ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
+                'diskIO' => [ 'in' => 0, 'out' => 0 ], // TODO: Implement (I could not find it in API)
+                'memoryIO' => [ 'in' => 0, 'out' => 0 ], // TODO: Implement (I could not find it in API)
+                'networkIO' => [ 'in' => $networkIn, 'out' => $networkOut ],
+            ];
+        }
+
+        return $list;
     }
 
     /**

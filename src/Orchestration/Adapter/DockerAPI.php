@@ -311,6 +311,12 @@ class DockerAPI extends Adapter
             $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
             $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage']  - $stats['precpu_stats']['system_cpu_usage'];
 
+            \var_dump($stats);
+            \var_dump($cpuDelta);
+            \var_dump($systemCpuDelta);
+            \var_dump($stats['cpu_stats']['online_cpus']);
+            \var_dump(($cpuDelta / $systemCpuDelta) * $stats['cpu_stats']['online_cpus'] * 100.0);
+
             $networkIn = 0;
             $networkOut = 0;
             foreach ($stats['networks'] as $network) {

@@ -135,7 +135,7 @@ class DockerCLI extends Adapter
             $stats[] = [
                 'id' => $stat['id'],
                 'name' => $stat['name'],
-                'cpu' => \floatval(\rtrim($stat['cpu'], '%')), // Remove percentage symbol and parse to number
+                'cpu' => \floatval(\rtrim($stat['cpu'], '%')) / 100, // Remove percentage symbol, parse to number, convert to percentage
                 'memory' => empty($stat['memory']) ? 0 : \floatval(\rtrim($stat['memory'], '%')), // Remove percentage symbol and parse to number. Value is empty on Windows
                 'diskIO' => $this->parseIOStats($stat['diskIO']),
                 'memoryIO' => $this->parseIOStats($stat['memoryIO']),

@@ -463,35 +463,47 @@ abstract class Base extends TestCase
         $stats = static::getOrchestration()->getStats();
         $this->assertCount(0, $stats);
 
+        // This allows CPU-heavy load check
+        static::getOrchestration()->setCpus(0.1);
+
         $containerId1 = static::getOrchestration()->run(
-            'appwrite/runtime-for-php:8.0',
+            'containerstack/alpine-stress',  // https://github.com/containerstack/alpine-stress
             'UsageStats1',
             [
                 'sh',
                 '-c',
-                'tail -f /dev/null'
+                'apk update && apk add screen && tail -f /dev/null'
             ],
-            '',
-            '/usr/local/src/',
-            [],
-            [],
-            __DIR__ . '/Resources',
+            workdir: '/usr/local/src/',
+            mountFolder: __DIR__ . '/Resources',
         );
 
         $this->assertNotEmpty($containerId1);
 
         $containerId2 = static::getOrchestration()->run(
-            'appwrite/runtime-for-php:8.0',
+            'containerstack/alpine-stress',
             'UsageStats2',
             [
                 'sh',
                 '-c',
-                'tail -f /dev/null'
+                'apk update && apk add screen && tail -f /dev/null'
             ],
+            workdir: '/usr/local/src/',
+            mountFolder: __DIR__ . '/Resources',
         );
 
         $this->assertNotEmpty($containerId2);
 
+        // This allows CPU-heavy load check
+        $stdout = "";
+        $stderr = "";
+        static::getOrchestration()->execute($containerId1, ["screen", "-d", "-m", "'stress --cpu 1 --timeout 5'"], $stdout, $stderr); // Run in screen so it's background task
+        static::getOrchestration()->execute($containerId2, ["screen", "-d", "-m", "'stress --cpu 1 --timeout 5'"], $stdout, $stderr);
+
+        // Set CPU stress-test start
+        \sleep(1);
+
+        // Fetch stats, should include high CPU usage
         $stats = static::getOrchestration()->getStats();
 
         $this->assertCount(2, $stats);
@@ -539,6 +551,9 @@ abstract class Base extends TestCase
         $this->assertEquals($stats[1]['name'], $stats1[0]['name']);
         $this->assertEquals($stats[0]['id'], $stats2[0]['id']);
         $this->assertEquals($stats[0]['name'], $stats2[0]['name']);
+
+        \var_dump($stats[0]['cpu']);
+        \var_dump($stats[1]['cpu']);
 
         $response = static::getOrchestration()->remove('UsageStats1', true);
 

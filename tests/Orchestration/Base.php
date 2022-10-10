@@ -516,11 +516,9 @@ abstract class Base extends TestCase
 
         $this->assertEquals('UsageStats2', $stats[0]['name']);
 
-        $this->assertIsFloat($stats[0]['cpu']);
         $this->assertGreaterThanOrEqual(0, $stats[0]['cpu']);
         $this->assertLessThanOrEqual(1, $stats[0]['cpu']);
 
-        $this->assertIsFloat($stats[0]['memory']);
         $this->assertGreaterThanOrEqual(0, $stats[0]['memory']);
         $this->assertLessThanOrEqual(1, $stats[0]['memory']);
 

@@ -39,8 +39,10 @@ abstract class Base extends TestCase
          */
         $response = static::getOrchestration()->pull('appwrite/runtime-for-php:8.0');
 
+        $this->assertEquals(true, $response);
+
         // Used later for CPU usage test
-        $response = static::getOrchestration()->pull('containerstack/alpine-stress');
+        $response = static::getOrchestration()->pull('containerstack/alpine-stress:latest');
 
         $this->assertEquals(true, $response);
 
@@ -350,7 +352,6 @@ abstract class Base extends TestCase
      * @return void
      * @depends testCreateContainer
      */
-
     public function testListFilters(): void
     {
         $response = $this->getOrchestration()->list(['id' => self::$containerID]);

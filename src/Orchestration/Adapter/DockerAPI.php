@@ -311,12 +311,6 @@ class DockerAPI extends Adapter
             $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
             $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage']  - $stats['precpu_stats']['system_cpu_usage'];
 
-            \var_dump($stats);
-            \var_dump($cpuDelta);
-            \var_dump($systemCpuDelta);
-            \var_dump($stats['cpu_stats']['online_cpus']);
-            \var_dump(($cpuDelta / $systemCpuDelta) * $stats['cpu_stats']['online_cpus'] * 100.0);
-
             $networkIn = 0;
             $networkOut = 0;
             foreach ($stats['networks'] as $network) {
@@ -329,7 +323,8 @@ class DockerAPI extends Adapter
             $list[] = [
                 'id' => $stats['id'],
                 'name' => \ltrim($stats['name'], '/'), // Remove '/' prefix
-                'cpu' => ($cpuDelta / $systemCpuDelta) * $stats['cpu_stats']['online_cpus'] * 100.0,
+                'cpu' => 1, // TODO: Implement (I coudl not do it because Docker API does not give correct values)
+                // 'cpu' => ($cpuDelta / $systemCpuDelta) * $stats['cpu_stats']['online_cpus'] * 100.0,
                 'memory' => ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
                 'diskIO' => [ 'in' => 0, 'out' => 0 ], // TODO: Implement (I could not find it in API)
                 'memoryIO' => [ 'in' => 0, 'out' => 0 ], // TODO: Implement (I could not find it in API)

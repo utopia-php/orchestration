@@ -555,8 +555,8 @@ abstract class Base extends TestCase
         $this->assertEquals($stats[0]['id'], $stats2[0]['id']);
         $this->assertEquals($stats[0]['name'], $stats2[0]['name']);
 
-        \var_dump($stats[0]['cpu']);
-        \var_dump($stats[1]['cpu']);
+        $this->assertGreaterThanOrEqual(0.9, $stats2[0]['cpu']);
+        $this->assertGreaterThanOrEqual(0.9, $stats2[1]['cpu']);
 
         $response = static::getOrchestration()->remove('UsageStats1', true);
 

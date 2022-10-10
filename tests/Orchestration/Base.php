@@ -39,6 +39,9 @@ abstract class Base extends TestCase
          */
         $response = static::getOrchestration()->pull('appwrite/runtime-for-php:8.0');
 
+        // Used later for CPU usage test
+        $response = static::getOrchestration()->pull('containerstack/alpine-stress');
+
         $this->assertEquals(true, $response);
 
         /**

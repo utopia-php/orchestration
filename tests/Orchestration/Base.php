@@ -2,9 +2,7 @@
 
 namespace Utopia\Tests;
 
-use Exception;
 use PHPUnit\Framework\TestCase;
-use Utopia\Orchestration\Exception\Timeout;
 use Utopia\Orchestration\Orchestration;
 
 abstract class Base extends TestCase
@@ -12,12 +10,12 @@ abstract class Base extends TestCase
     /**
      * @return Orchestration
      */
-    abstract static protected function getOrchestration(): Orchestration;
+    abstract protected static function getOrchestration(): Orchestration;
 
     /**
      * @var string
      */
-    static $containerID;
+    public static $containerID;
 
     public function setUp(): void
     {
@@ -39,7 +37,6 @@ abstract class Base extends TestCase
         /**
          * Test for Failure
          */
-
         $response = static::getOrchestration()->pull('appwrite/tXDytMhecKCuz5B4PlITXL1yKhZXDP'); // Pull non-existent Container
         $this->assertEquals(false, $response);
     }
@@ -56,15 +53,15 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null'
+                'cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null',
             ],
             '',
             '/usr/local/src/',
             [
-                __DIR__ . '/Resources:/test:rw'
+                __DIR__.'/Resources:/test:rw',
             ],
             [],
-            __DIR__ . '/Resources'
+            __DIR__.'/Resources'
         );
 
         $this->assertNotEmpty($response);
@@ -80,13 +77,13 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null'
+                'cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null',
             ],
             '',
             '/usr/local/src/',
             [],
             [],
-            __DIR__ . '/Resources',
+            __DIR__.'/Resources',
         );
     }
 
@@ -144,7 +141,6 @@ abstract class Base extends TestCase
         $this->assertEquals(true, $response);
     }
 
-
     /**
      * @return void
      * @depends testCreateNetwork
@@ -169,12 +165,12 @@ abstract class Base extends TestCase
             'TestContainer',
             [
                 'php',
-                'index.php'
+                'index.php',
             ],
             $stdout,
             $stderr,
             [
-                'test' => 'testEnviromentVariable'
+                'test' => 'testEnviromentVariable',
             ],
         );
 
@@ -183,7 +179,6 @@ abstract class Base extends TestCase
         /**
          * Test for Failure
          */
-
         $stdout = '';
         $stderr = '';
 
@@ -193,7 +188,7 @@ abstract class Base extends TestCase
             '60clotVWpufbEpy33zJLcoYHrUTqWaD1FV0FZWsw', // Non-Existent Container
             [
                 'php',
-                'index.php'
+                'index.php',
             ],
             $stdout,
             $stderr
@@ -213,7 +208,7 @@ abstract class Base extends TestCase
             'TestContainer',
             [
                 'cat',
-                '/test/testfile.txt'
+                '/test/testfile.txt',
             ],
             $stdout,
             $stderr
@@ -235,7 +230,7 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'cp /tmp/timeout.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null'
+                'cp /tmp/timeout.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null',
             ],
             '',
             '/usr/local/src/',
@@ -243,9 +238,9 @@ abstract class Base extends TestCase
             [
                 'teasdsa' => '',
             ],
-            __DIR__ . '/Resources',
+            __DIR__.'/Resources',
             [
-                'test2' => 'Hello World!'
+                'test2' => 'Hello World!',
             ]
         );
 
@@ -256,7 +251,6 @@ abstract class Base extends TestCase
         /**
          * Test for Failure
          */
-
         $stdout = '';
         $stderr = '';
 
@@ -266,7 +260,7 @@ abstract class Base extends TestCase
             'TestContainerTimeout',
             [
                 'php',
-                'index.php'
+                'index.php',
             ],
             $stdout,
             $stderr,
@@ -277,7 +271,6 @@ abstract class Base extends TestCase
         /**
          * Test for Success
          */
-
         $stdout = '';
         $stderr = '';
 
@@ -285,7 +278,7 @@ abstract class Base extends TestCase
             'TestContainerTimeout',
             [
                 'php',
-                'index.php'
+                'index.php',
             ],
             $stdout,
             $stderr,
@@ -298,7 +291,6 @@ abstract class Base extends TestCase
         /**
          * Test for Success
          */
-
         $stdout = '';
         $stderr = '';
 
@@ -307,7 +299,7 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'echo Hello World!'
+                'echo Hello World!',
             ],
             $stdout,
             $stderr,
@@ -342,7 +334,6 @@ abstract class Base extends TestCase
      * @return void
      * @depends testCreateContainer
      */
-
     public function testListFilters(): void
     {
         $response = $this->getOrchestration()->list(['id' => self::$containerID]);
@@ -384,7 +375,7 @@ abstract class Base extends TestCase
         $this->assertEquals([
             'sh',
             '-c',
-            "'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
+            "'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'",
         ], $test);
 
         $test = static::getOrchestration()->parseCommandString('sudo apt-get update');
@@ -392,13 +383,13 @@ abstract class Base extends TestCase
         $this->assertEquals([
             'sudo',
             'apt-get',
-            'update'
+            'update',
         ], $test);
 
         $test = static::getOrchestration()->parseCommandString('test');
 
         $this->assertEquals([
-            'test'
+            'test',
         ], $test);
 
         /**
@@ -409,7 +400,7 @@ abstract class Base extends TestCase
         $test = static::getOrchestration()->parseCommandString("sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null");
     }
 
-    public function testRunRemove():void
+    public function testRunRemove(): void
     {
         /**
          * Test for success
@@ -420,7 +411,7 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'echo Hello World!'
+                'echo Hello World!',
             ],
             '',
             '/usr/local/src/',
@@ -428,9 +419,9 @@ abstract class Base extends TestCase
             [
                 'teasdsa' => '',
             ],
-            __DIR__ . '/Resources',
+            __DIR__.'/Resources',
             [
-                'test2' => 'Hello World!'
+                'test2' => 'Hello World!',
             ],
             '',
             true

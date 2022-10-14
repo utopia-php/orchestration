@@ -558,9 +558,8 @@ abstract class Base extends TestCase
         $this->assertGreaterThanOrEqual(0.5, $stats[1]['cpu']);
 
         $timeStart = \time();
-        static::getOrchestration()->getStats(duration: 4);
+        static::getOrchestration()->getStats(cycles: 2); // 4s on CLI, 4s per container on API
         $timeEnd = \time();
-        \var_dump($timeEnd - $timeStart);
         $this->assertGreaterThanOrEqual(4, $timeEnd - $timeStart);
 
         $response = static::getOrchestration()->remove('UsageStats1', true);

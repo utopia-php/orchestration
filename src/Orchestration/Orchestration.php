@@ -133,19 +133,15 @@ class Orchestration
      * Get usage stats of containers
      * 
      * @param string $container
-     * @param int $duration
+     * @param int $cycles
      * 
      * @return array
      */
-    public function getStats(string $container = null, int $duration = 2): array 
+    public function getStats(string $container = null, int $cycles = 1): array 
     {
-        if($duration % 2 !== 0) {
-            throw new ExceptionOrchestration("Duration has to be multiples of 2.");
-        }
-
         $averageStats = [];
 
-        for ($i = 0; $i < $duration; $i += 2) {
+        for ($i = 0; $i < $cycles; $i++) {
             $averageStats[] = $this->adapter->getStats($container);
         }
 

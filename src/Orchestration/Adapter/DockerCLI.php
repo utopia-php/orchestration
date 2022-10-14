@@ -148,6 +148,10 @@ class DockerCLI extends Adapter
             $containerIds[] = $container;
         }
 
+        if(\count($containerIds) <= 0 && \count($filters) > 0) {
+            return []; // No containers found
+        }
+
         $stats = [];
 
         $containersString = "";

@@ -562,6 +562,9 @@ abstract class Base extends TestCase
         $this->assertCount(1, $statsFiltered);
         $this->assertEquals($containerId1, $statsFiltered[0]['id']);
 
+        $statsFiltered = static::getOrchestration()->getStats(filters: ['label' => 'utopia-container-type=non-existing-type']);
+        $this->assertCount(0, $statsFiltered);
+
         $timeStart = \time();
         static::getOrchestration()->getStats(cycles: 2); // 4s on CLI, 4s per container on API
         $timeEnd = \time();

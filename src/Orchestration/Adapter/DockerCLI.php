@@ -112,18 +112,47 @@ class DockerCLI extends Adapter
      */
     public function getStats(string $container = null, array $filters = []): array
     {
-        $stats = [];
+        // List ahead of time, since docker stats does not allow filtering
+        $containerIds = [];
 
         $stdout = '';
         $stderr = '';
 
-        $filterString = '';
+        if($container === null) {
+            if(\count($filters) > 0) {
+                $filterString = '';
 
-        foreach($filters as $key => $value) {
-            $filterString = $filterString . ' --filter "'.$key.'='.$value.'"';
+                foreach($filters as $key => $value) {
+                    $filterString = $filterString . ' --filter "'.$key.'='.$value.'"';
+                }
+
+                $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}"'.$filterString, '', $stdout, $stderr);
+
+                if($result !== 0) {
+                    throw new Orchestration("Docker Error: {$stderr}");
+                }
+
+                $stdoutArray = \explode("\n", $stdout);
+
+                $containerIds = \array_map(function($row) {
+                    $container = [];
+                    \parse_str($row, $container);
+                    return $container['id'];
+                }, $stdoutArray);
+            }
+        } else {
+            $containerIds[] = $container;
         }
 
-        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream' . $filterString . ' ' . $container, '', $stdout, $stderr);
+        $stats = [];
+
+        $containersString = "";
+
+        foreach ($containerIds as $containerId) {
+            $containersString .= " " . $containerId;   
+        }
+
+        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream' . $containersString, '', $stdout, $stderr);
         
         if($result !== 0) {
             throw new Orchestration("Docker Error: {$stderr}");

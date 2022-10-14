@@ -2,6 +2,6 @@
 
 namespace Utopia\Orchestration\Exception;
 
-    class Orchestration extends \Exception
-    {
-    }
+class Orchestration extends \Exception
+{
+}

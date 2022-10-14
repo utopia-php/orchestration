@@ -160,7 +160,10 @@ class Orchestration
         $containerIds = \array_map(fn($stat) => $stat['id'], $averageStats[0]);
         $response = [];
 
+        $i = 0;
         foreach ($containerIds as $containerId) {
+            $container = $averageStats[0][$i];
+
             $averageCpu = 0;
             $averageMemory = 0;
             $averageDiskIO = [ 'in' => 0, 'out' => 0 ];
@@ -180,7 +183,7 @@ class Orchestration
                 $averageMemoryIO['in'] += ($stat['memoryIO'] ?? $emptyIO)['in'];
                 $averageMemoryIO['out'] += ($stat['memoryIO'] ?? $emptyIO)['out'];
                 $averageNetworkIO['in'] += ($stat['networkIO'] ?? $emptyIO)['in'];
-                $averageNetworkIO['ou'] += ($stat['networkIO'] ?? $emptyIO)['out'];
+                $averageNetworkIO['out'] += ($stat['networkIO'] ?? $emptyIO)['out'];
             }
     
             $statsCount = \count($stat);
@@ -195,14 +198,16 @@ class Orchestration
             $averageNetworkIO['out'] /= $statsCount; 
 
             $response[] = [
-                'id' => $averageStats[0]['id'],
-                'name' => $averageStats[0]['name'],
+                'id' => $container['id'],
+                'name' => $container['name'],
                 'cpu' => $averageCpu,
                 'memory' => $averageMemory,
                 'diskIO' => $averageDiskIO,
                 'memoryIO' => $averageMemoryIO,
                 'networkIO' => $averageNetworkIO
             ];
+
+            $i++;
         }
 
       

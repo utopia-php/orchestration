@@ -146,7 +146,60 @@ class Orchestration
             $averageStats[] = $this->adapter->getStats($container, $filters);
         }
 
-        return $averageStats[0]; // TODO: Average results
+        // If no cycles, return empty
+        if(\count($averageStats) <= 0) {
+            return [];
+        }
+
+        // If one cycle, return the cycle
+        if(\count($averageStats) <= 1) {
+            return $averageStats[0];
+        }
+
+        // If multiple cycles, average them
+        $containerIds = \array_map(fn($stat) => $stat['id'], $averageStats[0]);
+        $response = [];
+
+        foreach ($containerIds as $containerId) {
+            $averageCpu = 0;
+            $averageMemory = 0;
+            $averageDiskIO = 0;
+            $averageMemoryIO = 0;
+            $averageNetworkIO = 0;
+    
+            foreach ($averageStats as $statArr) {
+                $statIndex = \array_search($containerId, \array_map(fn ($statI) => $statI['id'], $statArr));
+                $stat = $statArr[$statIndex] ?? [];
+                
+                $averageCpu += $stat['cpu'] ?? 0;
+                $averageMemory += $stat['memory'] ?? 0;
+                $averageDiskIO += $stat['diskIO'] ?? 0;
+                $averageMemoryIO += $stat['memoryIO'] ?? 0;
+                $averageNetworkIO += $stat['networkIO'] ?? 0;
+            }
+    
+            $statsCount = \count($stat);
+    
+            $averageCpu /= $statsCount;
+            $averageMemory /= $statsCount;
+            $averageDiskIO /= $statsCount;
+            $averageMemoryIO /= $statsCount;
+            $averageNetworkIO /= $statsCount; 
+
+            $response[] = [
+                'id' => $averageStats[0]['id'],
+                'name' => $averageStats[0]['name'],
+                'cpu' => $averageCpu,
+                'memory' => $averageMemory,
+                'diskIO' => $averageDiskIO,
+                'memoryIO' => $averageMemoryIO,
+                'networkIO' => $averageNetworkIO
+            ];
+        }
+
+      
+
+        return $response;
     }
 
     /**

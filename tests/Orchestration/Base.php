@@ -554,8 +554,14 @@ abstract class Base extends TestCase
         $this->assertEquals($stats[0]['id'], $stats2[0]['id']);
         $this->assertEquals($stats[0]['name'], $stats2[0]['name']);
 
-        $this->assertGreaterThanOrEqual(0.9, $stats[0]['cpu']);
-        $this->assertGreaterThanOrEqual(0.9, $stats[1]['cpu']);
+        $this->assertGreaterThanOrEqual(0.5, $stats[0]['cpu']);
+        $this->assertGreaterThanOrEqual(0.5, $stats[1]['cpu']);
+
+        $timeStart = \time();
+        static::getOrchestration()->getStats(duration: 4);
+        $timeEnd = \time();
+        \var_dump($timeEnd - $timeStart);
+        $this->assertGreaterThanOrEqual(4, $timeEnd - $timeStart);
 
         $response = static::getOrchestration()->remove('UsageStats1', true);
 

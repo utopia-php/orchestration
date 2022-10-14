@@ -4,6 +4,7 @@ namespace Utopia\Orchestration;
 
 use Utopia\Orchestration\Adapter;
 use Exception;
+use Utopia\Orchestration\Exception\Orchestration as ExceptionOrchestration;
 
 class Orchestration
 {
@@ -132,12 +133,23 @@ class Orchestration
      * Get usage stats of containers
      * 
      * @param string $container
+     * @param int $duration
      * 
      * @return array
      */
-    public function getStats(string $container = null): array 
+    public function getStats(string $container = null, int $duration = 2): array 
     {
-        return $this->adapter->getStats($container);
+        if($duration % 2 !== 0) {
+            throw new ExceptionOrchestration("Duration has to be multiples of 2.");
+        }
+
+        $averageStats = [];
+
+        for ($i = 0; $i < $duration; $i += 2) {
+            $averageStats[] = $this->adapter->getStats($container);
+        }
+
+        return $averageStats[0]; // TODO: Average results
     }
 
     /**

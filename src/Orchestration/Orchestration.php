@@ -163,9 +163,11 @@ class Orchestration
         foreach ($containerIds as $containerId) {
             $averageCpu = 0;
             $averageMemory = 0;
-            $averageDiskIO = 0;
-            $averageMemoryIO = 0;
-            $averageNetworkIO = 0;
+            $averageDiskIO = [ 'in' => 0, 'out' => 0 ];
+            $averageMemoryIO = [ 'in' => 0, 'out' => 0 ];
+            $averageNetworkIO = [ 'in' => 0, 'out' => 0 ];
+
+            $emptyIO = [ 'in' => 0, 'out' => 0 ]; // Used as default value
     
             foreach ($averageStats as $statArr) {
                 $statIndex = \array_search($containerId, \array_map(fn ($statI) => $statI['id'], $statArr));
@@ -173,18 +175,24 @@ class Orchestration
                 
                 $averageCpu += $stat['cpu'] ?? 0;
                 $averageMemory += $stat['memory'] ?? 0;
-                $averageDiskIO += $stat['diskIO'] ?? 0;
-                $averageMemoryIO += $stat['memoryIO'] ?? 0;
-                $averageNetworkIO += $stat['networkIO'] ?? 0;
+                $averageDiskIO['in'] += ($stat['diskIO'] ?? $emptyIO)['in'];
+                $averageDiskIO['out'] += ($stat['diskIO'] ?? $emptyIO)['out'];
+                $averageMemoryIO['in'] += ($stat['memoryIO'] ?? $emptyIO)['in'];
+                $averageMemoryIO['out'] += ($stat['memoryIO'] ?? $emptyIO)['out'];
+                $averageNetworkIO['in'] += ($stat['networkIO'] ?? $emptyIO)['in'];
+                $averageNetworkIO['ou'] += ($stat['networkIO'] ?? $emptyIO)['out'];
             }
     
             $statsCount = \count($stat);
     
             $averageCpu /= $statsCount;
             $averageMemory /= $statsCount;
-            $averageDiskIO /= $statsCount;
-            $averageMemoryIO /= $statsCount;
-            $averageNetworkIO /= $statsCount; 
+            $averageDiskIO['in'] /= $statsCount;
+            $averageDiskIO['out'] /= $statsCount;
+            $averageMemoryIO['in'] /= $statsCount;
+            $averageMemoryIO['out'] /= $statsCount;
+            $averageNetworkIO['in'] /= $statsCount; 
+            $averageNetworkIO['out'] /= $statsCount; 
 
             $response[] = [
                 'id' => $averageStats[0]['id'],

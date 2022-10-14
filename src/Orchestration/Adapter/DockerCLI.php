@@ -106,17 +106,24 @@ class DockerCLI extends Adapter
      * Get usage stats of containers
      * 
      * @param string $container
+     * @param array<string, string> $filters
      * 
      * @return array
      */
-    public function getStats(string $container = null): array
+    public function getStats(string $container = null, array $filters = []): array
     {
         $stats = [];
 
         $stdout = '';
         $stderr = '';
 
-        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream ' . $container, '', $stdout, $stderr);
+        $filterString = '';
+
+        foreach($filters as $key => $value) {
+            $filterString = $filterString . ' --filter "'.$key.'='.$value.'"';
+        }
+
+        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream' . $filterString . ' ' . $container, '', $stdout, $stderr);
         
         if($result !== 0) {
             throw new Orchestration("Docker Error: {$stderr}");

@@ -480,6 +480,7 @@ abstract class Base extends TestCase
             ],
             workdir: '/usr/local/src/',
             mountFolder: __DIR__ . '/Resources',
+            labels: [ 'utopia-container-type' => 'stats' ]
         );
 
         $this->assertNotEmpty($containerId1);
@@ -556,6 +557,10 @@ abstract class Base extends TestCase
 
         $this->assertGreaterThanOrEqual(0.5, $stats[0]['cpu']);
         $this->assertGreaterThanOrEqual(0.5, $stats[1]['cpu']);
+
+        $statsFiltered = static::getOrchestration()->getStats(filters: ['label' => 'utopia-container-type=stats']);
+        $this->assertCount(1, $statsFiltered);
+        $this->assertEquals($containerId1, $statsFiltered[0]['id']);
 
         $timeStart = \time();
         static::getOrchestration()->getStats(cycles: 2); // 4s on CLI, 4s per container on API

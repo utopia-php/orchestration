@@ -282,16 +282,28 @@ class DockerAPI extends Adapter
      * Get usage stats of containers
      * 
      * @param string $container
+     * @param array<string, string> $filters
      * 
      * @return array
      */
-    public function getStats(string $container = null): array
+    public function getStats(string $container = null, array $filters = []): array
     {
         // List ahead of time, since API does not allow listing all usage stats
         $containerIds = [];
 
         if($container === null) {
-            $containers = \json_decode($this->call('http://localhost/containers/json', 'GET')['response'], true);
+            $filtersSorted = [];
+
+            foreach($filters as $key => $value) {
+                $filtersSorted[$key] = [$value];
+            }
+    
+            $body = [
+                'all' => true,
+                'filters' => empty($filtersSorted) ? new stdClass() : json_encode($filtersSorted)
+            ];
+
+            $containers = \json_decode($this->call('http://localhost/containers/json?'.\http_build_query($body), 'GET')['response'], true);
             $containerIds = \array_map(fn($c) => $c['Id'], $containers);
         } else {
             $containerIds[] = $container;

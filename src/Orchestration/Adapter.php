@@ -86,10 +86,11 @@ abstract class Adapter
      * Get usage stats of containers
      * 
      * @param string $container
+     * @param array<string, string> $filters
      * 
      * @return array
      */
-    abstract public function getStats(string $container = null): array;
+    abstract public function getStats(string $container = null, array $filters = []): array;
 
     /**
      * Pull Image

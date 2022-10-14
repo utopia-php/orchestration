@@ -133,16 +133,17 @@ class Orchestration
      * Get usage stats of containers
      * 
      * @param string $container
+     * @param array<string, string> $filters
      * @param int $cycles
      * 
      * @return array
      */
-    public function getStats(string $container = null, int $cycles = 1): array 
+    public function getStats(string $container = null, array $filters = [], int $cycles = 1): array 
     {
         $averageStats = [];
 
         for ($i = 0; $i < $cycles; $i++) {
-            $averageStats[] = $this->adapter->getStats($container);
+            $averageStats[] = $this->adapter->getStats($container, $filters);
         }
 
         return $averageStats[0]; // TODO: Average results

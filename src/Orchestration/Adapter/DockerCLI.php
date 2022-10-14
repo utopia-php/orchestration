@@ -134,11 +134,15 @@ class DockerCLI extends Adapter
 
                 $stdoutArray = \explode("\n", $stdout);
 
-                $containerIds = \array_map(function($row) {
-                    $container = [];
-                    \parse_str($row, $container);
-                    return $container['id'];
-                }, $stdoutArray);
+                foreach($stdoutArray as $row) {
+                    if(empty($row)) {
+                        continue;
+                    }
+
+                    $rowParsed = [];
+                    \parse_str($row, $rowParsed);
+                    $containerIds[] = $rowParsed['id'];
+                }
             }
         } else {
             $containerIds[] = $container;

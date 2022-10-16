@@ -186,7 +186,7 @@ class Orchestration
                 $averageNetworkIO['out'] += ($stat['networkIO'] ?? $emptyIO)['out'];
             }
     
-            $statsCount = \count($stat);
+            $statsCount = \count($averageStats);
     
             $averageCpu /= $statsCount;
             $averageMemory /= $statsCount;

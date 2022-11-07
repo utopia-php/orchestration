@@ -330,8 +330,6 @@ class DockerAPI extends Adapter
                 $networkOut += $network['tx_bytes'];
             }
 
-            // Rx means Receive, and Tx means
-
             $list[] = [
                 'id' => $stats['id'],
                 'name' => \ltrim($stats['name'], '/'), // Remove '/' prefix

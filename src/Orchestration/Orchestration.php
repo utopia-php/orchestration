@@ -165,7 +165,7 @@ class Orchestration
 
         $i = 0;
         foreach ($containerIds as $containerId) {
-            $container = $averageStats[0][$i];
+            $stat = $averageStats[0][$i];
 
             $averageCpu = 0;
             $averageMemory = 0;
@@ -199,8 +199,8 @@ class Orchestration
             $averageNetworkIO['out'] /= $statsCount; 
 
             $response[] = new Stats(
-                containerId: $container['id'],
-                containerName: $container['name'],
+                containerId: $stat->getContainerId(),
+                containerName: $stat->getContainerId(),
                 cpuUsage: $averageCpu,
                 memoryUsage: $averageMemory,
                 diskIO: $averageDiskIO,

@@ -170,11 +170,13 @@ class DockerCLI extends Adapter
 
      /**
      * Use this method to parse string format into numeric in&out stats.
-     * CLI provides IO stats in verbose format like '12.5GiB / 10.01KiB'.
+     * CLI IO stats in verbose format: 2.203MiB / 62.8GiB
+     * Outpit after parsing: [ "in" => 2.203, "out": 62.8 ]
      * 
      * @return array<string,float>
      */
     private function parseIOStats(string $stats) {
+        \var_dump($stats);
         $units = [
             'B' => 1,
             'KB' => 1000,
@@ -193,7 +195,7 @@ class DockerCLI extends Adapter
         $inUnit = null;
         $outUnit = null;
 
-        foreach ($units as $unit) {
+        foreach ($units as $unit => $value) {
             if(\str_ends_with($inStr, $unit)) {
                 $inUnit = $unit;
             } else if(\str_ends_with($outStr, $unit)) {
@@ -211,6 +213,8 @@ class DockerCLI extends Adapter
             'in' => $inValue * $inMultiply,
             'out' => $outValue * $outMultiply,
         ];
+        \var_dump($response);
+        \var_dump('---');
 
         return $response;
     }

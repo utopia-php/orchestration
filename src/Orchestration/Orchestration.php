@@ -200,7 +200,7 @@ class Orchestration
 
             $response[] = new Stats(
                 containerId: $stat->getContainerId(),
-                containerName: $stat->getContainerId(),
+                containerName: $stat->getContainerName(),
                 cpuUsage: $averageCpu,
                 memoryUsage: $averageMemory,
                 diskIO: $averageDiskIO,

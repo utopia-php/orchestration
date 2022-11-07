@@ -170,8 +170,8 @@ class DockerCLI extends Adapter
 
      /**
      * Use this method to parse string format into numeric in&out stats.
-     * CLI IO stats in verbose format: 2.133MiB / 62.8GiB
-     * Outpit after parsing: [ "in" => 2133000, "out": 62800000000 ]
+     * CLI IO stats in verbose format: "2.133MiB / 62.8GiB"
+     * Output after parsing: [ "in" => 2133000, "out" => 62800000000 ]
      * 
      * @return array<string,float>
      */

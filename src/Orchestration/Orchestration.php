@@ -4,6 +4,7 @@ namespace Utopia\Orchestration;
 
 use Utopia\Orchestration\Adapter;
 use Exception;
+use Utopia\Orchestration\Container\Stats;
 
 class Orchestration
 {
@@ -126,6 +127,91 @@ class Orchestration
     public function networkConnect(string $container, string $network): bool 
     {
         return $this->adapter->networkConnect($container, $network);
+    }
+
+    /**
+     * Get usage stats of containers
+     * 
+     * @param string $container
+     * @param array<string, string> $filters
+     * @param int $cycles
+     * 
+     * @return array<Stats>
+     */
+    public function getStats(string $container = null, array $filters = [], int $cycles = 2): array 
+    {
+        /**
+         * @var array<Stats>
+         */
+        $averageStats = [];
+
+        for ($i = 0; $i < $cycles; $i++) {
+            $averageStats[] = $this->adapter->getStats($container, $filters);
+        }
+
+        // If no cycles, return empty
+        if(\count($averageStats) <= 0) {
+            return [];
+        }
+
+        // If one cycle, return the cycle
+        if(\count($averageStats) <= 1) {
+            return $averageStats[0];
+        }
+
+        // If multiple cycles, average them
+        $containerIds = \array_map(fn($stat) => $stat->getContainerId(), $averageStats[0]);
+        $response = [];
+
+        $i = 0;
+        foreach ($containerIds as $containerId) {
+            $stat = $averageStats[0][$i];
+
+            $averageCpu = 0;
+            $averageMemory = 0;
+            $averageDiskIO = [ 'in' => 0, 'out' => 0 ];
+            $averageMemoryIO = [ 'in' => 0, 'out' => 0 ];
+            $averageNetworkIO = [ 'in' => 0, 'out' => 0 ];
+    
+            foreach ($averageStats as $statArr) {
+                $statIndex = \array_search($containerId, \array_map(fn ($statI) => $statI->getContainerId(), $statArr));
+                $stat = $statArr[$statIndex] ?? [];
+                
+                $averageCpu += $stat->getCpuUsage();
+                $averageMemory += $stat->getMemoryUsage();
+                $averageDiskIO['in'] += ($stat->getDiskIO())['in'];
+                $averageDiskIO['out'] += ($stat->getDiskIO())['out'];
+                $averageMemoryIO['in'] += ($stat->getMemoryIO())['in'];
+                $averageMemoryIO['out'] += ($stat->getMemoryIO())['out'];
+                $averageNetworkIO['in'] += ($stat->getNetworkIO())['in'];
+                $averageNetworkIO['out'] += ($stat->getNetworkIO())['out'];
+            }
+    
+            $statsCount = \count($averageStats);
+    
+            $averageCpu /= $statsCount;
+            $averageMemory /= $statsCount;
+            $averageDiskIO['in'] /= $statsCount;
+            $averageDiskIO['out'] /= $statsCount;
+            $averageMemoryIO['in'] /= $statsCount;
+            $averageMemoryIO['out'] /= $statsCount;
+            $averageNetworkIO['in'] /= $statsCount; 
+            $averageNetworkIO['out'] /= $statsCount; 
+
+            $response[] = new Stats(
+                containerId: $stat->getContainerId(),
+                containerName: $stat->getContainerName(),
+                cpuUsage: $averageCpu,
+                memoryUsage: $averageMemory,
+                diskIO: $averageDiskIO,
+                memoryIO: $averageMemoryIO,
+                networkIO: $averageNetworkIO
+            );
+
+            $i++;
+        }
+
+        return $response;
     }
 
     /**

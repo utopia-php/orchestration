@@ -6,6 +6,7 @@ use CurlHandle;
 use stdClass;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
+use Utopia\Orchestration\Container\Stats;
 use Utopia\Orchestration\Exception\Orchestration;
 use Utopia\Orchestration\Exception\Timeout;
 use Utopia\Orchestration\Network;
@@ -276,6 +277,61 @@ class DockerAPI extends Adapter
         }
 
         return $result['code'] == 200;
+    }
+
+    /**
+     * Get usage stats of containers
+     * 
+     * @param string $container
+     * @param array<string, string> $filters
+     * 
+     * @return array<Stats>
+     */
+    public function getStats(string $container = null, array $filters = []): array
+    {
+        // List ahead of time, since API does not allow listing all usage stats
+        $containerIds = [];
+
+        if($container === null) {
+            $containers = $this->list($filters);
+            $containerIds = \array_map(fn($c) => $c->getId(), $containers);
+        } else {
+            $containerIds[] = $container;
+        }
+
+        $list = [];
+
+        foreach($containerIds as $containerId) {
+            $result = $this->call('http://localhost/containers/' . $containerId . '/stats?stream=false', 'GET');
+
+            if ($result['code'] !== 200) {
+                throw new Orchestration($result['response']);
+            }
+
+            $stats = \json_decode($result['response'], true);
+
+            $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
+            $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage']  - $stats['precpu_stats']['system_cpu_usage'];
+
+            $networkIn = 0;
+            $networkOut = 0;
+            foreach ($stats['networks'] as $network) {
+                $networkIn += $network['rx_bytes'];
+                $networkOut += $network['tx_bytes'];
+            }
+
+            $list[] = new Stats(
+                containerId: $stats['id'],
+                containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
+                cpuUsage:1, // TODO: Implement (API seems to give incorrect values)
+                memoryUsage: ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
+                diskIO: [ 'in' => 0, 'out' => 0 ], // TODO: Implement (API does not provide these values)
+                memoryIO: [ 'in' => 0, 'out' => 0 ], // TODO: Implement (API does not provide these values
+                networkIO: [ 'in' => $networkIn, 'out' => $networkOut ],
+            );
+        }
+
+        return $list;
     }
 
     /**

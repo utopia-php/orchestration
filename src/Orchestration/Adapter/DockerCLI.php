@@ -5,6 +5,7 @@ namespace Utopia\Orchestration\Adapter;
 use Utopia\CLI\Console;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
+use Utopia\Orchestration\Container\Stats;
 use Utopia\Orchestration\Exception\Orchestration;
 use Utopia\Orchestration\Exception\Timeout;
 use Utopia\Orchestration\Network;
@@ -100,6 +101,120 @@ class DockerCLI extends Adapter
         $result = Console::execute('docker network disconnect '.$network . ' ' . $container . ($force ? ' --force' : ''), '', $stdout, $stderr);
 
         return $result === 0;
+    }
+
+     /**
+     * Get usage stats of containers
+     * 
+     * @param string $container
+     * @param array<string, string> $filters
+     * 
+     * @return array<Stats>
+     */
+    public function getStats(string $container = null, array $filters = []): array
+    {
+        // List ahead of time, since docker stats does not allow filtering
+        $containerIds = [];
+
+        if($container === null) {
+            $containers = $this->list($filters);
+            $containerIds = \array_map(fn($c) => $c->getId(), $containers);
+        } else {
+            $containerIds[] = $container;
+        }
+
+        $stdout = '';
+        $stderr = '';
+
+        if(\count($containerIds) <= 0 && \count($filters) > 0) {
+            return []; // No containers found
+        }
+
+        $stats = [];
+
+        $containersString = "";
+
+        foreach ($containerIds as $containerId) {
+            $containersString .= " " . $containerId;   
+        }
+
+        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream' . $containersString, '', $stdout, $stderr);
+        
+        if($result !== 0) {
+            throw new Orchestration("Docker Error: {$stderr}");
+        }
+
+        $lines = \explode("\n", $stdout);
+
+        foreach($lines as $line) {
+            if(empty($line)) {
+                continue;
+            }
+
+            $stat = [];
+            \parse_str($line, $stat);
+
+            $stats[] = new Stats(
+                containerId: $stat['id'],
+                containerName: $stat['name'],
+                cpuUsage: \floatval(\rtrim($stat['cpu'], '%')) / 100, // Remove percentage symbol, parse to number, convert to percentage
+                memoryUsage: empty($stat['memory']) ? 0 : \floatval(\rtrim($stat['memory'], '%')), // Remove percentage symbol and parse to number. Value is empty on Windows
+                diskIO: $this->parseIOStats($stat['diskIO']),
+                memoryIO: $this->parseIOStats($stat['memoryIO']),
+                networkIO: $this->parseIOStats($stat['networkIO']),
+            );
+        }
+
+        return $stats;
+    }
+
+
+     /**
+     * Use this method to parse string format into numeric in&out stats.
+     * CLI IO stats in verbose format: "2.133MiB / 62.8GiB"
+     * Output after parsing: [ "in" => 2133000, "out" => 62800000000 ]
+     * 
+     * @return array<string,float>
+     */
+    private function parseIOStats(string $stats) {
+        $units = [
+            'B' => 1,
+            'KB' => 1000,
+            'MB' => 1000000,
+            'GB' => 1000000000,
+            'TB' => 1000000000000,
+
+            'KiB' => 1000,
+            'MiB' => 1000000,
+            'GiB' => 1000000000,
+            'TiB' => 1000000000000,
+        ];
+
+        [ $inStr, $outStr ] = \explode(' / ', $stats);
+
+        $inUnit = null;
+        $outUnit = null;
+
+        foreach ($units as $unit => $value) {
+            if(\str_ends_with($inStr, $unit)) {
+                $inUnit = $unit;
+            } else if(\str_ends_with($outStr, $unit)) {
+                $outUnit = $unit;
+            }
+        }
+
+        $inMultiply = $inUnit === null ? 1 : $units[$inUnit];
+        $outMultiply = $outUnit === null ? 1 : $units[$outUnit];
+
+        $inValue = \floatval(\rtrim($inStr, $inUnit));
+        $outValue = \floatval(\rtrim($outStr, $outUnit));
+
+        $response = [
+            'in' => $inValue * $inMultiply,
+            'out' => $outValue * $outMultiply,
+        ];
+
+        return $response;
     }
 
     /**

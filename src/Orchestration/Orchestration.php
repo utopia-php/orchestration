@@ -138,7 +138,7 @@ class Orchestration
      * 
      * @return array<Stats>
      */
-    public function getStats(string $container = null, array $filters = [], int $cycles = 1): array 
+    public function getStats(string $container = null, array $filters = [], int $cycles = 2): array 
     {
         /**
          * @var array<Stats>

@@ -88,7 +88,7 @@ abstract class Adapter
      * @param string $container
      * @param array<string, string> $filters
      * 
-     * @return array
+     * @return array<Stats>
      */
     abstract public function getStats(string $container = null, array $filters = []): array;
 

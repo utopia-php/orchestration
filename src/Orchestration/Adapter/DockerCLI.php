@@ -5,6 +5,7 @@ namespace Utopia\Orchestration\Adapter;
 use Utopia\CLI\Console;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
+use Utopia\Orchestration\Container\Stats;
 use Utopia\Orchestration\Exception\Orchestration;
 use Utopia\Orchestration\Exception\Timeout;
 use Utopia\Orchestration\Network;
@@ -108,7 +109,7 @@ class DockerCLI extends Adapter
      * @param string $container
      * @param array<string, string> $filters
      * 
-     * @return array
+     * @return array<Stats>
      */
     public function getStats(string $container = null, array $filters = []): array
     {
@@ -153,15 +154,15 @@ class DockerCLI extends Adapter
             $stat = [];
             \parse_str($line, $stat);
 
-            $stats[] = [
-                'id' => $stat['id'],
-                'name' => $stat['name'],
-                'cpu' => \floatval(\rtrim($stat['cpu'], '%')) / 100, // Remove percentage symbol, parse to number, convert to percentage
-                'memory' => empty($stat['memory']) ? 0 : \floatval(\rtrim($stat['memory'], '%')), // Remove percentage symbol and parse to number. Value is empty on Windows
-                'diskIO' => $this->parseIOStats($stat['diskIO']),
-                'memoryIO' => $this->parseIOStats($stat['memoryIO']),
-                'networkIO' => $this->parseIOStats($stat['networkIO']),
-            ];
+            $stats[] = new Stats(
+                containerId: $stat['id'],
+                containerName: $stat['name'],
+                cpuUsage: \floatval(\rtrim($stat['cpu'], '%')) / 100, // Remove percentage symbol, parse to number, convert to percentage
+                memoryUsage: empty($stat['memory']) ? 0 : \floatval(\rtrim($stat['memory'], '%')), // Remove percentage symbol and parse to number. Value is empty on Windows
+                diskIO: $this->parseIOStats($stat['diskIO']),
+                memoryIO: $this->parseIOStats($stat['memoryIO']),
+                networkIO: $this->parseIOStats($stat['networkIO']),
+            );
         }
 
         return $stats;

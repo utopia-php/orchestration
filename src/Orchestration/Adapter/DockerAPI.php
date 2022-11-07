@@ -6,6 +6,7 @@ use CurlHandle;
 use stdClass;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
+use Utopia\Orchestration\Container\Stats;
 use Utopia\Orchestration\Exception\Orchestration;
 use Utopia\Orchestration\Exception\Timeout;
 use Utopia\Orchestration\Network;
@@ -284,7 +285,7 @@ class DockerAPI extends Adapter
      * @param string $container
      * @param array<string, string> $filters
      * 
-     * @return array
+     * @return array<Stats>
      */
     public function getStats(string $container = null, array $filters = []): array
     {
@@ -319,15 +320,15 @@ class DockerAPI extends Adapter
                 $networkOut += $network['tx_bytes'];
             }
 
-            $list[] = [
-                'id' => $stats['id'],
-                'name' => \ltrim($stats['name'], '/'), // Remove '/' prefix
-                'cpu' => 1, // TODO: Implement (API seems to give incorrect values)
-                'memory' => ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
-                'diskIO' => [ 'in' => 0, 'out' => 0 ], // TODO: Implement (API does not provide these values)
-                'memoryIO' => [ 'in' => 0, 'out' => 0 ], // TODO: Implement (API does not provide these values
-                'networkIO' => [ 'in' => $networkIn, 'out' => $networkOut ],
-            ];
+            $list[] = new Stats(
+                containerId: $stats['id'],
+                containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
+                cpuUsage:1, // TODO: Implement (API seems to give incorrect values)
+                memoryUsage: ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
+                diskIO: [ 'in' => 0, 'out' => 0 ], // TODO: Implement (API does not provide these values)
+                memoryIO: [ 'in' => 0, 'out' => 0 ], // TODO: Implement (API does not provide these values
+                networkIO: [ 'in' => $networkIn, 'out' => $networkOut ],
+            );
         }
 
         return $list;

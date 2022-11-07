@@ -513,31 +513,31 @@ abstract class Base extends TestCase
 
         $this->assertCount(2, $stats);
 
-        $this->assertNotEmpty($stats[0]['id']);
-        $this->assertEquals(64, \strlen($stats[0]['id']));
+        $this->assertNotEmpty($stats[0]->getContainerId());
+        $this->assertEquals(64, \strlen($stats[0]->getContainerId()));
 
-        $this->assertEquals('UsageStats2', $stats[0]['name']);
+        $this->assertEquals('UsageStats2', $stats[0]->getContainerName());
 
-        $this->assertGreaterThanOrEqual(0, $stats[0]['cpu']);
-        $this->assertLessThanOrEqual(2, $stats[0]['cpu']); // Sometimes it gives like 102% usage
+        $this->assertGreaterThanOrEqual(0, $stats[0]->getCpuUsage());
+        $this->assertLessThanOrEqual(2, $stats[0]->getCpuUsage()); // Sometimes it gives like 102% usage
 
-        $this->assertGreaterThanOrEqual(0, $stats[0]['memory']);
-        $this->assertLessThanOrEqual(1, $stats[0]['memory']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]->getMemoryUsage());
+        $this->assertLessThanOrEqual(1, $stats[0]->getMemoryUsage());
 
-        $this->assertIsNumeric($stats[0]['diskIO']['in']);
-        $this->assertGreaterThanOrEqual(0, $stats[0]['diskIO']['in']);
-        $this->assertIsNumeric($stats[0]['diskIO']['out']);
-        $this->assertGreaterThanOrEqual(0, $stats[0]['diskIO']['out']);
+        $this->assertIsNumeric($stats[0]->getDiskIO()['in']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]->getDiskIO()['in']);
+        $this->assertIsNumeric($stats[0]->getDiskIO()['out']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]->getDiskIO()['out']);
 
-        $this->assertIsNumeric($stats[0]['memoryIO']['in']);
-        $this->assertGreaterThanOrEqual(0, $stats[0]['memoryIO']['in']);
-        $this->assertIsNumeric($stats[0]['memoryIO']['out']);
-        $this->assertGreaterThanOrEqual(0, $stats[0]['memoryIO']['out']);
+        $this->assertIsNumeric($stats[0]->getMemoryIO()['in']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]->getMemoryIO()['in']);
+        $this->assertIsNumeric($stats[0]->getMemoryIO()['out']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]->getMemoryIO()['out']);
 
-        $this->assertIsNumeric($stats[0]['networkIO']['in']);
-        $this->assertGreaterThanOrEqual(0, $stats[0]['networkIO']['in']);
-        $this->assertIsNumeric($stats[0]['networkIO']['out']);
-        $this->assertGreaterThanOrEqual(0, $stats[0]['networkIO']['out']);
+        $this->assertIsNumeric($stats[0]->getNetworkIO()['in']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]->getNetworkIO()['in']);
+        $this->assertIsNumeric($stats[0]->getNetworkIO()['out']);
+        $this->assertGreaterThanOrEqual(0, $stats[0]->getNetworkIO()['out']);
 
         $stats1 = static::getOrchestration()->getStats($containerId1);
         $stats2 = static::getOrchestration()->getStats($containerId2);
@@ -545,22 +545,22 @@ abstract class Base extends TestCase
         $statsName1 = static::getOrchestration()->getStats('UsageStats1');
         $statsName2 = static::getOrchestration()->getStats('UsageStats2');
 
-        $this->assertEquals($statsName1[0]['id'], $stats1[0]['id']);
-        $this->assertEquals($statsName1[0]['name'], $stats1[0]['name']);
-        $this->assertEquals($statsName2[0]['name'], $stats2[0]['name']);
-        $this->assertEquals($statsName2[0]['name'], $stats2[0]['name']);
+        $this->assertEquals($statsName1[0]->getContainerId(), $stats1[0]->getContainerId());
+        $this->assertEquals($statsName1[0]->getContainerName(), $stats1[0]->getContainerName());
+        $this->assertEquals($statsName2[0]->getContainerName(), $stats2[0]->getContainerName());
+        $this->assertEquals($statsName2[0]->getContainerName(), $stats2[0]->getContainerName());
 
-        $this->assertEquals($stats[1]['id'], $stats1[0]['id']);
-        $this->assertEquals($stats[1]['name'], $stats1[0]['name']);
-        $this->assertEquals($stats[0]['id'], $stats2[0]['id']);
-        $this->assertEquals($stats[0]['name'], $stats2[0]['name']);
+        $this->assertEquals($stats[1]->getContainerId(), $stats1[0]->getContainerId());
+        $this->assertEquals($stats[1]->getContainerName(), $stats1[0]->getContainerName());
+        $this->assertEquals($stats[0]->getContainerId(), $stats2[0]->getContainerId());
+        $this->assertEquals($stats[0]->getContainerName(), $stats2[0]->getContainerName());
 
-        $this->assertGreaterThanOrEqual(0.5, $stats[0]['cpu']);
-        $this->assertGreaterThanOrEqual(0.5, $stats[1]['cpu']);
+        $this->assertGreaterThanOrEqual(0.5, $stats[0]->getCpuUsage());
+        $this->assertGreaterThanOrEqual(0.5, $stats[1]->getCpuUsage());
 
         $statsFiltered = static::getOrchestration()->getStats(filters: ['label' => 'utopia-container-type=stats']);
         $this->assertCount(1, $statsFiltered);
-        $this->assertEquals($containerId1, $statsFiltered[0]['id']);
+        $this->assertEquals($containerId1, $statsFiltered[0]->getContainerId());
 
         $statsFiltered = static::getOrchestration()->getStats(filters: ['label' => 'utopia-container-type=non-existing-type']);
         $this->assertCount(0, $statsFiltered);

@@ -115,38 +115,15 @@ class DockerCLI extends Adapter
         // List ahead of time, since docker stats does not allow filtering
         $containerIds = [];
 
-        $stdout = '';
-        $stderr = '';
-
         if($container === null) {
-            if(\count($filters) > 0) {
-                $filterString = '';
-
-                foreach($filters as $key => $value) {
-                    $filterString = $filterString . ' --filter "'.$key.'='.$value.'"';
-                }
-
-                $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}"'.$filterString, '', $stdout, $stderr);
-
-                if($result !== 0) {
-                    throw new Orchestration("Docker Error: {$stderr}");
-                }
-
-                $stdoutArray = \explode("\n", $stdout);
-
-                foreach($stdoutArray as $row) {
-                    if(empty($row)) {
-                        continue;
-                    }
-
-                    $rowParsed = [];
-                    \parse_str($row, $rowParsed);
-                    $containerIds[] = $rowParsed['id'];
-                }
-            }
+            $containers = $this->list($filters);
+            $containerIds = \array_map(fn($c) => $c->getId(), $containers);
         } else {
             $containerIds[] = $container;
         }
+
+        $stdout = '';
+        $stderr = '';
 
         if(\count($containerIds) <= 0 && \count($filters) > 0) {
             return []; // No containers found
@@ -190,6 +167,13 @@ class DockerCLI extends Adapter
         return $stats;
     }
 
+
+     /**
+     * Use this method to parse string format into numeric in&out stats.
+     * CLI provides IO stats in verbose format like '12.5GiB / 10.01KiB'.
+     * 
+     * @return array<string,float>
+     */
     private function parseIOStats(string $stats) {
         $units = [
             'B' => 1,

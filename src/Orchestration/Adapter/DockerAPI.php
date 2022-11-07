@@ -292,19 +292,8 @@ class DockerAPI extends Adapter
         $containerIds = [];
 
         if($container === null) {
-            $filtersSorted = [];
-
-            foreach($filters as $key => $value) {
-                $filtersSorted[$key] = [$value];
-            }
-    
-            $body = [
-                'all' => true,
-                'filters' => empty($filtersSorted) ? new stdClass() : json_encode($filtersSorted)
-            ];
-
-            $containers = \json_decode($this->call('http://localhost/containers/json?'.\http_build_query($body), 'GET')['response'], true);
-            $containerIds = \array_map(fn($c) => $c['Id'], $containers);
+            $containers = $this->list($filters);
+            $containerIds = \array_map(fn($c) => $c->getId(), $containers);
         } else {
             $containerIds[] = $container;
         }
@@ -333,12 +322,10 @@ class DockerAPI extends Adapter
             $list[] = [
                 'id' => $stats['id'],
                 'name' => \ltrim($stats['name'], '/'), // Remove '/' prefix
-                'cpu' => 1, // TODO: Implement (I coudl not do it because Docker API does not give correct values)
-                // 'cpu' => ($cpuDelta / $systemCpuDelta) * $stats['cpu_stats']['online_cpus'] * 100.0,
+                'cpu' => 1, // TODO: Implement (API seems to give incorrect values)
                 'memory' => ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
                 'diskIO' => [ 'in' => 0, 'out' => 0 ], // TODO: Implement (API does not provide these values)
                 'memoryIO' => [ 'in' => 0, 'out' => 0 ], // TODO: Implement (API does not provide these values
-)
                 'networkIO' => [ 'in' => $networkIn, 'out' => $networkOut ],
             ];
         }

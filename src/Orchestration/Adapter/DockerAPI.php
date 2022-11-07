@@ -338,8 +338,9 @@ class DockerAPI extends Adapter
                 'cpu' => 1, // TODO: Implement (I coudl not do it because Docker API does not give correct values)
                 // 'cpu' => ($cpuDelta / $systemCpuDelta) * $stats['cpu_stats']['online_cpus'] * 100.0,
                 'memory' => ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
-                'diskIO' => [ 'in' => 0, 'out' => 0 ], // TODO: Implement (I could not find it in API)
-                'memoryIO' => [ 'in' => 0, 'out' => 0 ], // TODO: Implement (I could not find it in API)
+                'diskIO' => [ 'in' => 0, 'out' => 0 ], // TODO: Implement (API does not provide these values)
+                'memoryIO' => [ 'in' => 0, 'out' => 0 ], // TODO: Implement (API does not provide these values
+)
                 'networkIO' => [ 'in' => $networkIn, 'out' => $networkOut ],
             ];
         }

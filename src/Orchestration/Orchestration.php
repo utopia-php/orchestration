@@ -175,16 +175,18 @@ class Orchestration
     
             foreach ($averageStats as $statArr) {
                 $statIndex = \array_search($containerId, \array_map(fn ($statI) => $statI->getContainerId(), $statArr));
-                $stat = $statArr[$statIndex] ?? [];
-                
-                $averageCpu += $stat->getCpuUsage();
-                $averageMemory += $stat->getMemoryUsage();
-                $averageDiskIO['in'] += ($stat->getDiskIO())['in'];
-                $averageDiskIO['out'] += ($stat->getDiskIO())['out'];
-                $averageMemoryIO['in'] += ($stat->getMemoryIO())['in'];
-                $averageMemoryIO['out'] += ($stat->getMemoryIO())['out'];
-                $averageNetworkIO['in'] += ($stat->getNetworkIO())['in'];
-                $averageNetworkIO['out'] += ($stat->getNetworkIO())['out'];
+                $stat = $statArr[$statIndex] ?? null;
+
+                if($stat !== null) {
+                    $averageCpu += $stat->getCpuUsage();
+                    $averageMemory += $stat->getMemoryUsage();
+                    $averageDiskIO['in'] += ($stat->getDiskIO())['in'];
+                    $averageDiskIO['out'] += ($stat->getDiskIO())['out'];
+                    $averageMemoryIO['in'] += ($stat->getMemoryIO())['in'];
+                    $averageMemoryIO['out'] += ($stat->getMemoryIO())['out'];
+                    $averageNetworkIO['in'] += ($stat->getNetworkIO())['in'];
+                    $averageNetworkIO['out'] += ($stat->getNetworkIO())['out'];
+                }
             }
     
             $statsCount = \count($averageStats);

@@ -3,6 +3,7 @@
 namespace Utopia\Orchestration;
 
 use Exception;
+use Utopia\Orchestration\Container\Stats;
 
 class Orchestration
 {
@@ -119,6 +120,18 @@ class Orchestration
     public function networkConnect(string $container, string $network): bool
     {
         return $this->adapter->networkConnect($container, $network);
+    }
+
+    /**
+     * Get usage stats of containers
+     *
+     * @param  string  $container
+     * @param  array<string, string>  $filters
+     * @return array<Stats>
+     */
+    public function getStats(string $container = null, array $filters = []): array
+    {
+        return $this->adapter->getStats($container, $filters);
     }
 
     /**

@@ -52,6 +52,8 @@ class DockerAPI extends Adapter
      */
     protected function call(string $url, string $method, $body = null, array $headers = [], int $timeout = -1): array
     {
+        $headers[] = 'Host: utopia-php'; // Fix Swoole headers bug with socket requests
+
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');

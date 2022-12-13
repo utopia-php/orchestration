@@ -107,18 +107,24 @@ class DockerAPI extends Adapter
      */
     protected function streamCall(string $url, int $timeout = -1): array
     {
+        $body = \json_encode([
+            'Detach' => false
+        ]);
+        
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
         \curl_setopt($ch, CURLOPT_POST, 1);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, '{}'); // body is required
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
         $headers = [
             'Content-Type: application/json',
-            'Content-Length: 2',
-            'host: null'
+            'Content-Length: ' . \strlen($body)
         ];
+
+        $headers[] = 'Host: utopia-php'; // Fix Swoole headers bug with socket requests
+
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         /*
@@ -141,7 +147,11 @@ class DockerAPI extends Adapter
         $stdout = '';
         $stderr = '';
 
-        $callback = function (CurlHandle $ch, string $str) use (&$stdout, &$stderr): int {
+        $callback = function (mixed $ch, string $str) use (&$stdout, &$stderr): int {
+            if(empty($str)) {
+                return 0;
+            }
+
             $rawStream = unpack('C*', $str);
             $stream = $rawStream[1]; // 1-based index, not 0-based
             switch ($stream) { // only 1 or 2, as set while creating exec 
@@ -157,7 +167,6 @@ class DockerAPI extends Adapter
             return strlen($str); // must return full frame from callback
         };
         \curl_setopt($ch, CURLOPT_WRITEFUNCTION, $callback);
-
 
         \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
         $result = \curl_exec($ch);
@@ -312,21 +321,28 @@ class DockerAPI extends Adapter
 
             $stats = \json_decode($result['response'], true);
 
-            $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
-            $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage']  - $stats['precpu_stats']['system_cpu_usage'];
-
             $networkIn = 0;
             $networkOut = 0;
-            foreach ($stats['networks'] as $network) {
+            foreach (($stats['networks'] ?? []) as $network) {
                 $networkIn += $network['rx_bytes'];
                 $networkOut += $network['tx_bytes'];
             }
 
+            $memoryUsage = 0;
+
+            if(isset($stats['memory_stats']['usage']) && isset($stats['memory_stats']['limit'])) {
+                $memoryUsage = ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0;
+            }
+
+            // $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
+            // $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage']  - $stats['precpu_stats']['system_cpu_usage'];
+            $cpuUsage = 1; // TODO: Implement (API seems to give incorrect values)
+
             $list[] = new Stats(
                 containerId: $stats['id'],
                 containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
-                cpuUsage:1, // TODO: Implement (API seems to give incorrect values)
-                memoryUsage: ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
+                cpuUsage: $cpuUsage, 
+                memoryUsage: $memoryUsage,
                 diskIO: [ 'in' => 0, 'out' => 0 ], // TODO: Implement (API does not provide these values)
                 memoryIO: [ 'in' => 0, 'out' => 0 ], // TODO: Implement (API does not provide these values
                 networkIO: [ 'in' => $networkIn, 'out' => $networkOut ],

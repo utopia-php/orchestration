@@ -2,24 +2,23 @@
 
 namespace Utopia\Tests\Adapter;
 
-use Utopia\Orchestration\Orchestration;
 use Utopia\Orchestration\Adapter\DockerCLI;
+use Utopia\Orchestration\Orchestration;
 use Utopia\Tests\Base;
 
-class DockerCLITest extends Base {
+class DockerCLITest extends Base
+{
     /**
      * @var Orchestration
      */
-
-    static $orchestration = null;
+    public static $orchestration = null;
 
     /**
      * Return name of adapter
      *
      * @return string
      */
-
-    static function getAdapterName(): string
+    public static function getAdapterName(): string
     {
         return 'Docker CLI';
     }
@@ -27,10 +26,9 @@ class DockerCLITest extends Base {
     /**
      * @return Orchestration
      */
-
-    static function getOrchestration(): Orchestration
+    public static function getOrchestration(): Orchestration
     {
-        if (!is_null(self::$orchestration)) {
+        if (! is_null(self::$orchestration)) {
             return self::$orchestration;
         }
 

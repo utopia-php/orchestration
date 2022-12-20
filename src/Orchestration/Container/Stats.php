@@ -1,18 +1,22 @@
 <?php
+
 namespace Utopia\Orchestration\Container;
 
-class Stats {
+class Stats
+{
     protected string $containerId;
+
     protected string $containerName;
 
     protected float $cpuUsage;
+
     protected float $memoryUsage;
 
     /**
      * @var array<string,float>
      */
     protected array $diskIO;
-    
+
     /**
      * @var array<string,float>
      */
@@ -24,13 +28,13 @@ class Stats {
     protected array $networkIO;
 
     /**
-     * @param string $containerId
-     * @param string $containerName
-     * @param float $cpuUsage
-     * @param float $memoryUsage
-     * @param array<string,float> $diskIO
-     * @param array<string,float> $memoryIO
-     * @param array<string,float> $networkIO
+     * @param  string  $containerId
+     * @param  string  $containerName
+     * @param  float  $cpuUsage
+     * @param  float  $memoryUsage
+     * @param  array<string,float>  $diskIO
+     * @param  array<string,float>  $memoryIO
+     * @param  array<string,float>  $networkIO
      */
     public function __construct(string $containerId, string $containerName, float $cpuUsage, float $memoryUsage, array $diskIO, array $memoryIO, array $networkIO)
     {
@@ -43,22 +47,22 @@ class Stats {
         $this->networkIO = $networkIO;
     }
 
-    public function getContainerId(): string 
+    public function getContainerId(): string
     {
         return $this->containerId;
     }
 
-    public function getContainerName(): string 
+    public function getContainerName(): string
     {
         return $this->containerName;
     }
 
-    public function getCpuUsage(): float 
+    public function getCpuUsage(): float
     {
         return $this->cpuUsage;
     }
 
-    public function getMemoryUsage(): float 
+    public function getMemoryUsage(): float
     {
         return $this->memoryUsage;
     }
@@ -66,7 +70,7 @@ class Stats {
     /**
      * @return array<string,float>
      */
-    public function getMemoryIO(): array 
+    public function getMemoryIO(): array
     {
         return $this->memoryIO;
     }
@@ -74,16 +78,16 @@ class Stats {
     /**
      * @return array<string,float>
      */
-    public function getDiskIO(): array 
+    public function getDiskIO(): array
     {
         return $this->diskIO;
     }
+
     /**
      * @return array<string,float>
      */
-    public function getNetworkIO(): array 
+    public function getNetworkIO(): array
     {
         return $this->networkIO;
     }
-
 }

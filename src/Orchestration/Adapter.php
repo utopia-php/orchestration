@@ -26,6 +26,9 @@ abstract class Adapter
 
     /**
      * Filter ENV vars
+     *
+     * @param  string  $string
+     * @return string
      */
     public function filterEnvKey(string $string): string
     {
@@ -34,26 +37,43 @@ abstract class Adapter
 
     /**
      * Create Network
+     *
+     * @param  string  $name
+     * @return bool
      */
     abstract public function createNetwork(string $name, bool $internal = false): bool;
 
     /**
      * Remove Network
+     *
+     * @param  string  $name
+     * @return bool
      */
     abstract public function removeNetwork(string $name): bool;
 
     /**
      * Connect a container to a network
+     *
+     * @param  string  $container
+     * @param  string  $network
+     * @return bool
      */
     abstract public function networkConnect(string $container, string $network): bool;
 
     /**
      * Disconnect a container from a network
+     *
+     * @param  string  $container
+     * @param  string  $network
+     * @param  bool  $force
+     * @return bool
      */
     abstract public function networkDisconnect(string $container, string $network, bool $force = false): bool;
 
     /**
      * List Networks
+     *
+     * @return array
      */
     abstract public function listNetworks(): array;
 
@@ -68,6 +88,9 @@ abstract class Adapter
 
     /**
      * Pull Image
+     *
+     * @param  string  $image
+     * @return bool
      */
     abstract public function pull(string $image): bool;
 
@@ -85,9 +108,17 @@ abstract class Adapter
      * Creates and runs a new container, On success it will return a string containing the container ID.
      * On fail it will throw an exception.
      *
+     * @param  string  $image
+     * @param  string  $name
      * @param  string[]  $command
+     * @param  string  $entrypoint
+     * @param  string  $workdir
      * @param  string[]  $volumes
      * @param  array<string, string>  $vars
+     * @param  string  $mountFolder
+     * @param  string  $hostname
+     * @param  bool  $remove
+     * @return string
      */
     abstract public function run(
         string $image,
@@ -105,19 +136,29 @@ abstract class Adapter
     /**
      * Execute Container
      *
+     * @param  string  $name
      * @param  string[]  $command
+     * @param  string  &$stdout
+     * @param  string  &$stderr
      * @param  array<string, string>  $vars
+     * @param  int  $timeout
+     * @return bool
      */
     abstract public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool;
 
     /**
      * Remove Container
+     *
+     * @param  string  $name
+     * @param  bool  $force
+     * @return bool
      */
     abstract public function remove(string $name, bool $force): bool;
 
     /**
      * Set containers namespace
      *
+     * @param  string  $namespace
      * @return $this
      */
     public function setNamespace(string $namespace): self
@@ -130,6 +171,7 @@ abstract class Adapter
     /**
      * Set max allowed CPU cores per container
      *
+     * @param  int  $cores
      * @return $this
      */
     public function setCpus(int $cores): self
@@ -142,6 +184,7 @@ abstract class Adapter
     /**
      * Set max allowed memory in mb per container
      *
+     * @param  int  $mb
      * @return $this
      */
     public function setMemory(int $mb): self
@@ -154,6 +197,7 @@ abstract class Adapter
     /**
      * Set max allowed swap memory in mb per container
      *
+     * @param  int  $mb
      * @return $this
      */
     public function setSwap(int $mb): self

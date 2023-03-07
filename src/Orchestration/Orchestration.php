@@ -12,6 +12,9 @@ class Orchestration
      */
     protected $adapter;
 
+    /**
+     * @param  Adapter  $adapter
+     */
     public function __construct(Adapter $adapter)
     {
         $this->adapter = $adapter;
@@ -27,6 +30,7 @@ class Orchestration
      *
      * If there are no spaces detected in the first place it will just return the string as an array.
      *
+     * @param  string  $command
      * @return (false|string)[]
      */
     public function parseCommandString(string $command): array
@@ -75,6 +79,10 @@ class Orchestration
 
     /**
      * Create Network
+     *
+     * @param  string  $name
+     * @param  bool  $internal
+     * @return bool
      */
     public function createNetwork(string $name, bool $internal = false): bool
     {
@@ -83,6 +91,9 @@ class Orchestration
 
     /**
      * Remove Network
+     *
+     * @param  string  $name
+     * @return bool
      */
     public function removeNetwork(string $name): bool
     {
@@ -91,6 +102,8 @@ class Orchestration
 
     /**
      * List Networks
+     *
+     * @return array
      */
     public function listNetworks(): array
     {
@@ -99,6 +112,10 @@ class Orchestration
 
     /**
      * Connect a container to a network
+     *
+     * @param  string  $container
+     * @param  string  $network
+     * @return bool
      */
     public function networkConnect(string $container, string $network): bool
     {
@@ -119,6 +136,11 @@ class Orchestration
 
     /**
      * Disconnect a container from a network
+     *
+     * @param  string  $container
+     * @param  string  $network
+     * @param  bool  $force
+     * @return bool
      */
     public function networkDisconnect(string $container, string $network, bool $force = false): bool
     {
@@ -127,6 +149,9 @@ class Orchestration
 
     /**
      * Pull Image
+     *
+     * @param  string  $image
+     * @return bool
      */
     public function pull(string $image): bool
     {
@@ -150,9 +175,17 @@ class Orchestration
      * Creates and runs a new container, On success it will return a string containing the container ID.
      * On fail it will throw an exception.
      *
+     * @param  string  $image
+     * @param  string  $name
+     * @param  string  $entrypoint
      * @param  string[]  $command
+     * @param  string  $workdir
      * @param  string[]  $volumes
      * @param  array<string, string>  $vars
+     * @param  string  $mountFolder
+     * @param  string  $hostname
+     * @param  bool  $remove
+     * @return string
      */
     public function run(
         string $image,
@@ -173,8 +206,13 @@ class Orchestration
     /**
      * Execute Container
      *
+     * @param  string  $name
      * @param  string[]  $command
+     * @param  string  &$stdout
+     * @param  string  &$stderr
      * @param  array<string, string>  $vars
+     * @param  int  $timeout
+     * @return bool
      */
     public function execute(
         string $name,
@@ -189,6 +227,10 @@ class Orchestration
 
     /**
      * Remove Container
+     *
+     * @param  string  $name
+     * @param  bool  $force
+     * @return bool
      */
     public function remove(string $name, bool $force = false): bool
     {
@@ -198,6 +240,7 @@ class Orchestration
     /**
      * Set containers namespace
      *
+     * @param  string  $namespace
      * @return $this
      */
     public function setNamespace(string $namespace): self
@@ -210,6 +253,7 @@ class Orchestration
     /**
      * Set max allowed CPU cores per container
      *
+     * @param  int  $cores
      * @return $this
      */
     public function setCpus(int $cores): self
@@ -222,6 +266,7 @@ class Orchestration
     /**
      * Set max allowed memory in mb per container
      *
+     * @param  int  $mb
      * @return $this
      */
     public function setMemory(int $mb): self
@@ -234,6 +279,7 @@ class Orchestration
     /**
      * Set max allowed swap memory in mb per container
      *
+     * @param  int  $mb
      * @return $this
      */
     public function setSwap(int $mb): self

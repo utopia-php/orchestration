@@ -15,12 +15,17 @@ class DockerCLITest extends Base
 
     /**
      * Return name of adapter
+     *
+     * @return string
      */
     public static function getAdapterName(): string
     {
         return 'Docker CLI';
     }
 
+    /**
+     * @return Orchestration
+     */
     public static function getOrchestration(): Orchestration
     {
         if (! is_null(self::$orchestration)) {

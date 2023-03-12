@@ -185,6 +185,7 @@ class Orchestration
      * @param  string  $mountFolder
      * @param  string  $hostname
      * @param  bool  $remove
+     * @param  array $hosts
      * @return string
      */
     public function run(
@@ -198,9 +199,10 @@ class Orchestration
         string $mountFolder = '',
         array $labels = [],
         string $hostname = '',
-        bool $remove = false
+        bool $remove = false,
+        array $hosts = []
     ): string {
-        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname, $remove);
+        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname, $remove, $hosts);
     }
 
     /**

@@ -330,6 +330,7 @@ class DockerCLI extends Adapter
      * @param  string[]  $volumes
      * @param  array<string, string>  $vars
      * @param  string  $mountFolder
+     * @param  array $hosts
      * @return string
      */
     public function run(string $image,
@@ -342,7 +343,8 @@ class DockerCLI extends Adapter
         string $mountFolder = '',
         array $labels = [],
         string $hostname = '',
-        bool $remove = false
+        bool $remove = false,
+        array $hosts = []
     ): string {
         $stdout = '';
         $stderr = '';
@@ -384,6 +386,11 @@ class DockerCLI extends Adapter
 
         $time = time();
 
+        $hostsCmds = '';
+        foreach ($hosts as $host => $value) {
+            $hostsCmds .= " --add-host={$host}:{$value}";
+        }
+
         $result = Console::execute('docker run'.
         ' -d'.
         ($remove ? ' --rm' : '').
@@ -392,6 +399,7 @@ class DockerCLI extends Adapter
         (empty($this->memory) ? '' : (' --memory='.$this->memory.'m')).
         (empty($this->swap) ? '' : (' --memory-swap='.$this->swap.'m')).
         " --name={$name}".
+        (empty($hostsCmds) ? '' : $hostsCmds).
         " --label {$this->namespace}-type=runtime".
         " --label {$this->namespace}-created={$time}".
         (empty($mountFolder) ? '' : " --volume {$mountFolder}:/tmp:rw").

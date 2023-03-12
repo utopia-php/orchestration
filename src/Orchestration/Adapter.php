@@ -118,6 +118,7 @@ abstract class Adapter
      * @param  string  $mountFolder
      * @param  string  $hostname
      * @param  bool  $remove
+     * @param  array $hosts
      * @return string
      */
     abstract public function run(
@@ -131,7 +132,8 @@ abstract class Adapter
         string $mountFolder = '',
         array $labels = [],
         string $hostname = '',
-        bool $remove = false): string;
+        bool $remove = false,
+        array $hosts = []): string;
 
     /**
      * Execute Container

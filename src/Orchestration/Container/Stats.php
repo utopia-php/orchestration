@@ -28,10 +28,6 @@ class Stats
     protected array $networkIO;
 
     /**
-     * @param  string  $containerId
-     * @param  string  $containerName
-     * @param  float  $cpuUsage
-     * @param  float  $memoryUsage
      * @param  array<string,float>  $diskIO
      * @param  array<string,float>  $memoryIO
      * @param  array<string,float>  $networkIO

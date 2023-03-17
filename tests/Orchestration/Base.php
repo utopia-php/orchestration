@@ -7,14 +7,8 @@ use Utopia\Orchestration\Orchestration;
 
 abstract class Base extends TestCase
 {
-    /**
-     * @return Orchestration
-     */
     abstract protected static function getOrchestration(): Orchestration;
 
-    /**
-     * @return string
-     */
     abstract protected static function getAdapterName(): string;
 
     /**
@@ -52,7 +46,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testPullImage
      */
     public function testCreateContainer(): void
@@ -100,7 +93,6 @@ abstract class Base extends TestCase
     // Network Tests
 
     /**
-     * @return void
      * @depends testCreateContainer
      */
     public function testCreateNetwork(): void
@@ -111,7 +103,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testCreateNetwork
      */
     public function testListNetworks(): void
@@ -130,7 +121,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testCreateNetwork
      */
     public function testnetworkConnect(): void
@@ -141,7 +131,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testnetworkConnect
      */
     public function testnetworkDisconnect(): void
@@ -152,7 +141,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testCreateNetwork
      */
     public function testRemoveNetwork(): void
@@ -163,7 +151,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testCreateContainer
      */
     public function testExecContainer(): void
@@ -206,7 +193,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testExecContainer
      */
     public function testCheckVolume(): void
@@ -228,7 +214,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testExecContainer
      */
     public function testTimeoutContainer(): void
@@ -322,7 +307,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testCreateContainer
      */
     public function testListContainers(): void
@@ -341,7 +325,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testCreateContainer
      */
     public function testListFilters(): void
@@ -352,7 +335,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testCreateContainer
      */
     public function testRemoveContainer(): void
@@ -448,7 +430,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testPullImage
      */
     public function testUsageStats(): void

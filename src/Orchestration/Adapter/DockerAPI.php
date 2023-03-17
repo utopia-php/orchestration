@@ -40,11 +40,8 @@ class DockerAPI extends Adapter
     /**
      * Create a request with cURL via the Docker socket
      *
-     * @param  string  $url
-     * @param  string  $method
      * @param  array|bool|int|float|object|resource|string|null  $body
      * @param  string[]  $headers
-     * @param  int  $timeout
      * @return (bool|mixed|string)[]
      *
      * @psalm-return array{response: mixed, code: mixed}
@@ -95,8 +92,6 @@ class DockerAPI extends Adapter
      * Create a request with cURL via the Docker socket
      * but process a Docker Stream Response
      *
-     * @param  string  $url
-     * @param  int  $timeout
      * @return (bool|mixed|string)[]
      *
      * @psalm-return array{response: bool|string, code: mixed, stdout: mixed, stderr: mixed}
@@ -179,10 +174,6 @@ class DockerAPI extends Adapter
 
     /**
      * Create Network
-     *
-     * @param  string  $name
-     * @param  bool  $internal
-     * @return bool
      */
     public function createNetwork(string $name, bool $internal = false): bool
     {
@@ -205,9 +196,6 @@ class DockerAPI extends Adapter
 
     /**
      * Remove Network
-     *
-     * @param  string  $name
-     * @return bool
      */
     public function removeNetwork(string $name): bool
     {
@@ -222,10 +210,6 @@ class DockerAPI extends Adapter
 
     /**
      * Connect a container to a network
-     *
-     * @param  string  $container
-     * @param  string  $network
-     * @return bool
      */
     public function networkConnect(string $container, string $network): bool
     {
@@ -247,11 +231,6 @@ class DockerAPI extends Adapter
 
     /**
      * Disconnect a container from a network
-     *
-     * @param  string  $container
-     * @param  string  $network
-     * @param  bool  $force
-     * @return bool
      */
     public function networkDisconnect(string $container, string $network, bool $force = false): bool
     {
@@ -328,8 +307,6 @@ class DockerAPI extends Adapter
 
     /**
      * List Networks
-     *
-     * @return array
      */
     public function listNetworks(): array
     {
@@ -359,9 +336,6 @@ class DockerAPI extends Adapter
 
     /**
      * Pull Image
-     *
-     * @param  string  $image
-     * @return bool
      */
     public function pull(string $image): bool
     {
@@ -427,15 +401,9 @@ class DockerAPI extends Adapter
      * Creates and runs a new container, On success it will return a string containing the container ID.
      * On fail it will throw an exception.
      *
-     * @param  string  $image
-     * @param  string  $name
      * @param  string[]  $command
-     * @param  string  $entrypoint
-     * @param  string  $workdir
      * @param  string[]  $volumes
      * @param  array<string, string>  $vars
-     * @param  string  $mountFolder
-     * @return string
      */
     public function run(
         string $image,
@@ -509,13 +477,8 @@ class DockerAPI extends Adapter
     /**
      * Execute Container
      *
-     * @param  string  $name
      * @param  string[]  $command
-     * @param  string  &$stdout
-     * @param  string  &$stderr
      * @param  array<string, string>  $vars
-     * @param  int  $timeout
-     * @return bool
      */
     public function execute(
         string $name,
@@ -566,10 +529,6 @@ class DockerAPI extends Adapter
 
     /**
      * Remove Container
-     *
-     * @param  string  $name
-     * @param  bool  $force
-     * @return bool
      */
     public function remove(string $name, bool $force = false): bool
     {

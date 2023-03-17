@@ -5,9 +5,6 @@ namespace Utopia\Orchestration;
 class Container
 {
     /**
-     * @param  string  $name
-     * @param  string  $id
-     * @param  string  $status
      * @param  array<string, string>  $labels
      */
     public function __construct(string $name = '', string $id = '', string $status = '', array $labels = [])
@@ -40,8 +37,6 @@ class Container
 
     /**
      * Get the container's name
-     *
-     * @return string
      */
     public function getName(): string
     {
@@ -50,8 +45,6 @@ class Container
 
     /**
      * Get the container's ID
-     *
-     * @return string
      */
     public function getId(): string
     {
@@ -60,8 +53,6 @@ class Container
 
     /**
      * Get the container's status
-     *
-     * @return string
      */
     public function getStatus(): string
     {
@@ -81,7 +72,6 @@ class Container
     /**
      * Set the container's name
      *
-     * @param  string  $name
      * @return $this
      */
     public function setName(string $name): self
@@ -94,7 +84,6 @@ class Container
     /**
      * Set the container's id
      *
-     * @param  string  $id
      * @return $this
      */
     public function setId(string $id): self
@@ -107,7 +96,6 @@ class Container
     /**
      * Set the container's status
      *
-     * @param  string  $status
      * @return $this
      */
     public function setStatus(string $status): self

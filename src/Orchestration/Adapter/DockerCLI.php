@@ -33,10 +33,6 @@ class DockerCLI extends Adapter
 
     /**
      * Create Network
-     *
-     * @param  string  $name
-     * @param  bool  $internal
-     * @return bool
      */
     public function createNetwork(string $name, bool $internal = false): bool
     {
@@ -50,9 +46,6 @@ class DockerCLI extends Adapter
 
     /**
      * Remove Network
-     *
-     * @param  string  $name
-     * @return bool
      */
     public function removeNetwork(string $name): bool
     {
@@ -66,10 +59,6 @@ class DockerCLI extends Adapter
 
     /**
      * Connect a container to a network
-     *
-     * @param  string  $container
-     * @param  string  $network
-     * @return bool
      */
     public function networkConnect(string $container, string $network): bool
     {
@@ -83,11 +72,6 @@ class DockerCLI extends Adapter
 
     /**
      * Disconnect a container from a network
-     *
-     * @param  string  $container
-     * @param  string  $network
-     * @param  bool  $force
-     * @return bool
      */
     public function networkDisconnect(string $container, string $network, bool $force = false): bool
     {
@@ -214,8 +198,6 @@ class DockerCLI extends Adapter
 
     /**
      * List Networks
-     *
-     * @return array
      */
     public function listNetworks(): array
     {
@@ -248,9 +230,6 @@ class DockerCLI extends Adapter
 
     /**
      * Pull Image
-     *
-     * @param  string  $image
-     * @return bool
      */
     public function pull(string $image): bool
     {
@@ -322,15 +301,9 @@ class DockerCLI extends Adapter
      * Creates and runs a new container, On success it will return a string containing the container ID.
      * On fail it will throw an exception.
      *
-     * @param  string  $image
-     * @param  string  $name
      * @param  string[]  $command
-     * @param  string  $entrypoint
-     * @param  string  $workdir
      * @param  string[]  $volumes
      * @param  array<string, string>  $vars
-     * @param  string  $mountFolder
-     * @return string
      */
     public function run(string $image,
         string $name,
@@ -413,13 +386,8 @@ class DockerCLI extends Adapter
     /**
      * Execute Container
      *
-     * @param  string  $name
      * @param  string[]  $command
-     * @param  string  &$stdout
-     * @param  string  &$stderr
      * @param  array<string, string>  $vars
-     * @param  int  $timeout
-     * @return bool
      */
     public function execute(
         string $name,
@@ -461,10 +429,6 @@ class DockerCLI extends Adapter
 
     /**
      * Remove Container
-     *
-     * @param  string  $name
-     * @param  bool  $force
-     * @return bool
      */
     public function remove(string $name, bool $force = false): bool
     {

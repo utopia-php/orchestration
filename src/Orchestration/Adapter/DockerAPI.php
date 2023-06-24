@@ -3,6 +3,7 @@
 namespace Utopia\Orchestration\Adapter;
 
 use CurlHandle;
+use Exception;
 use stdClass;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
@@ -416,7 +417,8 @@ class DockerAPI extends Adapter
         string $mountFolder = '',
         array $labels = [],
         string $hostname = '',
-        bool $remove = false
+        bool $remove = false,
+        string $network = ''
     ): string {
         $parsedVariables = [];
 
@@ -426,6 +428,8 @@ class DockerAPI extends Adapter
         }
 
         $vars = $parsedVariables;
+
+        // TODO: Connect to $network if not empty
 
         $body = [
             'Hostname' => $hostname,

@@ -315,7 +315,8 @@ class DockerCLI extends Adapter
         string $mountFolder = '',
         array $labels = [],
         string $hostname = '',
-        bool $remove = false
+        bool $remove = false,
+        string $network = ''
     ): string {
         $stdout = '';
         $stderr = '';
@@ -360,6 +361,7 @@ class DockerCLI extends Adapter
         $result = Console::execute('docker run'.
         ' -d'.
         ($remove ? ' --rm' : '').
+        (empty($network) ? '' : " --network=\"{$network}\"").
         (empty($entrypoint) ? '' : " --entrypoint=\"{$entrypoint}\"").
         (empty($this->cpus) ? '' : (' --cpus='.$this->cpus)).
         (empty($this->memory) ? '' : (' --memory='.$this->memory.'m')).

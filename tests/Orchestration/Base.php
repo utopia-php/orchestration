@@ -131,6 +131,37 @@ abstract class Base extends TestCase
     }
 
     /**
+     * @depends testCreateNetwork
+     */
+    public function testCreateContainerWithNetwork(): void
+    {
+        $response = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            'TestContainerRM',
+            [
+                'sh',
+                '-c',
+                'echo Hello World!',
+            ],
+            '',
+            '/usr/local/src/',
+            [],
+            [
+                'teasdsa' => '',
+            ],
+            __DIR__.'/Resources',
+            [
+                'test2' => 'Hello World!',
+            ],
+            '',
+            true,
+            'TestNetwork'
+        );
+
+        $this->assertNotEmpty($response);
+    }
+
+    /**
      * @depends testnetworkConnect
      */
     public function testnetworkDisconnect(): void

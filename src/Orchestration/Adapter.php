@@ -100,7 +100,8 @@ abstract class Adapter
         string $mountFolder = '',
         array $labels = [],
         string $hostname = '',
-        bool $remove = false): string;
+        bool $remove = false,
+        string $network = ''): string;
 
     /**
      * Execute Container

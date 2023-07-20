@@ -294,7 +294,7 @@ class DockerAPI extends Adapter
             $list[] = new Stats(
                 containerId: $stats['id'],
                 containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
-                cpuUsage:1, // TODO: Implement (API seems to give incorrect values)
+                cpuUsage: 1, // TODO: Implement (API seems to give incorrect values)
                 memoryUsage: ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
                 diskIO: ['in' => 0, 'out' => 0], // TODO: Implement (API does not provide these values)
                 memoryIO: ['in' => 0, 'out' => 0], // TODO: Implement (API does not provide these values
@@ -416,7 +416,8 @@ class DockerAPI extends Adapter
         string $mountFolder = '',
         array $labels = [],
         string $hostname = '',
-        bool $remove = false
+        bool $remove = false,
+        string $network = ''
     ): string {
         $parsedVariables = [];
 
@@ -426,6 +427,8 @@ class DockerAPI extends Adapter
         }
 
         $vars = $parsedVariables;
+
+        // TODO: Connect to $network if not empty
 
         $body = [
             'Hostname' => $hostname,

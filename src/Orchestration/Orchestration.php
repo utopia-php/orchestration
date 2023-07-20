@@ -165,9 +165,10 @@ class Orchestration
         string $mountFolder = '',
         array $labels = [],
         string $hostname = '',
-        bool $remove = false
+        bool $remove = false,
+        string $network = ''
     ): string {
-        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname, $remove);
+        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname, $remove, $network);
     }
 
     /**

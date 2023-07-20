@@ -3,7 +3,6 @@
 namespace Utopia\Orchestration\Adapter;
 
 use CurlHandle;
-use Exception;
 use stdClass;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
@@ -295,7 +294,7 @@ class DockerAPI extends Adapter
             $list[] = new Stats(
                 containerId: $stats['id'],
                 containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
-                cpuUsage:1, // TODO: Implement (API seems to give incorrect values)
+                cpuUsage: 1, // TODO: Implement (API seems to give incorrect values)
                 memoryUsage: ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
                 diskIO: ['in' => 0, 'out' => 0], // TODO: Implement (API does not provide these values)
                 memoryIO: ['in' => 0, 'out' => 0], // TODO: Implement (API does not provide these values

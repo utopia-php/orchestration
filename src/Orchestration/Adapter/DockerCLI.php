@@ -22,11 +22,10 @@ class DockerCLI extends Adapter
     public function __construct(string $username = null, string $password = null)
     {
         if ($username && $password) {
-            $stdout = '';
-            $stderr = '';
+            $output = '';
 
-            if (! Console::execute('docker login --username '.$username.' --password-stdin', $password, $stdout, $stderr)) {
-                throw new Orchestration("Docker Error: {$stderr}");
+            if (! Console::execute('docker login --username '.$username.' --password-stdin', $password, $output)) {
+                throw new Orchestration("Docker Error: {$output}");
             }
         }
     }
@@ -36,10 +35,9 @@ class DockerCLI extends Adapter
      */
     public function createNetwork(string $name, bool $internal = false): bool
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
-        $result = Console::execute('docker network create '.$name.($internal ? '--internal' : ''), '', $stdout, $stderr);
+        $result = Console::execute('docker network create '.$name.($internal ? '--internal' : ''), '', $output);
 
         return $result === 0;
     }
@@ -49,10 +47,9 @@ class DockerCLI extends Adapter
      */
     public function removeNetwork(string $name): bool
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
-        $result = Console::execute('docker network rm '.$name, '', $stdout, $stderr);
+        $result = Console::execute('docker network rm '.$name, '', $output);
 
         return $result === 0;
     }
@@ -62,10 +59,9 @@ class DockerCLI extends Adapter
      */
     public function networkConnect(string $container, string $network): bool
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
-        $result = Console::execute('docker network connect '.$network.' '.$container, '', $stdout, $stderr);
+        $result = Console::execute('docker network connect '.$network.' '.$container, '', $output);
 
         return $result === 0;
     }
@@ -75,10 +71,9 @@ class DockerCLI extends Adapter
      */
     public function networkDisconnect(string $container, string $network, bool $force = false): bool
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
-        $result = Console::execute('docker network disconnect '.$network.' '.$container.($force ? ' --force' : ''), '', $stdout, $stderr);
+        $result = Console::execute('docker network disconnect '.$network.' '.$container.($force ? ' --force' : ''), '', $output);
 
         return $result === 0;
     }
@@ -102,8 +97,7 @@ class DockerCLI extends Adapter
             $containerIds[] = $container;
         }
 
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         if (\count($containerIds) <= 0 && \count($filters) > 0) {
             return []; // No containers found
@@ -117,13 +111,13 @@ class DockerCLI extends Adapter
             $containersString .= ' '.$containerId;
         }
 
-        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream'.$containersString, '', $stdout, $stderr);
+        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream'.$containersString, '', $output);
 
         if ($result !== 0) {
-            throw new Orchestration("Docker Error: {$stderr}");
+            throw new Orchestration("Docker Error: {$output}");
         }
 
-        $lines = \explode("\n", $stdout);
+        $lines = \explode("\n", $output);
 
         foreach ($lines as $line) {
             if (empty($line)) {
@@ -201,17 +195,16 @@ class DockerCLI extends Adapter
      */
     public function listNetworks(): array
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
-        $result = Console::execute('docker network ls --format "id={{.ID}}&name={{.Name}}&driver={{.Driver}}&scope={{.Scope}}"', '', $stdout, $stderr);
+        $result = Console::execute('docker network ls --format "id={{.ID}}&name={{.Name}}&driver={{.Driver}}&scope={{.Scope}}"', '', $output);
 
         if ($result !== 0) {
-            throw new Orchestration("Docker Error: {$stderr}");
+            throw new Orchestration("Docker Error: {$output}");
         }
 
         $list = [];
-        $stdoutArray = \explode("\n", $stdout);
+        $stdoutArray = \explode("\n", $output);
 
         foreach ($stdoutArray as $value) {
             $network = [];
@@ -233,10 +226,9 @@ class DockerCLI extends Adapter
      */
     public function pull(string $image): bool
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
-        $result = Console::execute('docker pull '.$image, '', $stdout, $stderr);
+        $result = Console::execute('docker pull '.$image, '', $output);
 
         return $result === 0;
     }
@@ -249,8 +241,7 @@ class DockerCLI extends Adapter
      */
     public function list(array $filters = []): array
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $filterString = '';
 
@@ -258,14 +249,14 @@ class DockerCLI extends Adapter
             $filterString = $filterString.' --filter "'.$key.'='.$value.'"';
         }
 
-        $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"'.$filterString, '', $stdout, $stderr);
+        $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"'.$filterString, '', $output);
 
         if ($result !== 0 && $result !== -1) {
-            throw new Orchestration("Docker Error: {$stderr}");
+            throw new Orchestration("Docker Error: {$output}");
         }
 
         $list = [];
-        $stdoutArray = \explode("\n", $stdout);
+        $stdoutArray = \explode("\n", $output);
 
         foreach ($stdoutArray as $value) {
             $container = [];
@@ -318,8 +309,7 @@ class DockerCLI extends Adapter
         bool $remove = false,
         string $network = ''
     ): string {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         foreach ($command as $key => $value) {
             if (str_contains($value, ' ')) {
@@ -376,13 +366,13 @@ class DockerCLI extends Adapter
         (empty($hostname) ? '' : " --hostname {$hostname}").
         (empty($vars) ? '' : ' '.\implode(' ', $vars)).
         " {$image}".
-        (empty($command) ? '' : ' '.implode(' ', $command)), '', $stdout, $stderr, 30);
+        (empty($command) ? '' : ' '.implode(' ', $command)), '', $output, 30);
 
         if ($result !== 0) {
-            throw new Orchestration("Docker Error: {$stderr}");
+            throw new Orchestration("Docker Error: {$output}");
         }
 
-        return rtrim($stdout);
+        return rtrim($output);
     }
 
     /**
@@ -394,8 +384,7 @@ class DockerCLI extends Adapter
     public function execute(
         string $name,
         array $command,
-        string &$stdout = '',
-        string &$stderr = '',
+        string &$output = '',
         array $vars = [],
         int $timeout = -1
     ): bool {
@@ -416,13 +405,13 @@ class DockerCLI extends Adapter
 
         $vars = $parsedVariables;
 
-        $result = Console::execute('docker exec '.\implode(' ', $vars)." {$name} ".implode(' ', $command), '', $stdout, $stderr, $timeout);
+        $result = Console::execute('docker exec '.\implode(' ', $vars)." {$name} ".implode(' ', $command), '', $output, $timeout);
 
         if ($result !== 0) {
             if ($result == 124) {
                 throw new Timeout('Command timed out');
             } else {
-                throw new Orchestration("Docker Error: {$stderr}");
+                throw new Orchestration("Docker Error: {$output}");
             }
         }
 
@@ -434,13 +423,12 @@ class DockerCLI extends Adapter
      */
     public function remove(string $name, bool $force = false): bool
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
-        $result = Console::execute('docker rm '.($force ? '--force' : '')." {$name}", '', $stdout, $stderr);
+        $result = Console::execute('docker rm '.($force ? '--force' : '')." {$name}", '', $output);
 
-        if (! str_contains($stdout, $name)) {
-            throw new Orchestration("Docker Error: {$stderr}");
+        if (! \str_starts_with($output, $name) || \str_contains($output, 'No such container')) {
+            throw new Orchestration("Docker Error: {$output}");
         }
 
         return ! $result;

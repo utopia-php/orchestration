@@ -427,7 +427,7 @@ class DockerCLI extends Adapter
 
         $result = Console::execute('docker rm '.($force ? '--force' : '')." {$name}", '', $output);
 
-        if (! str_contains($output, $name)) {
+        if (! \str_starts_with($output, $name) || \str_contains($output, 'No such container')) {
             throw new Orchestration("Docker Error: {$output}");
         }
 

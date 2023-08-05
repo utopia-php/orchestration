@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a1a9ccbb8efcd2dbcb48fd4305387081",
+    "content-hash": "f6f5a9aa8be54983b3488e4d0338c5db",
     "packages": [
         {
             "name": "utopia-php/cli",
-            "version": "0.15.0",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea"
+                "reference": "5b936638c90c86d1bae83d0dbe81fe14d12ff8ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
-                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/5b936638c90c86d1bae83d0dbe81fe14d12ff8ff",
+                "reference": "5b936638c90c86d1bae83d0dbe81fe14d12ff8ff",
                 "shasum": ""
             },
             "require": {
@@ -51,9 +51,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.15.0"
+                "source": "https://github.com/utopia-php/cli/tree/0.16.0"
             },
-            "time": "2023-03-01T05:55:14+00:00"
+            "time": "2023-08-05T13:13:08+00:00"
         },
         {
             "name": "utopia-php/framework",

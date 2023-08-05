@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c277fa2ed52b281f648be7fea4e296d1",
+    "content-hash": "a1a9ccbb8efcd2dbcb48fd4305387081",
     "packages": [
         {
             "name": "utopia-php/cli",
-            "version": "dev-feat-logs-combine",
+            "version": "0.15.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "03592ad7858c677079ae555cdc25a076dc0bb865"
+                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/03592ad7858c677079ae555cdc25a076dc0bb865",
-                "reference": "03592ad7858c677079ae555cdc25a076dc0bb865",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
+                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
                 "shasum": ""
             },
             "require": {
@@ -51,9 +51,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/feat-logs-combine"
+                "source": "https://github.com/utopia-php/cli/tree/0.15.0"
             },
-            "time": "2023-08-05T12:45:44+00:00"
+            "time": "2023-03-01T05:55:14+00:00"
         },
         {
             "name": "utopia-php/framework",
@@ -3976,18 +3976,9 @@
             "time": "2015-12-17T08:42:14+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/cli",
-            "version": "dev-feat-logs-combine",
-            "alias": "0.14.99",
-            "alias_normalized": "0.14.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/cli": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

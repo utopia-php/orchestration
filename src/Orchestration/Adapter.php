@@ -109,7 +109,7 @@ abstract class Adapter
      * @param  string[]  $command
      * @param  array<string, string>  $vars
      */
-    abstract public function execute(string $name, array $command, string &$stdout, string &$stderr, array $vars = [], int $timeout = -1): bool;
+    abstract public function execute(string $name, array $command, string &$output, array $vars = [], int $timeout = -1): bool;
 
     /**
      * Remove Container

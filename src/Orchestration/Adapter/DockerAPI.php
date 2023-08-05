@@ -486,8 +486,7 @@ class DockerAPI extends Adapter
     public function execute(
         string $name,
         array $command,
-        string &$stdout,
-        string &$stderr,
+        string &$output,
         array $vars = [],
         int $timeout = -1
     ): bool {
@@ -520,8 +519,7 @@ class DockerAPI extends Adapter
 
         $result = $this->streamCall('http://localhost/exec/'.$parsedResponse['Id'].'/start', $timeout);
 
-        $stdout = $result['stdout'];
-        $stderr = $result['stderr'];
+        $output = $result['stdout'].$result['stderr'];
 
         if ($result['code'] !== 200) {
             throw new Orchestration('Failed to create execute command: '.$result['response'].' Response Code: '.$result['code']);

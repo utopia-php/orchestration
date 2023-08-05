@@ -186,8 +186,7 @@ abstract class Base extends TestCase
      */
     public function testExecContainer(): void
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $response = static::getOrchestration()->execute(
             'TestContainer',
@@ -195,20 +194,18 @@ abstract class Base extends TestCase
                 'php',
                 'index.php',
             ],
-            $stdout,
-            $stderr,
+            $output,
             [
                 'test' => 'testEnviromentVariable',
             ],
         );
 
-        $this->assertEquals('Hello World! testEnviromentVariable', $stdout);
+        $this->assertEquals('Hello World! testEnviromentVariable', $output);
 
         /**
          * Test for Failure
          */
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $this->expectException(\Exception::class);
 
@@ -218,8 +215,7 @@ abstract class Base extends TestCase
                 'php',
                 'index.php',
             ],
-            $stdout,
-            $stderr
+            $output
         );
     }
 
@@ -228,8 +224,7 @@ abstract class Base extends TestCase
      */
     public function testCheckVolume(): void
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $response = static::getOrchestration()->execute(
             'TestContainer',
@@ -237,11 +232,10 @@ abstract class Base extends TestCase
                 'cat',
                 '/test/testfile.txt',
             ],
-            $stdout,
-            $stderr
+            $output
         );
 
-        $this->assertEquals('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper.', $stdout);
+        $this->assertEquals('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper.', $output);
     }
 
     /**
@@ -277,8 +271,7 @@ abstract class Base extends TestCase
         /**
          * Test for Failure
          */
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $this->expectException(\Exception::class);
 
@@ -288,8 +281,7 @@ abstract class Base extends TestCase
                 'php',
                 'index.php',
             ],
-            $stdout,
-            $stderr,
+            $output,
             [],
             1
         );
@@ -297,8 +289,7 @@ abstract class Base extends TestCase
         /**
          * Test for Success
          */
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $response = static::getOrchestration()->execute(
             'TestContainerTimeout',
@@ -306,8 +297,7 @@ abstract class Base extends TestCase
                 'php',
                 'index.php',
             ],
-            $stdout,
-            $stderr,
+            $output,
             [],
             10
         );
@@ -317,8 +307,7 @@ abstract class Base extends TestCase
         /**
          * Test for Success
          */
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $response = static::getOrchestration()->execute(
             'TestContainerTimeout',
@@ -327,13 +316,12 @@ abstract class Base extends TestCase
                 '-c',
                 'echo Hello World!',
             ],
-            $stdout,
-            $stderr,
+            $output,
             [],
             10
         );
 
-        $this->assertEquals('Hello World!', $stdout);
+        $this->assertEquals('Hello World!', $output);
         $this->assertEquals(true, $response);
     }
 
@@ -504,10 +492,9 @@ abstract class Base extends TestCase
         $this->assertNotEmpty($containerId2);
 
         // This allows CPU-heavy load check
-        $stdout = '';
-        $stderr = '';
-        static::getOrchestration()->execute($containerId1, ['screen', '-d', '-m', "'stress --cpu 1 --timeout 5'"], $stdout, $stderr); // Run in screen so it's background task
-        static::getOrchestration()->execute($containerId2, ['screen', '-d', '-m', "'stress --cpu 1 --timeout 5'"], $stdout, $stderr);
+        $output = '';
+        static::getOrchestration()->execute($containerId1, ['screen', '-d', '-m', "'stress --cpu 1 --timeout 5'"], $output); // Run in screen so it's background task
+        static::getOrchestration()->execute($containerId2, ['screen', '-d', '-m', "'stress --cpu 1 --timeout 5'"], $output);
 
         // Set CPU stress-test start
         \sleep(1);

@@ -2,7 +2,6 @@
 
 namespace Orchestration\Adapter;
 
-use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Adapter\DockerSwarmCLI;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Tests\Base;
@@ -24,7 +23,7 @@ class DockerSwarmCLITest extends Base
 
     public static function getOrchestration(): Orchestration
     {
-        if (!is_null(self::$orchestration)) {
+        if (! is_null(self::$orchestration)) {
             return self::$orchestration;
         }
 

@@ -15,8 +15,8 @@ class DockerSwarmCLI extends Adapter
     /**
      * Constructor
      *
-     * @param string $username
-     * @param string $password
+     * @param  string  $username
+     * @param  string  $password
      * @return void
      */
     public function __construct(string $username = null, string $password = null)
@@ -24,7 +24,7 @@ class DockerSwarmCLI extends Adapter
         if ($username && $password) {
             $output = '';
 
-            if (!Console::execute('docker login --username ' . $username . ' --password-stdin', $password, $output)) {
+            if (! Console::execute('docker login --username '.$username.' --password-stdin', $password, $output)) {
                 throw new Orchestration("Docker Error: {$output}");
             }
         }
@@ -37,7 +37,7 @@ class DockerSwarmCLI extends Adapter
     {
         $output = '';
 
-        $result = Console::execute('docker network create -d overlay --attachable ' . $name . ($internal ? '--internal' : ''), '', $output);
+        $result = Console::execute('docker network create -d overlay --attachable '.$name.($internal ? '--internal' : ''), '', $output);
 
         return $result === 0;
     }
@@ -49,7 +49,7 @@ class DockerSwarmCLI extends Adapter
     {
         $output = '';
 
-        $result = Console::execute('docker network rm ' . $name, '', $output);
+        $result = Console::execute('docker network rm '.$name, '', $output);
 
         return $result === 0;
     }
@@ -61,7 +61,7 @@ class DockerSwarmCLI extends Adapter
     {
         $output = '';
 
-        $result = Console::execute('docker service update --network-add ' . $network . ' ' . $container, '', $output);
+        $result = Console::execute('docker service update --network-add '.$network.' '.$container, '', $output);
 
         return $result === 0;
     }
@@ -73,7 +73,7 @@ class DockerSwarmCLI extends Adapter
     {
         $output = '';
 
-        $result = Console::execute(' docker service update --network-rm ' . $network . ' ' . $container . ($force ? ' --force' : ''), '', $output);
+        $result = Console::execute(' docker service update --network-rm '.$network.' '.$container.($force ? ' --force' : ''), '', $output);
 
         return $result === 0;
     }
@@ -83,8 +83,8 @@ class DockerSwarmCLI extends Adapter
      * Notice: Due to the limitations of Docker Swarm, this function is not feasible, as Docker Swarm
      * does not have the capability to access statistics for containers across different nodes.
      *
-     * @param string $container
-     * @param array<string, string> $filters
+     * @param  string  $container
+     * @param  array<string, string>  $filters
      * @return array<Stats>
      */
     public function getStats(string $container = null, array $filters = []): array
@@ -94,7 +94,7 @@ class DockerSwarmCLI extends Adapter
 
         if ($container === null) {
             $containers = $this->list($filters);
-            $containerIds = \array_map(fn($c) => $c->getId(), $containers);
+            $containerIds = \array_map(fn ($c) => $c->getId(), $containers);
         } else {
             $containerIds[] = $container;
         }
@@ -110,10 +110,10 @@ class DockerSwarmCLI extends Adapter
         $containersString = '';
 
         foreach ($containerIds as $containerId) {
-            $containersString .= ' ' . $containerId;
+            $containersString .= ' '.$containerId;
         }
 
-        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream' . $containersString, '', $output);
+        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream'.$containersString, '', $output);
 
         if ($result !== 0) {
             throw new Orchestration("Docker Error: {$output}");
@@ -230,7 +230,7 @@ class DockerSwarmCLI extends Adapter
     {
         $output = '';
 
-        $result = Console::execute('docker pull ' . $image, '', $output);
+        $result = Console::execute('docker pull '.$image, '', $output);
 
         return $result === 0;
     }
@@ -238,7 +238,7 @@ class DockerSwarmCLI extends Adapter
     /**
      * List Containers
      *
-     * @param array<string, string> $filters
+     * @param  array<string, string>  $filters
      * @return Container[]
      */
     public function list(array $filters = []): array
@@ -248,10 +248,10 @@ class DockerSwarmCLI extends Adapter
         $filterString = '';
 
         foreach ($filters as $key => $value) {
-            $filterString = $filterString . ' --filter "' . $key . '=' . $value . '"';
+            $filterString = $filterString.' --filter "'.$key.'='.$value.'"';
         }
 
-        $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"' . $filterString, '', $output);
+        $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"'.$filterString, '', $output);
 
         if ($result !== 0 && $result !== -1) {
             throw new Orchestration("Docker Error: {$output}");
@@ -294,30 +294,29 @@ class DockerSwarmCLI extends Adapter
      * Creates and runs a new container, On success it will return a string containing the container ID.
      * On fail it will throw an exception.
      *
-     * @param string[] $command
-     * @param string[] $volumes
-     * @param array<string, string> $vars
+     * @param  string[]  $command
+     * @param  string[]  $volumes
+     * @param  array<string, string>  $vars
      */
     public function run(string $image,
-                        string $name,
-                        array  $command = [],
-                        string $entrypoint = '',
-                        string $workdir = '',
-                        array  $volumes = [],
-                        array  $vars = [],
-                        string $mountFolder = '',
-                        array  $labels = [],
-                        string $hostname = '',
-                        bool   $remove = false,
-                        string $network = '',
-                        int    $replicas = 1
-    ): string
-    {
+        string $name,
+        array $command = [],
+        string $entrypoint = '',
+        string $workdir = '',
+        array $volumes = [],
+        array $vars = [],
+        string $mountFolder = '',
+        array $labels = [],
+        string $hostname = '',
+        bool $remove = false,
+        string $network = '',
+        int $replicas = 1
+    ): string {
         $output = '';
 
         foreach ($command as $key => $value) {
             if (str_contains($value, ' ')) {
-                $command[$key] = "'" . $value . "'";
+                $command[$key] = "'".$value."'";
             }
         }
 
@@ -328,10 +327,10 @@ class DockerSwarmCLI extends Adapter
             $label = str_replace("'", '', $label);
 
             if (str_contains($label, ' ')) {
-                $label = "'" . $label . "'";
+                $label = "'".$label."'";
             }
 
-            $labelString = $labelString . ' --label ' . $labelKey . '=' . $label;
+            $labelString = $labelString.' --label '.$labelKey.'='.$label;
         }
 
         $parsedVariables = [];
@@ -346,7 +345,7 @@ class DockerSwarmCLI extends Adapter
         $volumeString = '';
         foreach ($volumes as $volume) {
             $mount = explode(':', $volume);
-            $volumeString = $volumeString . "--mount type=volume,source={$mount[0]},destination={$mount[1]}";
+            $volumeString = $volumeString."--mount type=volume,source={$mount[0]},destination={$mount[1]}";
 
         }
 
@@ -354,24 +353,24 @@ class DockerSwarmCLI extends Adapter
 
         $time = time();
 
-        $result = Console::execute('docker service create' .
-            ' -d' .
-            (empty($replicas) ? '' : " --replicas=\"{$replicas}\"") .
-            (empty($network) ? '' : " --network=\"{$network}\"") .
-            (empty($entrypoint) ? '' : " --entrypoint=\"{$entrypoint}\"") .
-            (empty($this->cpus) ? '' : (' --cpus=' . $this->cpus)) .
-            (empty($this->memory) ? '' : (' --memory=' . $this->memory . 'm')) .
-            (empty($this->swap) ? '' : (' --memory-swap=' . $this->swap . 'm')) .
-            " --name={$name}" .
-            " --label {$this->namespace}-type=runtime" .
-            " --label {$this->namespace}-created={$time}" .
-            (empty($volumeString) ? '' : ' ' . $volumeString) .
-            (empty($labelString) ? '' : ' ' . $labelString) .
-            (empty($workdir) ? '' : " --workdir {$workdir}") .
-            (empty($hostname) ? '' : " --hostname {$hostname}") .
-            (empty($vars) ? '' : ' ' . \implode(' ', $vars)) .
-            " {$image}" .
-            (empty($command) ? '' : ' ' . implode(' ', $command)), '', $output, 30);
+        $result = Console::execute('docker service create'.
+            ' -d'.
+            (empty($replicas) ? '' : " --replicas=\"{$replicas}\"").
+            (empty($network) ? '' : " --network=\"{$network}\"").
+            (empty($entrypoint) ? '' : " --entrypoint=\"{$entrypoint}\"").
+            (empty($this->cpus) ? '' : (' --cpus='.$this->cpus)).
+            (empty($this->memory) ? '' : (' --memory='.$this->memory.'m')).
+            (empty($this->swap) ? '' : (' --memory-swap='.$this->swap.'m')).
+            " --name={$name}".
+            " --label {$this->namespace}-type=runtime".
+            " --label {$this->namespace}-created={$time}".
+            (empty($volumeString) ? '' : ' '.$volumeString).
+            (empty($labelString) ? '' : ' '.$labelString).
+            (empty($workdir) ? '' : " --workdir {$workdir}").
+            (empty($hostname) ? '' : " --hostname {$hostname}").
+            (empty($vars) ? '' : ' '.\implode(' ', $vars)).
+            " {$image}".
+            (empty($command) ? '' : ' '.implode(' ', $command)), '', $output, 30);
 
         if ($result !== 0) {
             throw new Orchestration("Docker Error: {$output}");
@@ -385,20 +384,19 @@ class DockerSwarmCLI extends Adapter
      * Notice: Due to the limitations of Docker Swarm, this function is not feasible, as Docker Swarm does not
      * have the capability to access and execute commands for containers across different nodes.
      *
-     * @param string[] $command
-     * @param array<string, string> $vars
+     * @param  string[]  $command
+     * @param  array<string, string>  $vars
      */
     public function execute(
         string $name,
-        array  $command,
+        array $command,
         string &$output = '',
-        array  $vars = [],
-        int    $timeout = -1
-    ): bool
-    {
+        array $vars = [],
+        int $timeout = -1
+    ): bool {
         foreach ($command as $key => $value) {
             if (str_contains($value, ' ')) {
-                $command[$key] = "'" . $value . "'";
+                $command[$key] = "'".$value."'";
             }
         }
 
@@ -413,7 +411,7 @@ class DockerSwarmCLI extends Adapter
 
         $vars = $parsedVariables;
 
-        $result = Console::execute('docker exec ' . \implode(' ', $vars) . " {$name} " . implode(' ', $command), '', $output, $timeout);
+        $result = Console::execute('docker exec '.\implode(' ', $vars)." {$name} ".implode(' ', $command), '', $output, $timeout);
 
         if ($result !== 0) {
             if ($result == 124) {
@@ -423,7 +421,7 @@ class DockerSwarmCLI extends Adapter
             }
         }
 
-        return !$result;
+        return ! $result;
     }
 
     /**
@@ -435,10 +433,10 @@ class DockerSwarmCLI extends Adapter
 
         $result = Console::execute("docker service rm {$name}", '', $output);
 
-        if (!\str_starts_with($output, $name) || \str_contains($output, 'No such container')) {
+        if (! \str_starts_with($output, $name) || \str_contains($output, 'No such container')) {
             throw new Orchestration("Docker Error: {$output}");
         }
 
-        return !$result;
+        return ! $result;
     }
 }

@@ -37,7 +37,7 @@ class DockerSwarmCLI extends Adapter
     {
         $output = '';
 
-        $result = Console::execute('docker network -d overlay create ' . $name . ($internal ? '--internal' : ''), '', $output);
+        $result = Console::execute('docker network create -d overlay --attachable ' . $name . ($internal ? '--internal' : ''), '', $output);
 
         return $result === 0;
     }
@@ -61,7 +61,7 @@ class DockerSwarmCLI extends Adapter
     {
         $output = '';
 
-        $result = Console::execute('docker network connect ' . $network . ' ' . $container, '', $output);
+        $result = Console::execute('docker service update --network-add ' . $network . ' ' . $container, '', $output);
 
         return $result === 0;
     }
@@ -73,7 +73,7 @@ class DockerSwarmCLI extends Adapter
     {
         $output = '';
 
-        $result = Console::execute('docker network disconnect ' . $network . ' ' . $container . ($force ? ' --force' : ''), '', $output);
+        $result = Console::execute(' docker service update --network-rm ' . $network . ' ' . $container . ($force ? ' --force' : ''), '', $output);
 
         return $result === 0;
     }
@@ -345,7 +345,9 @@ class DockerSwarmCLI extends Adapter
 
         $volumeString = '';
         foreach ($volumes as $volume) {
-            $volumeString = $volumeString . '--volume ' . $volume . ' ';
+            $mount = explode(':', $volume);
+            $volumeString = $volumeString . "--mount type=volume,source={$mount[0]},destination={$mount[1]}";
+
         }
 
         $vars = $parsedVariables;
@@ -354,7 +356,6 @@ class DockerSwarmCLI extends Adapter
 
         $result = Console::execute('docker service create' .
             ' -d' .
-            ($remove ? ' --rm' : '') .
             (empty($replicas) ? '' : " --replicas=\"{$replicas}\"") .
             (empty($network) ? '' : " --network=\"{$network}\"") .
             (empty($entrypoint) ? '' : " --entrypoint=\"{$entrypoint}\"") .
@@ -364,7 +365,6 @@ class DockerSwarmCLI extends Adapter
             " --name={$name}" .
             " --label {$this->namespace}-type=runtime" .
             " --label {$this->namespace}-created={$time}" .
-            (empty($mountFolder) ? '' : " --volume {$mountFolder}:/tmp:rw") .
             (empty($volumeString) ? '' : ' ' . $volumeString) .
             (empty($labelString) ? '' : ' ' . $labelString) .
             (empty($workdir) ? '' : " --workdir {$workdir}") .

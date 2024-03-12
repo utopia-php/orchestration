@@ -492,7 +492,7 @@ abstract class Base extends TestCase
         $this->assertNotEmpty($containerId2);
 
         // This allows CPU-heavy load check
-        
+
         $output = '';
         static::getOrchestration()->execute($containerId1, ['screen', '-d', '-m', 'stress --cpu 1 --timeout 5'], $output); // Run in screen so it's background task
         static::getOrchestration()->execute($containerId2, ['screen', '-d', '-m', 'stress --cpu 1 --timeout 5'], $output);
@@ -547,6 +547,7 @@ abstract class Base extends TestCase
         $this->assertEquals($stats[0]->getContainerId(), $stats2[0]->getContainerId());
         $this->assertEquals($stats[0]->getContainerName(), $stats2[0]->getContainerName());
 
+        var_dump($stats);
         $this->assertGreaterThanOrEqual(0.5, $stats[0]->getCpuUsage());
         $this->assertGreaterThanOrEqual(0.5, $stats[1]->getCpuUsage());
 

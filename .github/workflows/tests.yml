@@ -1,0 +1,36 @@
+name: Tests
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.0', nightly]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP with PECL extension
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: curl
+
+      - name: Install dependencies
+        run: composer install --ignore-platform-reqs
+
+      - name: Run tests
+        run: vendor/bin/phpunit --configuration phpunit.xml
+
+      - name: Run Psalm analysis
+        run: vendor/bin/psalm --show-info=true

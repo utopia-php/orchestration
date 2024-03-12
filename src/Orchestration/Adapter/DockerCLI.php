@@ -116,6 +116,12 @@ class DockerCLI extends Adapter
         if ($result !== 0) {
             throw new Orchestration("Docker Error: {$output}");
         }
+        $dump = function ($value) {
+            $p = var_export($value, true);
+            $b = debug_backtrace();
+            echo $b[0]['file'].':'.$b[0]['line'].' - '.$p."\n";
+        };
+        $dump($output);
 
         $lines = \explode("\n", $output);
 
@@ -344,6 +350,13 @@ class DockerCLI extends Adapter
 
         $vars = $parsedVariables;
 
+        $dump = function ($value) {
+            $p = var_export($value, true);
+            $b = debug_backtrace();
+            echo $b[0]['file'].':'.$b[0]['line'].' - '.$p."\n";
+        };
+        $dump(implode(' ', $command));
+
         $time = time();
 
         $result = Console::execute('docker run'.
@@ -400,6 +413,13 @@ class DockerCLI extends Adapter
         }
 
         $vars = $parsedVariables;
+
+        $dump = function ($value) {
+            $p = var_export($value, true);
+            $b = debug_backtrace();
+            echo $b[0]['file'].':'.$b[0]['line'].' - '.$p."\n";
+        };
+        $dump(implode(' ', $command));
 
         $result = Console::execute('docker exec '.\implode(' ', $vars)." {$name} ".implode(' ', $command), '', $output, $timeout);
 

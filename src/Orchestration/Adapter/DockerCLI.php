@@ -312,9 +312,7 @@ class DockerCLI extends Adapter
         $output = '';
 
         foreach ($command as $key => $value) {
-            if (str_contains($value, ' ')) {
-                $command[$key] = "'".$value."'";
-            }
+            $command[$key] = \escapeshellarg($command[$key]);
         }
 
         $labelString = '';
@@ -389,9 +387,7 @@ class DockerCLI extends Adapter
         int $timeout = -1
     ): bool {
         foreach ($command as $key => $value) {
-            if (str_contains($value, ' ')) {
-                $command[$key] = "'".$value."'";
-            }
+            $command[$key] = \escapeshellarg($command[$key]);
         }
 
         $parsedVariables = [];

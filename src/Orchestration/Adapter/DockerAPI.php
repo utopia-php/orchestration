@@ -42,9 +42,9 @@ class DockerAPI extends Adapter
      *
      * @param  array|bool|int|float|object|resource|string|null  $body
      * @param  string[]  $headers
+     * @param  string | null  $body
      * @return (bool|mixed|string)[]
-     *
-     * @psalm-return array{response: mixed, code: mixed}
+     * @return array{response: mixed, code: mixed}
      */
     protected function call(string $url, string $method, $body = null, array $headers = [], int $timeout = -1): array
     {
@@ -404,6 +404,7 @@ class DockerAPI extends Adapter
      * @param  string[]  $command
      * @param  string[]  $volumes
      * @param  array<string, string>  $vars
+     * @param  array<string, string>  $labels
      */
     public function run(
         string $image,

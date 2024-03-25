@@ -7,6 +7,8 @@
     "minimum-stability": "stable",
     "scripts": {
         "lint": "./vendor/bin/pint --test",
+        "test": "./vendor/bin/phpunit --configuration phpunit.xml",
+        "check": "./vendor/bin/phpstan analyse --level 6 src tests",
         "format": "./vendor/bin/pint"
     },
     "autoload": {
@@ -21,7 +23,7 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^9.3",
-        "vimeo/psalm": "4.0.1",
-        "laravel/pint": "^1.2"
+        "laravel/pint": "^1.2",
+        "phpstan/phpstan": "^1.10"
     }
 }

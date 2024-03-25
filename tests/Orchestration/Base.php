@@ -460,7 +460,7 @@ abstract class Base extends TestCase
         $this->assertCount(0, $stats);
 
         // This allows CPU-heavy load check
-        static::getOrchestration()->setCpus(0.1);
+        static::getOrchestration()->setCpus(1);
 
         $containerId1 = static::getOrchestration()->run(
             'containerstack/alpine-stress',  // https://github.com/containerstack/alpine-stress

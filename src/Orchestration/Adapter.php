@@ -54,6 +54,8 @@ abstract class Adapter
 
     /**
      * List Networks
+     *
+     * @return Network[]
      */
     abstract public function listNetworks(): array;
 
@@ -62,7 +64,7 @@ abstract class Adapter
      *
      * @param  string  $container
      * @param  array<string, string>  $filters
-     * @return array<Stats>
+     * @return array<\Utopia\Orchestration\Container\Stats>
      */
     abstract public function getStats(string $container = null, array $filters = []): array;
 
@@ -88,6 +90,7 @@ abstract class Adapter
      * @param  string[]  $command
      * @param  string[]  $volumes
      * @param  array<string, string>  $vars
+     * @param  array<string, string>  $labels
      */
     abstract public function run(
         string $image,

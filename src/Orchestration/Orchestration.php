@@ -91,6 +91,8 @@ class Orchestration
 
     /**
      * List Networks
+     *
+     * @return Network[]
      */
     public function listNetworks(): array
     {
@@ -110,7 +112,7 @@ class Orchestration
      *
      * @param  string  $container
      * @param  array<string, string>  $filters
-     * @return array<Stats>
+     * @return array<\Utopia\Orchestration\Container\Stats>
      */
     public function getStats(string $container = null, array $filters = []): array
     {
@@ -152,6 +154,7 @@ class Orchestration
      *
      * @param  string[]  $command
      * @param  string[]  $volumes
+     * @param  array<string, string>  $labels
      * @param  array<string, string>  $vars
      */
     public function run(

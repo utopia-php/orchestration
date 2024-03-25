@@ -54,6 +54,7 @@ abstract class Adapter
 
     /**
      * List Networks
+     * @return Network[]
      */
     abstract public function listNetworks(): array;
 
@@ -88,6 +89,7 @@ abstract class Adapter
      * @param  string[]  $command
      * @param  string[]  $volumes
      * @param  array<string, string>  $vars
+    * @param array<string, string> $labels
      */
     abstract public function run(
         string $image,

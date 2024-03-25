@@ -267,9 +267,6 @@ class DockerCLI extends Adapter
                 $labelsParsed = [];
 
                 foreach (\explode(',', $container['labels']) as $value) {
-                    if (is_array($value)) {
-                        $value = implode('', $value);
-                    }
                     $value = \explode('=', $value);
 
                     if (isset($value[0]) && isset($value[1])) {
@@ -415,7 +412,7 @@ class DockerCLI extends Adapter
             }
         }
 
-        return ! $result;
+        return true;
     }
 
     /**

@@ -62,7 +62,7 @@ abstract class Adapter
      *
      * @param  string  $container
      * @param  array<string, string>  $filters
-     * @return array<Stats>
+     * @return array<\Utopia\Orchestration\Container\Stats>
      */
     abstract public function getStats(string $container = null, array $filters = []): array;
 

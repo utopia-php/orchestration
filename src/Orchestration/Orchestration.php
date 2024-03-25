@@ -110,7 +110,7 @@ class Orchestration
      *
      * @param  string  $container
      * @param  array<string, string>  $filters
-     * @return array<Stats>
+     * @return array<\Utopia\Orchestration\Container\Stats>
      */
     public function getStats(string $container = null, array $filters = []): array
     {

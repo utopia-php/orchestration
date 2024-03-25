@@ -192,6 +192,7 @@ class DockerCLI extends Adapter
 
     /**
      * List Networks
+     *
      * @return Network[]
      */
     public function listNetworks(): array
@@ -293,7 +294,7 @@ class DockerCLI extends Adapter
      * @param  string[]  $command
      * @param  string[]  $volumes
      * @param  array<string, string>  $vars
-     * @param array<string, string> $labels
+     * @param  array<string, string>  $labels
      */
     public function run(string $image,
         string $name,

@@ -490,6 +490,7 @@ abstract class Base extends TestCase
         );
 
         $this->assertNotEmpty($containerId2);
+        sleep(2);
 
         // This allows CPU-heavy load check
         $output = '';

@@ -192,6 +192,8 @@ class DockerCLI extends Adapter
 
     /**
      * List Networks
+     *
+     * @return Network[]
      */
     public function listNetworks(): array
     {
@@ -267,9 +269,6 @@ class DockerCLI extends Adapter
                 $labelsParsed = [];
 
                 foreach (\explode(',', $container['labels']) as $value) {
-                    if (is_array($value)) {
-                        $value = implode('', $value);
-                    }
                     $value = \explode('=', $value);
 
                     if (isset($value[0]) && isset($value[1])) {
@@ -295,6 +294,7 @@ class DockerCLI extends Adapter
      * @param  string[]  $command
      * @param  string[]  $volumes
      * @param  array<string, string>  $vars
+     * @param  array<string, string>  $labels
      */
     public function run(string $image,
         string $name,
@@ -415,7 +415,7 @@ class DockerCLI extends Adapter
             }
         }
 
-        return ! $result;
+        return true;
     }
 
     /**

@@ -10,7 +10,7 @@ use Utopia\Orchestration\Exception\Orchestration;
 use Utopia\Orchestration\Exception\Timeout;
 use Utopia\Orchestration\Network;
 
-class DockerCLI extends Adapter
+class DockerSwarmCLI extends Adapter
 {
     /**
      * Constructor
@@ -37,7 +37,7 @@ class DockerCLI extends Adapter
     {
         $output = '';
 
-        $result = Console::execute('docker network create '.$name.($internal ? '--internal' : ''), '', $output);
+        $result = Console::execute('docker network create -d overlay --attachable '.$name.($internal ? '--internal' : ''), '', $output);
 
         return $result === 0;
     }
@@ -61,7 +61,7 @@ class DockerCLI extends Adapter
     {
         $output = '';
 
-        $result = Console::execute('docker network connect '.$network.' '.$container, '', $output);
+        $result = Console::execute('docker service update --network-add '.$network.' '.$container, '', $output);
 
         return $result === 0;
     }
@@ -73,13 +73,15 @@ class DockerCLI extends Adapter
     {
         $output = '';
 
-        $result = Console::execute('docker network disconnect '.$network.' '.$container.($force ? ' --force' : ''), '', $output);
+        $result = Console::execute(' docker service update --network-rm '.$network.' '.$container.($force ? ' --force' : ''), '', $output);
 
         return $result === 0;
     }
 
     /**
      * Get usage stats of containers
+     * Notice: Due to the limitations of Docker Swarm, this function is not feasible, as Docker Swarm
+     * does not have the capability to access statistics for containers across different nodes.
      *
      * @param  string  $container
      * @param  array<string, string>  $filters
@@ -163,7 +165,7 @@ class DockerCLI extends Adapter
             'TiB' => 1000000000000,
         ];
 
-        [ $inStr, $outStr ] = \explode(' / ', $stats);
+        [$inStr, $outStr] = \explode(' / ', $stats);
 
         $inUnit = null;
         $outUnit = null;
@@ -192,8 +194,6 @@ class DockerCLI extends Adapter
 
     /**
      * List Networks
-     *
-     * @return Network[]
      */
     public function listNetworks(): array
     {
@@ -269,6 +269,9 @@ class DockerCLI extends Adapter
                 $labelsParsed = [];
 
                 foreach (\explode(',', $container['labels']) as $value) {
+                    if (is_array($value)) {
+                        $value = implode('', $value);
+                    }
                     $value = \explode('=', $value);
 
                     if (isset($value[0]) && isset($value[1])) {
@@ -294,7 +297,6 @@ class DockerCLI extends Adapter
      * @param  string[]  $command
      * @param  string[]  $volumes
      * @param  array<string, string>  $vars
-     * @param  array<string, string>  $labels
      */
     public function run(string $image,
         string $name,
@@ -342,32 +344,33 @@ class DockerCLI extends Adapter
 
         $volumeString = '';
         foreach ($volumes as $volume) {
-            $volumeString = $volumeString.'--volume '.$volume.' ';
+            $mount = explode(':', $volume);
+            $volumeString = $volumeString."--mount type=volume,source={$mount[0]},destination={$mount[1]}";
+
         }
 
         $vars = $parsedVariables;
 
         $time = time();
 
-        $result = Console::execute('docker run'.
-        ' -d'.
-        ($remove ? ' --rm' : '').
-        (empty($network) ? '' : " --network=\"{$network}\"").
-        (empty($entrypoint) ? '' : " --entrypoint=\"{$entrypoint}\"").
-        (empty($this->cpus) ? '' : (' --cpus='.$this->cpus)).
-        (empty($this->memory) ? '' : (' --memory='.$this->memory.'m')).
-        (empty($this->swap) ? '' : (' --memory-swap='.$this->swap.'m')).
-        " --name={$name}".
-        " --label {$this->namespace}-type=runtime".
-        " --label {$this->namespace}-created={$time}".
-        (empty($mountFolder) ? '' : " --volume {$mountFolder}:/tmp:rw").
-        (empty($volumeString) ? '' : ' '.$volumeString).
-        (empty($labelString) ? '' : ' '.$labelString).
-        (empty($workdir) ? '' : " --workdir {$workdir}").
-        (empty($hostname) ? '' : " --hostname {$hostname}").
-        (empty($vars) ? '' : ' '.\implode(' ', $vars)).
-        " {$image}".
-        (empty($command) ? '' : ' '.implode(' ', $command)), '', $output, 30);
+        $result = Console::execute('docker service create'.
+            ' -d'.
+            (empty($replicas) ? '' : " --replicas=\"{$replicas}\"").
+            (empty($network) ? '' : " --network=\"{$network}\"").
+            (empty($entrypoint) ? '' : " --entrypoint=\"{$entrypoint}\"").
+            (empty($this->cpus) ? '' : (' --cpus='.$this->cpus)).
+            (empty($this->memory) ? '' : (' --memory='.$this->memory.'m')).
+            (empty($this->swap) ? '' : (' --memory-swap='.$this->swap.'m')).
+            " --name={$name}".
+            " --label {$this->namespace}-type=runtime".
+            " --label {$this->namespace}-created={$time}".
+            (empty($volumeString) ? '' : ' '.$volumeString).
+            (empty($labelString) ? '' : ' '.$labelString).
+            (empty($workdir) ? '' : " --workdir {$workdir}").
+            (empty($hostname) ? '' : " --hostname {$hostname}").
+            (empty($vars) ? '' : ' '.\implode(' ', $vars)).
+            " {$image}".
+            (empty($command) ? '' : ' '.implode(' ', $command)), '', $output, 30);
 
         if ($result !== 0) {
             throw new Orchestration("Docker Error: {$output}");
@@ -378,6 +381,8 @@ class DockerCLI extends Adapter
 
     /**
      * Execute Container
+     * Notice: Due to the limitations of Docker Swarm, this function is not feasible, as Docker Swarm does not
+     * have the capability to access and execute commands for containers across different nodes.
      *
      * @param  string[]  $command
      * @param  array<string, string>  $vars
@@ -416,7 +421,7 @@ class DockerCLI extends Adapter
             }
         }
 
-        return true;
+        return ! $result;
     }
 
     /**
@@ -426,7 +431,7 @@ class DockerCLI extends Adapter
     {
         $output = '';
 
-        $result = Console::execute('docker rm '.($force ? '--force' : '')." {$name}", '', $output);
+        $result = Console::execute("docker service rm {$name}", '', $output);
 
         if (! \str_starts_with($output, $name) || \str_contains($output, 'No such container')) {
             throw new Orchestration("Docker Error: {$output}");

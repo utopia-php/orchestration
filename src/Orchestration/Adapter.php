@@ -104,7 +104,8 @@ abstract class Adapter
         array $labels = [],
         string $hostname = '',
         bool $remove = false,
-        string $network = ''): string;
+        string $network = '',
+        int $replicas = 1): string;
 
     /**
      * Execute Container

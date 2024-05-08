@@ -418,7 +418,8 @@ class DockerAPI extends Adapter
         array $labels = [],
         string $hostname = '',
         bool $remove = false,
-        string $network = ''
+        string $network = '',
+        int $replicas = 1
     ): string {
         $parsedVariables = [];
 

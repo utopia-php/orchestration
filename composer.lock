@@ -4,31 +4,31 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "48c2bbcd6ef1dc35e86875383889ffa9",
+    "content-hash": "6f2c193a6f8afa27499810233331b69c",
     "packages": [
         {
             "name": "utopia-php/cli",
-            "version": "0.16.0",
+            "version": "0.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "5b936638c90c86d1bae83d0dbe81fe14d12ff8ff"
+                "reference": "48610e02976180ac7eddf1c110cd675c6d2912d5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/5b936638c90c86d1bae83d0dbe81fe14d12ff8ff",
-                "reference": "5b936638c90c86d1bae83d0dbe81fe14d12ff8ff",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/48610e02976180ac7eddf1c110cd675c6d2912d5",
+                "reference": "48610e02976180ac7eddf1c110cd675c6d2912d5",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.4",
-                "utopia-php/framework": "0.*.*"
+                "utopia-php/framework": "0.34.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "^1.10",
                 "phpunit/phpunit": "^9.3",
-                "squizlabs/php_codesniffer": "^3.6",
-                "vimeo/psalm": "4.0.1"
+                "squizlabs/php_codesniffer": "^3.6"
             },
             "type": "library",
             "autoload": {
@@ -51,54 +51,57 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.16.0"
+                "source": "https://github.com/utopia-php/cli/tree/0.18.0"
             },
-            "time": "2023-08-05T13:13:08+00:00"
+            "time": "2024-05-08T05:05:53+00:00"
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.29",
+            "version": "0.34.2",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/framework.git",
-                "reference": "1c8ed95fb73531b0508ad69f85dafc4c78a64414"
+                "url": "https://github.com/utopia-php/http.git",
+                "reference": "fd126c02b78cc80678c9638f7b335dfb4a841b78"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/1c8ed95fb73531b0508ad69f85dafc4c78a64414",
-                "reference": "1c8ed95fb73531b0508ad69f85dafc4c78a64414",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/fd126c02b78cc80678c9638f7b335dfb4a841b78",
+                "reference": "fd126c02b78cc80678c9638f7b335dfb4a841b78",
                 "shasum": ""
             },
             "require": {
+                "ext-swoole": "*",
                 "php": ">=8.0"
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
                 "phpbench/phpbench": "^1.2",
                 "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.5.25"
+                "phpunit/phpunit": "^9.5.25",
+                "swoole/ide-helper": "4.8.3"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\": "src/"
+                    "Utopia\\Http\\": "src/Http"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
-            "description": "A simple, light and advanced PHP framework",
+            "description": "A simple, light and advanced PHP HTTP framework",
             "keywords": [
                 "framework",
+                "http",
                 "php",
                 "upf"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.29"
+                "issues": "https://github.com/utopia-php/http/issues",
+                "source": "https://github.com/utopia-php/http/tree/0.34.2"
             },
-            "time": "2023-07-30T07:56:23+00:00"
+            "time": "2024-02-20T11:36:56+00:00"
         }
     ],
     "packages-dev": [
@@ -1969,7 +1972,8 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=8.0"
+        "php": ">=8.0",
+        "ext-curl": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.6.0"

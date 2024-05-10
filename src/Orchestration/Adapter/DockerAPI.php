@@ -15,12 +15,8 @@ class DockerAPI extends Adapter
 {
     /**
      * Constructor
-     *
-     * @param  string  $username
-     * @param  string  $password
-     * @param  string  $email
      */
-    public function __construct(string $username = null, string $password = null, string $email = null)
+    public function __construct(?string $username = null, ?string $password = null, ?string $email = null)
     {
         if ($username && $password && $email) {
             $this->registryAuth = base64_encode(json_encode([
@@ -254,11 +250,10 @@ class DockerAPI extends Adapter
     /**
      * Get usage stats of containers
      *
-     * @param  string  $container
      * @param  array<string, string>  $filters
      * @return array<Stats>
      */
-    public function getStats(string $container = null, array $filters = []): array
+    public function getStats(?string $container = null, array $filters = []): array
     {
         // List ahead of time, since API does not allow listing all usage stats
         $containerIds = [];

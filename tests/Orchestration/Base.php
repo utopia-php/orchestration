@@ -488,6 +488,10 @@ abstract class Base extends TestCase
 
         $this->assertNotEmpty($containerId1);
 
+        $output = '';
+        Console::execute("docker inspect $containerId1", '', $output);
+        $dump($output);
+
         $containerId2 = static::getOrchestration()->run(
             'containerstack/alpine-stress',
             'UsageStats2',
@@ -508,6 +512,10 @@ abstract class Base extends TestCase
         $this->assertNotEmpty($containerId2);
 
         $output = '';
+        Console::execute("docker inspect $containerId2", '', $output);
+        $dump($output);
+
+        $output = '';
         static::getOrchestration()->execute($containerId1, ['which', 'screen'], $output);
         $dump($output);
         sleep(5);
@@ -522,10 +530,10 @@ abstract class Base extends TestCase
 
         // This allows CPU-heavy load check
         $output = '';
-        static::getOrchestration()->execute($containerId1, ['stress', '--cpu', '1', '--timeout', '5'], $output); // Run in screen so it's background task
+        static::getOrchestration()->execute($containerId1, ['screen', '-d', '-m', 'stress --cpu 1 --timeout 5'], $output); // Run in screen so it's background task
         $dump($output);
         $output = '';
-        static::getOrchestration()->execute($containerId2, ['stress', '--cpu', '1', '--timeout', '5'], $output);
+        static::getOrchestration()->execute($containerId2, ['screen', '-d', '-m', 'stress --cpu 1 --timeout 5'], $output);
         $dump($output);
 
         // Set CPU stress-test start

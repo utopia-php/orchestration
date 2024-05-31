@@ -2,27 +2,19 @@
 
 namespace Utopia\Tests;
 
-use Exception;
 use PHPUnit\Framework\TestCase;
-use Utopia\Orchestration\Exception\Timeout;
 use Utopia\Orchestration\Orchestration;
 
 abstract class Base extends TestCase
 {
-    /**
-     * @return Orchestration
-     */
-    abstract static protected function getOrchestration(): Orchestration;
+    abstract protected static function getOrchestration(): Orchestration;
 
-    /**
-     * @return string
-     */
-    abstract static protected function getAdapterName(): string;
+    abstract protected static function getAdapterName(): string;
 
     /**
      * @var string
      */
-    static $containerID;
+    public static $containerID;
 
     public function setUp(): void
     {
@@ -49,13 +41,11 @@ abstract class Base extends TestCase
         /**
          * Test for Failure
          */
-
         $response = static::getOrchestration()->pull('appwrite/tXDytMhecKCuz5B4PlITXL1yKhZXDP'); // Pull non-existent Container
         $this->assertEquals(false, $response);
     }
 
     /**
-     * @return void
      * @depends testPullImage
      */
     public function testCreateContainer(): void
@@ -66,15 +56,15 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null'
+                'cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null',
             ],
             '',
             '/usr/local/src/',
             [
-                __DIR__ . '/Resources:/test:rw'
+                __DIR__.'/Resources:/test:rw',
             ],
             [],
-            __DIR__ . '/Resources'
+            __DIR__.'/Resources'
         );
 
         $this->assertNotEmpty($response);
@@ -90,20 +80,19 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null'
+                'cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null',
             ],
             '',
             '/usr/local/src/',
             [],
             [],
-            __DIR__ . '/Resources',
+            __DIR__.'/Resources',
         );
     }
 
     // Network Tests
 
     /**
-     * @return void
      * @depends testCreateContainer
      */
     public function testCreateNetwork(): void
@@ -114,7 +103,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testCreateNetwork
      */
     public function testListNetworks(): void
@@ -133,7 +121,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testCreateNetwork
      */
     public function testnetworkConnect(): void
@@ -144,7 +131,37 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
+     * @depends testCreateNetwork
+     */
+    public function testCreateContainerWithNetwork(): void
+    {
+        $response = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            'TestContainerRM',
+            [
+                'sh',
+                '-c',
+                'echo Hello World!',
+            ],
+            '',
+            '/usr/local/src/',
+            [],
+            [
+                'teasdsa' => '',
+            ],
+            __DIR__.'/Resources',
+            [
+                'test2' => 'Hello World!',
+            ],
+            '',
+            true,
+            'TestNetwork'
+        );
+
+        $this->assertNotEmpty($response);
+    }
+
+    /**
      * @depends testnetworkConnect
      */
     public function testnetworkDisconnect(): void
@@ -154,9 +171,7 @@ abstract class Base extends TestCase
         $this->assertEquals(true, $response);
     }
 
-
     /**
-     * @return void
      * @depends testCreateNetwork
      */
     public function testRemoveNetwork(): void
@@ -167,35 +182,30 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testCreateContainer
      */
     public function testExecContainer(): void
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $response = static::getOrchestration()->execute(
             'TestContainer',
             [
                 'php',
-                'index.php'
+                'index.php',
             ],
-            $stdout,
-            $stderr,
+            $output,
             [
-                'test' => 'testEnviromentVariable'
+                'test' => 'testEnviromentVariable',
             ],
         );
 
-        $this->assertEquals('Hello World! testEnviromentVariable', $stdout);
+        $this->assertEquals('Hello World! testEnviromentVariable', $output);
 
         /**
          * Test for Failure
          */
-
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $this->expectException(\Exception::class);
 
@@ -203,37 +213,32 @@ abstract class Base extends TestCase
             '60clotVWpufbEpy33zJLcoYHrUTqWaD1FV0FZWsw', // Non-Existent Container
             [
                 'php',
-                'index.php'
+                'index.php',
             ],
-            $stdout,
-            $stderr
+            $output
         );
     }
 
     /**
-     * @return void
      * @depends testExecContainer
      */
     public function testCheckVolume(): void
     {
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $response = static::getOrchestration()->execute(
             'TestContainer',
             [
                 'cat',
-                '/test/testfile.txt'
+                '/test/testfile.txt',
             ],
-            $stdout,
-            $stderr
+            $output
         );
 
-        $this->assertEquals('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper.', $stdout);
+        $this->assertEquals('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper.', $output);
     }
 
     /**
-     * @return void
      * @depends testExecContainer
      */
     public function testTimeoutContainer(): void
@@ -245,7 +250,7 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'cp /tmp/timeout.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null'
+                'cp /tmp/timeout.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null',
             ],
             '',
             '/usr/local/src/',
@@ -253,9 +258,9 @@ abstract class Base extends TestCase
             [
                 'teasdsa' => '',
             ],
-            __DIR__ . '/Resources',
+            __DIR__.'/Resources',
             [
-                'test2' => 'Hello World!'
+                'test2' => 'Hello World!',
             ]
         );
 
@@ -266,9 +271,7 @@ abstract class Base extends TestCase
         /**
          * Test for Failure
          */
-
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $this->expectException(\Exception::class);
 
@@ -276,10 +279,9 @@ abstract class Base extends TestCase
             'TestContainerTimeout',
             [
                 'php',
-                'index.php'
+                'index.php',
             ],
-            $stdout,
-            $stderr,
+            $output,
             [],
             1
         );
@@ -287,18 +289,15 @@ abstract class Base extends TestCase
         /**
          * Test for Success
          */
-
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $response = static::getOrchestration()->execute(
             'TestContainerTimeout',
             [
                 'php',
-                'index.php'
+                'index.php',
             ],
-            $stdout,
-            $stderr,
+            $output,
             [],
             10
         );
@@ -308,29 +307,25 @@ abstract class Base extends TestCase
         /**
          * Test for Success
          */
-
-        $stdout = '';
-        $stderr = '';
+        $output = '';
 
         $response = static::getOrchestration()->execute(
             'TestContainerTimeout',
             [
                 'sh',
                 '-c',
-                'echo Hello World!'
+                'echo Hello World!',
             ],
-            $stdout,
-            $stderr,
+            $output,
             [],
             10
         );
 
-        $this->assertEquals('Hello World!', $stdout);
+        $this->assertEquals('Hello World!', $output);
         $this->assertEquals(true, $response);
     }
 
     /**
-     * @return void
      * @depends testCreateContainer
      */
     public function testListContainers(): void
@@ -349,7 +344,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testCreateContainer
      */
     public function testListFilters(): void
@@ -360,7 +354,6 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testCreateContainer
      */
     public function testRemoveContainer(): void
@@ -393,7 +386,7 @@ abstract class Base extends TestCase
         $this->assertEquals([
             'sh',
             '-c',
-            "'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
+            "'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'",
         ], $test);
 
         $test = static::getOrchestration()->parseCommandString('sudo apt-get update');
@@ -401,13 +394,13 @@ abstract class Base extends TestCase
         $this->assertEquals([
             'sudo',
             'apt-get',
-            'update'
+            'update',
         ], $test);
 
         $test = static::getOrchestration()->parseCommandString('test');
 
         $this->assertEquals([
-            'test'
+            'test',
         ], $test);
 
         /**
@@ -418,7 +411,7 @@ abstract class Base extends TestCase
         $test = static::getOrchestration()->parseCommandString("sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null");
     }
 
-    public function testRunRemove():void
+    public function testRunRemove(): void
     {
         /**
          * Test for success
@@ -429,7 +422,7 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'echo Hello World!'
+                'echo Hello World!',
             ],
             '',
             '/usr/local/src/',
@@ -437,9 +430,9 @@ abstract class Base extends TestCase
             [
                 'teasdsa' => '',
             ],
-            __DIR__ . '/Resources',
+            __DIR__.'/Resources',
             [
-                'test2' => 'Hello World!'
+                'test2' => 'Hello World!',
             ],
             '',
             true
@@ -456,19 +449,18 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @return void
      * @depends testPullImage
      */
-    public function testUsageStats(): void {
+    public function testUsageStats(): void
+    {
         /**
          * Test for Success
          */
-
         $stats = static::getOrchestration()->getStats();
         $this->assertCount(0, $stats);
 
         // This allows CPU-heavy load check
-        static::getOrchestration()->setCpus(0.1);
+        static::getOrchestration()->setCpus(1);
 
         $containerId1 = static::getOrchestration()->run(
             'containerstack/alpine-stress',  // https://github.com/containerstack/alpine-stress
@@ -476,11 +468,11 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'apk update && apk add screen && tail -f /dev/null'
+                'apk update && apk add screen && tail -f /dev/null',
             ],
             workdir: '/usr/local/src/',
-            mountFolder: __DIR__ . '/Resources',
-            labels: [ 'utopia-container-type' => 'stats' ]
+            mountFolder: __DIR__.'/Resources',
+            labels: ['utopia-container-type' => 'stats']
         );
 
         $this->assertNotEmpty($containerId1);
@@ -491,19 +483,19 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'apk update && apk add screen && tail -f /dev/null'
+                'apk update && apk add screen && tail -f /dev/null',
             ],
             workdir: '/usr/local/src/',
-            mountFolder: __DIR__ . '/Resources',
+            mountFolder: __DIR__.'/Resources',
         );
 
         $this->assertNotEmpty($containerId2);
+        sleep(2);
 
         // This allows CPU-heavy load check
-        $stdout = "";
-        $stderr = "";
-        static::getOrchestration()->execute($containerId1, ["screen", "-d", "-m", "'stress --cpu 1 --timeout 5'"], $stdout, $stderr); // Run in screen so it's background task
-        static::getOrchestration()->execute($containerId2, ["screen", "-d", "-m", "'stress --cpu 1 --timeout 5'"], $stdout, $stderr);
+        $output = '';
+        static::getOrchestration()->execute($containerId1, ['screen', '-d', '-m', "'stress --cpu 1 --timeout 5'"], $output); // Run in screen so it's background task
+        static::getOrchestration()->execute($containerId2, ['screen', '-d', '-m', "'stress --cpu 1 --timeout 5'"], $output);
 
         // Set CPU stress-test start
         \sleep(1);
@@ -576,9 +568,8 @@ abstract class Base extends TestCase
         /**
          * Test for Failure
          */
-
         $this->expectException(\Exception::class);
 
-        $stats = static::getOrchestration()->getStats("IDontExist");
+        $stats = static::getOrchestration()->getStats('IDontExist');
     }
 }

@@ -6,31 +6,24 @@ use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Tests\Base;
 
-class DockerAPITest extends Base {
+class DockerAPITest extends Base
+{
     /**
-     * @var Orchestration
+     * @var Orchestration|null
      */
-
-    static $orchestration = null;
+    public static $orchestration = null;
 
     /**
      * Return name of adapter
-     *
-     * @return string
      */
-
-    static function getAdapterName(): string
+    public static function getAdapterName(): string
     {
         return 'Docker API';
     }
 
-    /**
-     * @return Orchestration
-     */
-
-    static function getOrchestration(): Orchestration
+    public static function getOrchestration(): Orchestration
     {
-        if (!is_null(self::$orchestration)) {
+        if (! is_null(self::$orchestration)) {
             return self::$orchestration;
         }
 

@@ -141,7 +141,7 @@ class DockerAPI extends Adapter
         $stdout = '';
         $stderr = '';
 
-        $callback = function (CurlHandle $ch, string $str) use (&$stdout, &$stderr): int {
+        $callback = function (mixed $ch, string $str) use (&$stdout, &$stderr): int {
             if (empty($str)) {
                 return 0;
             }

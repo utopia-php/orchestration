@@ -100,7 +100,7 @@ class DockerAPI extends Adapter
     protected function streamCall(string $url, int $timeout = -1): array
     {
         $body = \json_encode([
-            'Detach' => false
+            'Detach' => false,
         ]);
 
         $ch = \curl_init();
@@ -114,7 +114,7 @@ class DockerAPI extends Adapter
 
         $headers = [
             'Content-Type: application/json',
-            'Content-Length: '. $contentLength,
+            'Content-Length: '.$contentLength,
         ];
 
         $headers[] = 'Host: utopia-php'; // Fix Swoole headers bug with socket requests
@@ -142,7 +142,7 @@ class DockerAPI extends Adapter
         $stderr = '';
 
         $callback = function (CurlHandle $ch, string $str) use (&$stdout, &$stderr): int {
-            if(empty($str)) {
+            if (empty($str)) {
                 return 0;
             }
 
@@ -303,31 +303,38 @@ class DockerAPI extends Adapter
 
             $memoryUsage = 0;
 
-            $usedMemory = $stats['memory_stats']['usage'] - $stats['memory_stats']['stats']['inactive_file'];
+            if (isset($stats['memory_stats']['stats']['inactive_file'])) {
+                $usedMemory = $stats['memory_stats']['usage'] - $stats['memory_stats']['stats']['inactive_file'];
+            } elseif (isset($stats['memory_stats']['stats']['cache'])) {
+                $usedMemory = $stats['memory_stats']['usage'] - $stats['memory_stats']['stats']['cache'];
+            } else {
+                $usedMemory = $stats['memory_stats']['usage'];
+            }
+
             $availableMemory = $stats['memory_stats']['limit'];
 
             $memoryUsage = ($usedMemory / $availableMemory) * 100.0;
 
             $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
-            $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage']  - $stats['precpu_stats']['system_cpu_usage'];
+            $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage'] - $stats['precpu_stats']['system_cpu_usage'];
             $numberCpus = $stats['cpu_stats']['online_cpus'];
-            
+
             if ($systemCpuDelta > 0 && $cpuDelta > 0) {
                 $cpuUsage = ($cpuDelta / $systemCpuDelta) * $numberCpus * 100.0;
             } else {
                 $cpuUsage = 0.0;
             }
 
-            $diskIOStats = $stats["blkio_stats"]["io_service_bytes_recursive"] ?? [];
+            $diskIOStats = $stats['blkio_stats']['io_service_bytes_recursive'] ?? [];
             $read_bytes = 0.0;
             $write_bytes = 0.0;
             foreach ($diskIOStats as $entry) {
-                if ($entry["op"] === "read") {
-                  $read_bytes = floatval($entry["value"]);
-                } elseif ($entry["op"] === "write") {
-                  $write_bytes = floatval($entry["value"]);
+                if ($entry['op'] === 'read') {
+                    $read_bytes = floatval($entry['value']);
+                } elseif ($entry['op'] === 'write') {
+                    $write_bytes = floatval($entry['value']);
                 }
-              }
+            }
 
             $list[] = new Stats(
                 containerId: $stats['id'],

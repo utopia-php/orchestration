@@ -62,6 +62,11 @@ $ git push origin [name_of_your_new_branch]
 8. After approval, merge your PR
 9. GitHub will automatically delete the branch after the merge is done. (they can still be restored).
 
+### Command to run test cases
+```
+./vendor/bin/phpunit --configuration phpunit.xml  
+```
+
 ## Introducing New Features
 
 We would 💖 you to contribute to Utopia-php, but we would also like to make sure Utopia-php is as great as possible and loyal to its vision and mission statement 🙏.

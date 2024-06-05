@@ -26,7 +26,7 @@ class DockerAPI extends Adapter
             $this->registryAuth = base64_encode(json_encode([
                 'username' => $username,
                 'password' => $password,
-                'serveraddress' => 'https://index.docker.io/v1/',
+                'serveraddress' => 'index.docker.io/v1/',
                 'email' => $email,
             ]));
         }
@@ -48,6 +48,7 @@ class DockerAPI extends Adapter
      */
     protected function call(string $url, string $method, $body = null, array $headers = [], int $timeout = -1): array
     {
+        $headers[] = 'Host: utopia-php'; // Fix Swoole headers bug with socket requests
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
@@ -98,18 +99,26 @@ class DockerAPI extends Adapter
      */
     protected function streamCall(string $url, int $timeout = -1): array
     {
+        $body = \json_encode([
+            'Detach' => false
+        ]);
+
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
         \curl_setopt($ch, CURLOPT_POST, 1);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, '{}'); // body is required
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+        $contentLength = \strlen($body);
 
         $headers = [
             'Content-Type: application/json',
-            'Content-Length: 2',
-            'host: null',
+            'Content-Length: '. $contentLength,
         ];
+
+        $headers[] = 'Host: utopia-php'; // Fix Swoole headers bug with socket requests
+
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         /*
@@ -133,6 +142,10 @@ class DockerAPI extends Adapter
         $stderr = '';
 
         $callback = function (CurlHandle $ch, string $str) use (&$stdout, &$stderr): int {
+            if(empty($str)) {
+                return 0;
+            }
+
             $rawStream = unpack('C*', $str);
             $stream = $rawStream[1]; // 1-based index, not 0-based
             switch ($stream) { // only 1 or 2, as set while creating exec
@@ -281,22 +294,47 @@ class DockerAPI extends Adapter
 
             $stats = \json_decode($result['response'], true);
 
-            $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
-            $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage'] - $stats['precpu_stats']['system_cpu_usage'];
-
-            $networkIn = 0;
-            $networkOut = 0;
-            foreach ($stats['networks'] as $network) {
-                $networkIn += $network['rx_bytes'];
-                $networkOut += $network['tx_bytes'];
+            $networkIn = 0.0;
+            $networkOut = 0.0;
+            foreach (($stats['networks'] ?? []) as $network) {
+                $networkIn += floatval($network['rx_bytes']);
+                $networkOut += floatval($network['tx_bytes']);
             }
+
+            $memoryUsage = 0;
+
+            $usedMemory = $stats['memory_stats']['usage'] - $stats['memory_stats']['stats']['inactive_file'];
+            $availableMemory = $stats['memory_stats']['limit'];
+
+            $memoryUsage = ($usedMemory / $availableMemory) * 100.0;
+
+            $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
+            $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage']  - $stats['precpu_stats']['system_cpu_usage'];
+            $numberCpus = $stats['cpu_stats']['online_cpus'];
+            
+            if ($systemCpuDelta > 0 && $cpuDelta > 0) {
+                $cpuUsage = ($cpuDelta / $systemCpuDelta) * $numberCpus * 100.0;
+            } else {
+                $cpuUsage = 0.0;
+            }
+
+            $diskIOStats = $stats["blkio_stats"]["io_service_bytes_recursive"] ?? [];
+            $read_bytes = 0.0;
+            $write_bytes = 0.0;
+            foreach ($diskIOStats as $entry) {
+                if ($entry["op"] === "read") {
+                  $read_bytes = floatval($entry["value"]);
+                } elseif ($entry["op"] === "write") {
+                  $write_bytes = floatval($entry["value"]);
+                }
+              }
 
             $list[] = new Stats(
                 containerId: $stats['id'],
                 containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
-                cpuUsage: 1, // TODO: Implement (API seems to give incorrect values)
-                memoryUsage: ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
-                diskIO: ['in' => 0, 'out' => 0], // TODO: Implement (API does not provide these values)
+                cpuUsage: $cpuUsage,
+                memoryUsage: $memoryUsage,
+                diskIO: ['in' => $read_bytes, 'out' => $write_bytes],
                 memoryIO: ['in' => 0, 'out' => 0], // TODO: Implement (API does not provide these values
                 networkIO: ['in' => $networkIn, 'out' => $networkOut],
             );

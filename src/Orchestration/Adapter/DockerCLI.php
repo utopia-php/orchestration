@@ -150,17 +150,18 @@ class DockerCLI extends Adapter
      */
     private function parseIOStats(string $stats)
     {
+        $stats = strtolower($stats);
         $units = [
-            'B' => 1,
-            'kB' => 1000,
-            'MB' => 1000000,
-            'GB' => 1000000000,
-            'TB' => 1000000000000,
+            'b' => 1,
+            'kb' => 1000,
+            'mb' => 1000000,
+            'gb' => 1000000000,
+            'tb' => 1000000000000,
 
-            'kiB' => 1000,
-            'MiB' => 1000000,
-            'GiB' => 1000000000,
-            'TiB' => 1000000000000,
+            'kib' => 1000,
+            'mib' => 1000000,
+            'gib' => 1000000000,
+            'tib' => 1000000000000,
         ];
 
         [ $inStr, $outStr ] = \explode(' / ', $stats);

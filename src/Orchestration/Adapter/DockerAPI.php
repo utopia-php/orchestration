@@ -341,7 +341,7 @@ class DockerAPI extends Adapter
                 cpuUsage: $cpuUsage,
                 memoryUsage: $memoryUsage,
                 diskIO: ['in' => $read_bytes, 'out' => $write_bytes],
-                memoryIO: ['in' => 0, 'out' => 0], // TODO: Implement (API does not provide these values
+                memoryIO: ['in' => $stats['memory_stats']['usage'], 'out' => $stats['memory_stats']['limit']],
                 networkIO: ['in' => $networkIn, 'out' => $networkOut],
             );
         }

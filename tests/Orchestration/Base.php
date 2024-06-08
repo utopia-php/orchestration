@@ -531,24 +531,24 @@ abstract class Base extends TestCase
         $this->assertIsNumeric($stats[0]->getNetworkIO()['out']);
         $this->assertGreaterThanOrEqual(0, $stats[0]->getNetworkIO()['out']);
 
-        // $stats1 = static::getOrchestration()->getStats($containerId1);
-        // $stats2 = static::getOrchestration()->getStats($containerId2);
+        $stats1 = static::getOrchestration()->getStats($containerId1);
+        $stats2 = static::getOrchestration()->getStats($containerId2);
 
         $statsName1 = static::getOrchestration()->getStats('UsageStats1');
         $statsName2 = static::getOrchestration()->getStats('UsageStats2');
 
-        // $this->assertEquals($statsName1[0]->getContainerId(), $stats1[0]->getContainerId());
-        // $this->assertEquals($statsName1[0]->getContainerName(), $stats1[0]->getContainerName());
-        // $this->assertEquals($statsName2[0]->getContainerName(), $stats2[0]->getContainerName());
-        // $this->assertEquals($statsName2[0]->getContainerName(), $stats2[0]->getContainerName());
+        $this->assertEquals($statsName1[0]->getContainerId(), $stats1[0]->getContainerId());
+        $this->assertEquals($statsName1[0]->getContainerName(), $stats1[0]->getContainerName());
+        $this->assertEquals($statsName2[0]->getContainerName(), $stats2[0]->getContainerName());
+        $this->assertEquals($statsName2[0]->getContainerName(), $stats2[0]->getContainerName());
 
-        // $this->assertEquals($stats[1]->getContainerId(), $stats1[0]->getContainerId());
-        // $this->assertEquals($stats[1]->getContainerName(), $stats1[0]->getContainerName());
-        // $this->assertEquals($stats[0]->getContainerId(), $stats2[0]->getContainerId());
-        // $this->assertEquals($stats[0]->getContainerName(), $stats2[0]->getContainerName());
+        $this->assertEquals($stats[1]->getContainerId(), $stats1[0]->getContainerId());
+        $this->assertEquals($stats[1]->getContainerName(), $stats1[0]->getContainerName());
+        $this->assertEquals($stats[0]->getContainerId(), $stats2[0]->getContainerId());
+        $this->assertEquals($stats[0]->getContainerName(), $stats2[0]->getContainerName());
 
-        // $this->assertGreaterThanOrEqual(0.5, $stats[0]->getCpuUsage());
-        // $this->assertGreaterThanOrEqual(0.5, $stats[1]->getCpuUsage());
+        $this->assertGreaterThan(0, $stats[0]->getCpuUsage());
+        $this->assertGreaterThan(0, $stats[1]->getCpuUsage());
 
         $statsFiltered = static::getOrchestration()->getStats(filters: ['label' => 'utopia-container-type=stats']);
         $this->assertCount(1, $statsFiltered);

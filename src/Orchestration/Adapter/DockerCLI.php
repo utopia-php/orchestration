@@ -171,7 +171,8 @@ class DockerCLI extends Adapter
         foreach ($units as $unit => $value) {
             if (\str_ends_with($inStr, $unit)) {
                 $inUnit = $unit;
-            } elseif (\str_ends_with($outStr, $unit)) {
+            }
+            if (\str_ends_with($outStr, $unit)) {
                 $outUnit = $unit;
             }
         }

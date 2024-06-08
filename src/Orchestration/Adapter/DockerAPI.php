@@ -2,7 +2,6 @@
 
 namespace Utopia\Orchestration\Adapter;
 
-use CurlHandle;
 use stdClass;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
@@ -293,7 +292,7 @@ class DockerAPI extends Adapter
             }
 
             $stats = \json_decode($result['response'], true);
-            var_dump("stats for docker API");
+            var_dump('stats for docker API');
             var_dump($stats);
 
             $networkIn = 0.0;

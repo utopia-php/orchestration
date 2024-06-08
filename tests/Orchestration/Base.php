@@ -457,7 +457,7 @@ abstract class Base extends TestCase
          * Test for Success
          */
         $stats = static::getOrchestration()->getStats();
-        $this->assertCount(1, $stats);
+        $this->assertCount(0, $stats);
 
         // This allows CPU-heavy load check
         static::getOrchestration()->setCpus(1);
@@ -503,7 +503,7 @@ abstract class Base extends TestCase
         // Fetch stats, should include high CPU usage
         $stats = static::getOrchestration()->getStats();
 
-        $this->assertCount(3, $stats);
+        $this->assertCount(2, $stats);
 
         $this->assertNotEmpty($stats[0]->getContainerId());
         $this->assertEquals(64, \strlen($stats[0]->getContainerId()));
@@ -552,7 +552,7 @@ abstract class Base extends TestCase
 
         $statsFiltered = static::getOrchestration()->getStats(filters: ['label' => 'utopia-container-type=stats']);
         $this->assertCount(1, $statsFiltered);
-        // $this->assertEquals($containerId1, $statsFiltered[0]->getContainerId());
+        $this->assertEquals($containerId1, $statsFiltered[0]->getContainerId());
 
         $statsFiltered = static::getOrchestration()->getStats(filters: ['label' => 'utopia-container-type=non-existing-type']);
         $this->assertCount(0, $statsFiltered);

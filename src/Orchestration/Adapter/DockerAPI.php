@@ -94,21 +94,19 @@ class DockerAPI extends Adapter
      */
     protected function streamCall(string $url, int $timeout = -1): array
     {
-        $body = \json_encode([
-            'Detach' => false,
-        ]);
+        $body = \json_encode(['Detach' => false]);
 
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
         \curl_setopt($ch, CURLOPT_POST, 1);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body); // body is required
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
         $headers = [
             'Content-Type: application/json',
-            'Content-Length: 2',
-            'host: null',
+            'Content-Length: '.\strlen($body),
+            'Host: utopia-php', // Fix Swoole headers bug with socket requests
         ];
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 

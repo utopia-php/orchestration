@@ -178,9 +178,8 @@ abstract class Base extends TestCase
     {
         $response = static::getOrchestration()->removeNetwork('TestNetwork');
 
-
-        fwrite(STDERR, print_r("response: ", true));
-        fwrite(STDERR, print_r($response, true));
+        fwrite(STDOUT, print_r('response: ', true));
+        fwrite(STDOUT, print_r($response, true));
         $this->assertEquals(true, $response);
     }
 

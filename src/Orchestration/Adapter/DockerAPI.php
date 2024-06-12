@@ -290,7 +290,7 @@ class DockerAPI extends Adapter
             $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage'] - $stats['precpu_stats']['system_cpu_usage'];
             $numberCpus = $stats['cpu_stats']['online_cpus'];
             if ($systemCpuDelta > 0 && $cpuDelta > 0) {
-                $cpuUsage = ($cpuDelta / $systemCpuDelta) * $numberCpus * 100.0;
+                $cpuUsage = ($cpuDelta / $systemCpuDelta) * $numberCpus;
             } else {
                 $cpuUsage = 0.0;
             }

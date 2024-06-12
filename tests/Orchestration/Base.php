@@ -16,6 +16,30 @@ abstract class Base extends TestCase
      */
     public static $containerID;
 
+    public static function setUpBeforeClass(): void
+    {
+        $testContainers = [
+            'TestContainer',
+            'TestContainerTimeout',
+            'UsageStats1',
+            'UsageStats2',
+            'TestContainerRM',
+            'TestContainerRM2',
+        ];
+
+        foreach (static::getOrchestration()->list() as $activeContainer) {
+            if (in_array($activeContainer->getName(), $testContainers)) {
+                static::getOrchestration()->remove($activeContainer->getName(), true);
+            }
+        }
+
+        foreach (static::getOrchestration()->listNetworks() as $activeNetwork) {
+            if ($activeNetwork->getName() === 'TestNetwork') {
+                static::getOrchestration()->removeNetwork($activeNetwork->getName());
+            }
+        }
+    }
+
     public function setUp(): void
     {
     }
@@ -75,7 +99,7 @@ abstract class Base extends TestCase
         $this->expectException(\Exception::class);
 
         $response = static::getOrchestration()->run(
-            'appwrite/tXDytMhecKCuz5B4PlITXL1yKhZXDP', // Non-Existent Image
+            'appwrite/txdytmheckcuz5b4plitxl1ykhzxdh', // Non-Existent Image
             'TestContainer',
             [
                 'sh',
@@ -178,8 +202,6 @@ abstract class Base extends TestCase
     {
         $response = static::getOrchestration()->removeNetwork('TestNetwork');
 
-        fwrite(STDOUT, print_r('response: ', true));
-        fwrite(STDOUT, print_r($response, true));
         $this->assertEquals(true, $response);
     }
 

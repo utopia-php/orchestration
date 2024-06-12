@@ -154,11 +154,10 @@ class DockerCLI extends Adapter
             'mb' => 1000000,
             'gb' => 1000000000,
             'tb' => 1000000000000,
-
-            'kib' => 1000,
-            'mib' => 1000000,
-            'gib' => 1000000000,
-            'tib' => 1000000000000,
+            'kib' => 1024,
+            'mib' => 1048576,
+            'gib' => 1073741824,
+            'tib' => 1099511627776,
         ];
 
         [$inStr, $outStr] = \explode(' / ', $stats);
@@ -371,6 +370,8 @@ class DockerCLI extends Adapter
             throw new Orchestration("Docker Error: {$output}");
         }
 
+        // Use first line only, CLI can add warnings or other messages
+        $output = \explode("\n", $output)[0];
         return rtrim($output);
     }
 

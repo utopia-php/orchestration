@@ -187,8 +187,10 @@ class DockerAPI extends Adapter
             'Content-Length: '.\strlen($body),
         ]);
 
-        if ($result['code'] != 201) {
-            throw new Orchestration('Error creating network: '.$result['response']);
+        if ($result['code'] === 409) {
+            throw new Orchestration('Network with name "' . $name . '" already exists: ' . $result['response']);
+        } elseif ($result['code'] !== 201) {
+            throw new Orchestration('Error creating network: ' . $result['response']);
         }
 
         return $result['response'];
@@ -273,7 +275,7 @@ class DockerAPI extends Adapter
         $list = [];
 
         foreach ($containerIds as $containerId) {
-            $result = $this->call('http://localhost/containers/'.$containerId.'/stats?stream=false', 'GET');
+            $result = $this->call('http://localhost/containers/' . $containerId . '/stats?stream=false', 'GET');
 
             if ($result['code'] !== 200) {
                 throw new Orchestration($result['response']);
@@ -284,6 +286,7 @@ class DockerAPI extends Adapter
             $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
             $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage'] - $stats['precpu_stats']['system_cpu_usage'];
 
+            // Calculate network I/O
             $networkIn = 0;
             $networkOut = 0;
             foreach ($stats['networks'] as $network) {
@@ -291,13 +294,30 @@ class DockerAPI extends Adapter
                 $networkOut += $network['tx_bytes'];
             }
 
+            // Calculate disk I/O
+            $diskRead = 0;
+            $diskWrite = 0;
+            if (isset($stats['blkio_stats']['io_service_bytes_recursive'])) {
+                foreach ($stats['blkio_stats']['io_service_bytes_recursive'] as $entry) {
+                    if ($entry['op'] === 'Read') {
+                        $diskRead += $entry['value'];
+                    } elseif ($entry['op'] === 'Write') {
+                        $diskWrite += $entry['value'];
+                    }
+                }
+            }
+
+            // Calculate memory I/O (approximated)
+            $memoryIn = $stats['memory_stats']['usage'] ?? 0;
+            $memoryOut = $stats['memory_stats']['max_usage'] ?? 0;
+
             $list[] = new Stats(
                 containerId: $stats['id'],
                 containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
-                cpuUsage: 1, // TODO: Implement (API seems to give incorrect values)
+                cpuUsage: ($systemCpuDelta > 0) ? ($cpuDelta / $systemCpuDelta) * count($stats['cpu_stats']['cpu_usage']['percpu_usage']) * 100.0 : 0.0,
                 memoryUsage: ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
-                diskIO: ['in' => 0, 'out' => 0], // TODO: Implement (API does not provide these values)
-                memoryIO: ['in' => 0, 'out' => 0], // TODO: Implement (API does not provide these values
+                diskIO: ['in' => $diskRead, 'out' => $diskWrite],
+                memoryIO: ['in' => $memoryIn, 'out' => $memoryOut],
                 networkIO: ['in' => $networkIn, 'out' => $networkOut],
             );
         }

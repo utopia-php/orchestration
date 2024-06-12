@@ -15,9 +15,11 @@ class DockerCLI extends Adapter
     /**
      * Constructor
      *
+     * @param  string  $username
+     * @param  string  $password
      * @return void
      */
-    public function __construct(?string $username = null, ?string $password = null)
+    public function __construct(string $username = null, string $password = null)
     {
         if ($username && $password) {
             $output = '';
@@ -79,10 +81,11 @@ class DockerCLI extends Adapter
     /**
      * Get usage stats of containers
      *
+     * @param  string  $container
      * @param  array<string, string>  $filters
      * @return array<Stats>
      */
-    public function getStats(?string $container = null, array $filters = []): array
+    public function getStats(string $container = null, array $filters = []): array
     {
         // List ahead of time, since docker stats does not allow filtering
         $containerIds = [];
@@ -147,17 +150,18 @@ class DockerCLI extends Adapter
      */
     private function parseIOStats(string $stats)
     {
+        $stats = \strtolower($stats);
         $units = [
-            'B' => 1,
-            'KB' => 1000,
-            'MB' => 1000000,
-            'GB' => 1000000000,
-            'TB' => 1000000000000,
+            'b' => 1,
+            'kb' => 1000,
+            'mb' => 1000000,
+            'gb' => 1000000000,
+            'tb' => 1000000000000,
 
-            'KiB' => 1000,
-            'MiB' => 1000000,
-            'GiB' => 1000000000,
-            'TiB' => 1000000000000,
+            'kib' => 1000,
+            'mib' => 1000000,
+            'gib' => 1000000000,
+            'tib' => 1000000000000,
         ];
 
         [$inStr, $outStr] = \explode(' / ', $stats);
@@ -168,7 +172,8 @@ class DockerCLI extends Adapter
         foreach ($units as $unit => $value) {
             if (\str_ends_with($inStr, $unit)) {
                 $inUnit = $unit;
-            } elseif (\str_ends_with($outStr, $unit)) {
+            } 
+            if (\str_ends_with($outStr, $unit)) {
                 $outUnit = $unit;
             }
         }

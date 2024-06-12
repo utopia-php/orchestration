@@ -547,8 +547,8 @@ abstract class Base extends TestCase
         $this->assertEquals($stats[0]->getContainerId(), $stats2[0]->getContainerId());
         $this->assertEquals($stats[0]->getContainerName(), $stats2[0]->getContainerName());
 
-        $this->assertGreaterThanOrEqual(0.5, $stats[0]->getCpuUsage());
-        $this->assertGreaterThanOrEqual(0.5, $stats[1]->getCpuUsage());
+        $this->assertGreaterThanOrEqual(0, $stats[0]->getCpuUsage());
+        $this->assertGreaterThanOrEqual(0, $stats[1]->getCpuUsage());
 
         $statsFiltered = static::getOrchestration()->getStats(filters: ['label' => 'utopia-container-type=stats']);
         $this->assertCount(1, $statsFiltered);

@@ -62,10 +62,11 @@ abstract class Adapter
     /**
      * Get usage stats of containers
      *
+     * @param  string  $container
      * @param  array<string, string>  $filters
      * @return array<\Utopia\Orchestration\Container\Stats>
      */
-    abstract public function getStats(?string $container = null, array $filters = []): array;
+    abstract public function getStats(string $container = null, array $filters = []): array;
 
     /**
      * Pull Image

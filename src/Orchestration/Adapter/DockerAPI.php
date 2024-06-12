@@ -22,7 +22,7 @@ class DockerAPI extends Adapter
             $this->registryAuth = base64_encode(json_encode([
                 'username' => $username,
                 'password' => $password,
-                'serveraddress' => 'https://index.docker.io/v1/',
+                'serveraddress' => 'index.docker.io/v1/',
                 'email' => $email,
             ]));
         }
@@ -44,6 +44,7 @@ class DockerAPI extends Adapter
      */
     protected function call(string $url, string $method, $body = null, array $headers = [], int $timeout = -1): array
     {
+        $headers[] = 'Host: utopia-php'; // Fix Swoole headers bug with socket requests
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
@@ -94,11 +95,15 @@ class DockerAPI extends Adapter
      */
     protected function streamCall(string $url, int $timeout = -1): array
     {
+        $body = \json_encode([
+            'Detach' => false,
+        ]);
+
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
         \curl_setopt($ch, CURLOPT_POST, 1);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, '{}'); // body is required
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body); // body is required
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
         $headers = [
@@ -128,7 +133,11 @@ class DockerAPI extends Adapter
         $stdout = '';
         $stderr = '';
 
-        $callback = function (CurlHandle $ch, string $str) use (&$stdout, &$stderr): int {
+        $callback = function (mixed $ch, string $str) use (&$stdout, &$stderr): int {
+            if (empty($str)) {
+                return 0;
+            }
+
             $rawStream = unpack('C*', $str);
             $stream = $rawStream[1]; // 1-based index, not 0-based
             switch ($stream) { // only 1 or 2, as set while creating exec

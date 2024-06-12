@@ -157,7 +157,7 @@ class DockerAPI extends Adapter
         $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
         if (curl_errno($ch)) {
-            if (\curl_errno($ch) == CURLE_OPERATION_TIMEOUTED) {
+            if (\curl_errno($ch) === CURLE_OPERATION_TIMEOUTED) {
                 throw new Timeout('Curl Error: '.curl_error($ch));
             } else {
                 throw new Orchestration('Curl Error: '.curl_error($ch));
@@ -205,11 +205,13 @@ class DockerAPI extends Adapter
     {
         $result = $this->call('http://localhost/networks/'.$name, 'DELETE');
 
-        if ($result['code'] != 204) {
+        if ($result['code'] === 404) {
+            throw new Orchestration('Network with name "'.$name.'" does not exist: '.$result['response']);
+        } elseif ($result['code'] !== 204) {
             throw new Orchestration('Error removing network: '.$result['response']);
         }
 
-        return $result['code'] == 204;
+        return $result['code'] === 204;
     }
 
     /**
@@ -226,11 +228,11 @@ class DockerAPI extends Adapter
             'Content-Length: '.\strlen($body),
         ]);
 
-        if ($result['code'] != 200) {
+        if ($result['code'] !== 200) {
             throw new Orchestration('Error attaching network: '.$result['response']);
         }
 
-        return $result['code'] == 200;
+        return $result['code'] === 200;
     }
 
     /**
@@ -248,11 +250,11 @@ class DockerAPI extends Adapter
             'Content-Length: '.\strlen($body),
         ]);
 
-        if ($result['code'] != 200) {
+        if ($result['code'] !== 200) {
             throw new Orchestration('Error detatching network: '.$result['response']);
         }
 
-        return $result['code'] == 200;
+        return $result['code'] === 200;
     }
 
     /**

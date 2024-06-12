@@ -15,12 +15,8 @@ class DockerAPI extends Adapter
 {
     /**
      * Constructor
-     *
-     * @param  string  $username
-     * @param  string  $password
-     * @param  string  $email
      */
-    public function __construct(string $username = null, string $password = null, string $email = null)
+    public function __construct(?string $username = null, ?string $password = null, ?string $email = null)
     {
         if ($username && $password && $email) {
             $this->registryAuth = base64_encode(json_encode([
@@ -188,9 +184,9 @@ class DockerAPI extends Adapter
         ]);
 
         if ($result['code'] === 409) {
-            throw new Orchestration('Network with name "' . $name . '" already exists: ' . $result['response']);
+            throw new Orchestration('Network with name "'.$name.'" already exists: '.$result['response']);
         } elseif ($result['code'] !== 201) {
-            throw new Orchestration('Error creating network: ' . $result['response']);
+            throw new Orchestration('Error creating network: '.$result['response']);
         }
 
         return $result['response'];
@@ -256,11 +252,10 @@ class DockerAPI extends Adapter
     /**
      * Get usage stats of containers
      *
-     * @param  string  $container
      * @param  array<string, string>  $filters
      * @return array<Stats>
      */
-    public function getStats(string $container = null, array $filters = []): array
+    public function getStats(?string $container = null, array $filters = []): array
     {
         // List ahead of time, since API does not allow listing all usage stats
         $containerIds = [];
@@ -275,7 +270,7 @@ class DockerAPI extends Adapter
         $list = [];
 
         foreach ($containerIds as $containerId) {
-            $result = $this->call('http://localhost/containers/' . $containerId . '/stats?stream=false', 'GET');
+            $result = $this->call('http://localhost/containers/'.$containerId.'/stats?stream=false', 'GET');
 
             if ($result['code'] !== 200) {
                 throw new Orchestration($result['response']);

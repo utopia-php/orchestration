@@ -372,6 +372,7 @@ class DockerCLI extends Adapter
 
         // Use first line only, CLI can add warnings or other messages
         $output = \explode("\n", $output)[0];
+
         return rtrim($output);
     }
 

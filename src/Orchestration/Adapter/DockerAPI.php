@@ -286,6 +286,12 @@ class DockerAPI extends Adapter
 
             $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
             $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage'] - $stats['precpu_stats']['system_cpu_usage'];
+            $numberCpus = $stats['cpu_stats']['online_cpus'];
+            if ($systemCpuDelta > 0 && $cpuDelta > 0) {
+                $cpuUsage = ($cpuDelta / $systemCpuDelta) * $numberCpus * 100.0;
+            } else {
+                $cpuUsage = 0.0;
+            }
 
             // Calculate network I/O
             $networkIn = 0;
@@ -315,7 +321,7 @@ class DockerAPI extends Adapter
             $list[] = new Stats(
                 containerId: $stats['id'],
                 containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
-                cpuUsage: ($systemCpuDelta > 0) ? ($cpuDelta / $systemCpuDelta) * count($stats['cpu_stats']['cpu_usage']['percpu_usage']) * 100.0 : 0.0,
+                cpuUsage: $cpuUsage,
                 memoryUsage: ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
                 diskIO: ['in' => $diskRead, 'out' => $diskWrite],
                 memoryIO: ['in' => $memoryIn, 'out' => $memoryOut],

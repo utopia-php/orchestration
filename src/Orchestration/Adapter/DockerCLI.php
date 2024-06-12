@@ -49,6 +49,9 @@ class DockerCLI extends Adapter
 
         $result = Console::execute('docker network rm '.$name, '', $output);
 
+        var_dump($result);
+        var_dump($output);
+
         return $result === 0;
     }
 

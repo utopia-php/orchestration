@@ -268,12 +268,18 @@ class DockerAPI extends Adapter
         // List ahead of time, since API does not allow listing all usage stats
         $containerIds = [];
 
+        var_dump($container, $filters);
+
         if ($container === null) {
             $containers = $this->list($filters);
+
+            var_dump($containers);
             $containerIds = \array_map(fn ($c) => $c->getId(), $containers);
         } else {
             $containerIds[] = $container;
         }
+
+        var_dump($containerIds);
 
         $list = [];
 
@@ -285,8 +291,6 @@ class DockerAPI extends Adapter
             }
 
             $stats = \json_decode($result['response'], true);
-
-            \var_dump($stats);
 
             // Calculate CPU usage
             $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];

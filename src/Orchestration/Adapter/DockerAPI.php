@@ -286,6 +286,7 @@ class DockerAPI extends Adapter
 
             $stats = \json_decode($result['response'], true);
 
+            // Calculate CPU usage
             $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
             $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage'] - $stats['precpu_stats']['system_cpu_usage'];
             $numberCpus = $stats['cpu_stats']['online_cpus'];
@@ -293,6 +294,12 @@ class DockerAPI extends Adapter
                 $cpuUsage = ($cpuDelta / $systemCpuDelta) * $numberCpus;
             } else {
                 $cpuUsage = 0.0;
+            }
+
+            // Calculate memory usage (unsafe div /0)
+            $memoryUsage = 0.0;
+            if ($stats['memory_stats']['limit'] > 0 && $stats['memory_stats']['usage'] > 0) {
+                $memoryUsage = ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0;
             }
 
             // Calculate network I/O
@@ -324,7 +331,7 @@ class DockerAPI extends Adapter
                 containerId: $stats['id'],
                 containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
                 cpuUsage: $cpuUsage,
-                memoryUsage: ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
+                memoryUsage: $memoryUsage,
                 diskIO: ['in' => $diskRead, 'out' => $diskWrite],
                 memoryIO: ['in' => $memoryIn, 'out' => $memoryOut],
                 networkIO: ['in' => $networkIn, 'out' => $networkOut],

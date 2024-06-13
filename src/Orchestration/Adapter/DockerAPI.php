@@ -274,18 +274,14 @@ class DockerAPI extends Adapter
             $containerIds[] = $container;
         }
 
-        var_dump($containerIds);
-
         $list = [];
 
         foreach ($containerIds as $containerId) {
             $result = $this->call('http://localhost/containers/'.$containerId.'/stats?stream=false', 'GET');
 
-            if ($result['code'] !== 200) {
+            if ($result['code'] !== 200 || empty($result['response'])) {
                 throw new Orchestration($result['response']);
             }
-
-            var_dump($result);
 
             $stats = \json_decode($result['response'], true);
 

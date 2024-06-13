@@ -267,13 +267,8 @@ class DockerAPI extends Adapter
     {
         // List ahead of time, since API does not allow listing all usage stats
         $containerIds = [];
-
-        var_dump($container, $filters);
-
         if ($container === null) {
             $containers = $this->list($filters);
-
-            var_dump($containers);
             $containerIds = \array_map(fn ($c) => $c->getId(), $containers);
         } else {
             $containerIds[] = $container;
@@ -289,6 +284,8 @@ class DockerAPI extends Adapter
             if ($result['code'] !== 200) {
                 throw new Orchestration($result['response']);
             }
+
+            var_dump($result);
 
             $stats = \json_decode($result['response'], true);
 

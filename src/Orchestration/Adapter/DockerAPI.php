@@ -286,6 +286,8 @@ class DockerAPI extends Adapter
 
             $stats = \json_decode($result['response'], true);
 
+            \var_dump($stats);
+
             // Calculate CPU usage
             $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
             $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage'] - $stats['precpu_stats']['system_cpu_usage'];

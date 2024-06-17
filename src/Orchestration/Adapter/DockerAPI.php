@@ -285,6 +285,12 @@ class DockerAPI extends Adapter
 
             $stats = \json_decode($result['response'], true);
 
+            if (! isset($stats['id']) || ! isset($stats['precpu_stats']) || ! isset($stats['cpu_stats']) || ! isset($stats['memory_stats']) || ! isset($stats['networks'])) {
+                var_dump($containerId);
+                var_dump($result['response']);
+                throw new Orchestration('Failed to get stats for container: '.$containerId);
+            }
+
             // Calculate CPU usage
             $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
             $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage'] - $stats['precpu_stats']['system_cpu_usage'];

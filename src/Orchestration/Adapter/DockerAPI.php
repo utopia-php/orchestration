@@ -568,6 +568,18 @@ class DockerAPI extends Adapter
         } else {
             return true;
         }
+
+        $result = $this->call('http://localhost/exec/'.$parsedResponse['Id'].'/json', 'GET');
+
+        if ($result['code'] !== 200) {
+            throw new Orchestration('Failed to inspect status of execute command: '.$result['response'].' Response Code: '.$result['code']);
+        }
+
+        $parsedResponse = json_decode($result['response'], true);
+
+        if ($parsedResponse['ExitCode'] !== 0) {
+            throw new Orchestration('Failed to execute command: '.$result['response'].' Exit Code: '.$parsedResponse['ExitCode']);
+        }
     }
 
     /**

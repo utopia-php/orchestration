@@ -112,6 +112,26 @@ abstract class Base extends TestCase
             [],
             __DIR__.'/Resources',
         );
+
+        /**
+         * Test for Failure
+         */
+        $this->expectException(\Exception::class);
+
+        $response = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            'TestContainerBadBuild',
+            [
+                'sh',
+                '-c',
+                'cp /tmp/doesnotexist.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null',
+            ],
+            '',
+            '/usr/local/src/',
+            [],
+            [],
+            __DIR__.'/Resources',
+        );
     }
 
     // Network Tests

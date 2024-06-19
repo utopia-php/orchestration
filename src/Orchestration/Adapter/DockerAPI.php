@@ -480,12 +480,12 @@ class DockerAPI extends Adapter
             'Env' => array_values($vars),
             'HostConfig' => [
                 'Binds' => $volumes,
-                'CpuQuota' => !empty($this->cpus) ? floatval($this->cpus) * 100000 : null,
-                'CpuPeriod' => !empty($this->cpus) ? 100000 : null,
-                'Memory' => !empty($this->memory) ? intval($this->memory) * 1e+6 : null, // Convert into bytes
-                'MemorySwap' => !empty($this->swap) ? intval($this->swap) * 1e+6 : null, // Convert into bytes
+                'CpuQuota' => ! empty($this->cpus) ? floatval($this->cpus) * 100000 : null,
+                'CpuPeriod' => ! empty($this->cpus) ? 100000 : null,
+                'Memory' => ! empty($this->memory) ? intval($this->memory) * 1e+6 : null, // Convert into bytes
+                'MemorySwap' => ! empty($this->swap) ? intval($this->swap) * 1e+6 : null, // Convert into bytes
                 'AutoRemove' => $remove,
-                'NetworkMode' => !empty($network) ? $network : null,
+                'NetworkMode' => ! empty($network) ? $network : null,
             ],
         ];
 
@@ -510,19 +510,20 @@ class DockerAPI extends Adapter
         $containerId = $parsedResponse['Id'];
 
         // Run Created Container
-        $result = $this->call('http://localhost/containers/' . $containerId . '/start', 'POST', '{}');
+        $result = $this->call('http://localhost/containers/'.$containerId.'/start', 'POST', '{}');
 
         if ($result['code'] !== 204) {
             throw new Orchestration('Failed to create function environment: '.$result['response'].' Response Code: '.$result['code']);
         }
 
-        $result = $this->call('http://localhost/containers/' . $containerId . '/wait', 'POST', null, [], 30);
+        $result = $this->call('http://localhost/containers/'.$containerId.'/wait', 'POST', null, [], 30);
         if ($result['code'] !== 200) {
-            throw new Orchestration('Failed to wait for container: ' . $result['response'] . ' Response Code: ' . $result['code']);
+            throw new Orchestration('Failed to wait for container: '.$result['response'].' Response Code: '.$result['code']);
         }
 
         $waitResponse = json_decode($result['response'], true);
-        if ($$waitResponse['StatusCode'] !== 0) {
+        $exitCode = $waitResponse['StatusCode'];
+        if ($exitCode !== 0) {
             throw new Orchestration("Docker Error: Container exited with non-zero exit code: {$exitCode}");
         }
 
@@ -575,8 +576,6 @@ class DockerAPI extends Adapter
 
         if ($result['code'] !== 200) {
             throw new Orchestration('Failed to create execute command: '.$result['response'].' Response Code: '.$result['code']);
-        } else {
-            return true;
         }
 
         $result = $this->call('http://localhost/exec/'.$parsedResponse['Id'].'/json', 'GET');
@@ -586,9 +585,10 @@ class DockerAPI extends Adapter
         }
 
         $parsedResponse = json_decode($result['response'], true);
-
-        if ($parsedResponse['ExitCode'] !== 0) {
+        if ($parsedResponse['Running'] === true || $parsedResponse['ExitCode'] !== 0) {
             throw new Orchestration('Failed to execute command: '.$result['response'].' Exit Code: '.$parsedResponse['ExitCode']);
+        } else {
+            return true;
         }
     }
 

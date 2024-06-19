@@ -269,7 +269,6 @@ abstract class Base extends TestCase
         /**
          * Test for Success
          */
-
         $output = '';
 
         $response = static::getOrchestration()->execute(

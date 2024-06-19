@@ -3,7 +3,6 @@
 namespace Utopia\Orchestration;
 
 use Exception;
-use Utopia\Orchestration\Container\Stats;
 
 class Orchestration
 {

@@ -16,31 +16,6 @@ abstract class Base extends TestCase
      */
     public static $containerID;
 
-    public static function setUpBeforeClass(): void
-    {
-        $testContainers = [
-            'TestContainer',
-            'TestContainerTimeout',
-            'TestContainerBadBuild',
-            'UsageStats1',
-            'UsageStats2',
-            'TestContainerRM',
-            'TestContainerRM2',
-        ];
-
-        foreach (static::getOrchestration()->list() as $activeContainer) {
-            if (in_array($activeContainer->getName(), $testContainers)) {
-                static::getOrchestration()->remove($activeContainer->getName(), true);
-            }
-        }
-
-        foreach (static::getOrchestration()->listNetworks() as $activeNetwork) {
-            if ($activeNetwork->getName() === 'TestNetwork') {
-                static::getOrchestration()->removeNetwork($activeNetwork->getName());
-            }
-        }
-    }
-
     public function setUp(): void
     {
     }
@@ -168,17 +143,7 @@ abstract class Base extends TestCase
     /**
      * @depends testCreateNetwork
      */
-    public function testnetworkConnect(): void
-    {
-        $response = static::getOrchestration()->networkConnect('TestContainer', 'TestNetwork');
-
-        $this->assertEquals(true, $response);
-    }
-
-    /**
-     * @depends testCreateNetwork
-     */
-    public function testCreateContainerWithNetwork(): void
+    public function testNetworkConnect(): void
     {
         $response = static::getOrchestration()->run(
             'appwrite/runtime-for-php:8.0',
@@ -204,12 +169,18 @@ abstract class Base extends TestCase
         );
 
         $this->assertNotEmpty($response);
+
+        sleep(1); // wait for container
+
+        $response = static::getOrchestration()->networkConnect('TestContainer', 'TestNetwork');
+
+        $this->assertEquals(true, $response);
     }
 
     /**
-     * @depends testnetworkConnect
+     * @depends testNetworkConnect
      */
-    public function testnetworkDisconnect(): void
+    public function testNetworkDisconnect(): void
     {
         $response = static::getOrchestration()->networkDisconnect('TestContainer', 'TestNetwork', true);
 
@@ -217,7 +188,7 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @depends testnetworkDisconnect
+     * @depends testNetworkDisconnect
      */
     public function testRemoveNetwork(): void
     {
@@ -272,7 +243,7 @@ abstract class Base extends TestCase
          */
         $output = '';
 
-        $response = static::getOrchestration()->execute(
+        static::getOrchestration()->execute(
             'TestContainer',
             [
                 'php',
@@ -294,7 +265,7 @@ abstract class Base extends TestCase
     {
         $output = '';
 
-        $response = static::getOrchestration()->execute(
+        static::getOrchestration()->execute(
             'TestContainer',
             [
                 'cat',

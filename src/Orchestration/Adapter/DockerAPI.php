@@ -479,17 +479,24 @@ class DockerAPI extends Adapter
             'WorkingDir' => $workdir,
             'Labels' => (object) $labels,
             'Env' => array_values($vars),
-            'Mounts' => $mountFolder ? [['Type' => 'bind', 'Source' => $mountFolder, 'Target' => '/tmp', 'RW' => true]] : [],
             'HostConfig' => [
                 'Binds' => $volumes,
-                'CpuQuota' => ! empty($this->cpus) ? floatval($this->cpus) * 100000 : null,
-                'CpuPeriod' => ! empty($this->cpus) ? 100000 : null,
-                'Memory' => ! empty($this->memory) ? intval($this->memory) * 1e+6 : null, // Convert into bytes
-                'MemorySwap' => ! empty($this->swap) ? intval($this->swap) * 1e+6 : null, // Convert into bytes
+                'CpuQuota' => floatval($this->cpus) * 100000,
+                'CpuPeriod' => 100000,
+                'Memory' => intval($this->memory) * 1e+6, // Convert into bytes
+                'MemorySwap' => intval($this->swap) * 1e+6, // Convert into bytes
                 'AutoRemove' => $remove,
                 'NetworkMode' => ! empty($network) ? $network : null,
             ],
         ];
+
+        if (! empty($mountFolder)) {
+            $body['HostConfig']['Binds'][] = $mountFolder.':/tmp';
+        }
+
+        $body = array_filter($body, function ($value) {
+            return ! empty($value);
+        });
 
         $result = $this->call('http://localhost/containers/create?name='.$name, 'POST', json_encode($body), [
             'Content-Type: application/json',

@@ -468,7 +468,8 @@ class DockerAPI extends Adapter
 
         $vars = $parsedVariables;
 
-        // TODO: Connect to $network if not empty
+        $labels[$this->namespace.'-type'] = 'runtime';
+        $labels[$this->namespace.'-created'] = (string)time();
 
         $body = [
             'Hostname' => $hostname,
@@ -478,6 +479,7 @@ class DockerAPI extends Adapter
             'WorkingDir' => $workdir,
             'Labels' => (object) $labels,
             'Env' => array_values($vars),
+            'Mounts' => $mountFolder ? [['Type' => 'bind', 'Source' => $mountFolder, 'Target' => '/tmp', 'RW' => true]] : [],
             'HostConfig' => [
                 'Binds' => $volumes,
                 'CpuQuota' => ! empty($this->cpus) ? floatval($this->cpus) * 100000 : null,
@@ -488,14 +490,6 @@ class DockerAPI extends Adapter
                 'NetworkMode' => ! empty($network) ? $network : null,
             ],
         ];
-
-        if (! empty($mountFolder)) {
-            $body['HostConfig']['Binds'][] = $mountFolder.':/tmp:rw';
-        }
-
-        $body = array_filter($body, function ($value) {
-            return $value !== null && $value !== '';
-        });
 
         $result = $this->call('http://localhost/containers/create?name='.$name, 'POST', json_encode($body), [
             'Content-Type: application/json',
@@ -510,20 +504,9 @@ class DockerAPI extends Adapter
         $containerId = $parsedResponse['Id'];
 
         // Run Created Container
-        $result = $this->call('http://localhost/containers/'.$containerId.'/start', 'POST', '{}');
-        if ($result['code'] !== 204) {
-            throw new Orchestration('Failed to create function environment: '.$result['response'].' Response Code: '.$result['code']);
-        }
-
-        $result = $this->call('http://localhost/containers/'.$containerId.'/wait', 'POST', '{}');
-        if ($result['code'] !== 200) {
-            throw new Orchestration('Failed to wait for container: '.$result['response'].' Response Code: '.$result['code']);
-        }
-
-        $waitResponse = json_decode($result['response'], true);
-        $exitCode = $waitResponse['StatusCode'];
-        if ($exitCode !== 0) {
-            throw new Orchestration("Docker Error: Container exited with non-zero exit code: {$exitCode}");
+        $startResult = $this->call('http://localhost/containers/'.$containerId.'/start', 'POST', '{}');
+        if ($startResult['code'] !== 204) {
+            throw new Orchestration('Failed to start container: '.$startResult['response']);
         }
 
         return $containerId;

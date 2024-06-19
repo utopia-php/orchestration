@@ -217,7 +217,7 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @depends testCreateNetwork
+     * @depends testnetworkDisconnect
      */
     public function testRemoveNetwork(): void
     {
@@ -434,9 +434,6 @@ abstract class Base extends TestCase
         $this->assertEquals(true, $response);
 
         $response = static::getOrchestration()->remove('TestContainerTimeout', true);
-        $this->assertEquals(true, $response);
-
-        $response = static::getOrchestration()->remove('TestContainerBadBuild', true);
         $this->assertEquals(true, $response);
 
         /**

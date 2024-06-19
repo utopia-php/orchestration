@@ -503,7 +503,11 @@ class DockerAPI extends Adapter
             'Content-Length: '.\strlen(\json_encode($body)),
         ]);
 
-        if ($result['code'] !== 201) {
+        if ($result['code'] === 404) {
+            throw new Orchestration('Container image "'.$image.'" not found.');
+        } elseif ($result['code'] === 409) {
+            throw new Orchestration('Container with name "'.$name.'" already exists.');
+        } elseif ($result['code'] !== 201) {
             throw new Orchestration('Failed to create function environment: '.$result['response'].' Response Code: '.$result['code']);
         }
 

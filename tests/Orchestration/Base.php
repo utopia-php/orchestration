@@ -21,6 +21,7 @@ abstract class Base extends TestCase
         $testContainers = [
             'TestContainer',
             'TestContainerTimeout',
+            'TestContainerBadBuild',
             'UsageStats1',
             'UsageStats2',
             'TestContainerRM',
@@ -433,6 +434,9 @@ abstract class Base extends TestCase
         $this->assertEquals(true, $response);
 
         $response = static::getOrchestration()->remove('TestContainerTimeout', true);
+        $this->assertEquals(true, $response);
+
+        $response = static::getOrchestration()->remove('TestContainerBadBuild', true);
         $this->assertEquals(true, $response);
 
         /**

@@ -511,12 +511,11 @@ class DockerAPI extends Adapter
 
         // Run Created Container
         $result = $this->call('http://localhost/containers/'.$containerId.'/start', 'POST', '{}');
-
         if ($result['code'] !== 204) {
             throw new Orchestration('Failed to create function environment: '.$result['response'].' Response Code: '.$result['code']);
         }
 
-        $result = $this->call('http://localhost/containers/'.$containerId.'/wait', 'POST', null, [], 30);
+        $result = $this->call('http://localhost/containers/'.$containerId.'/wait', 'POST', '{}');
         if ($result['code'] !== 200) {
             throw new Orchestration('Failed to wait for container: '.$result['response'].' Response Code: '.$result['code']);
         }

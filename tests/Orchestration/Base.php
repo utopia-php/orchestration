@@ -528,7 +528,7 @@ abstract class Base extends TestCase
          * Test for Success
          */
         $stats = static::getOrchestration()->getStats();
-        $this->assertCount(0, $stats);
+        $this->assertCount(0, $stats, 'Container(s) still running: '.\json_encode($stats, JSON_PRETTY_PRINT));
 
         // This allows CPU-heavy load check
         static::getOrchestration()->setCpus(1);

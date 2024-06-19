@@ -469,7 +469,7 @@ class DockerAPI extends Adapter
         $vars = $parsedVariables;
 
         $labels[$this->namespace.'-type'] = 'runtime';
-        $labels[$this->namespace.'-created'] = (string)time();
+        $labels[$this->namespace.'-created'] = (string) time();
 
         $body = [
             'Hostname' => $hostname,

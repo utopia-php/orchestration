@@ -210,22 +210,6 @@ abstract class Base extends TestCase
      */
     public function testExecContainer(): void
     {
-        $output = '';
-
-        $response = static::getOrchestration()->execute(
-            'TestContainer',
-            [
-                'php',
-                'index.php',
-            ],
-            $output,
-            [
-                'test' => 'testEnviromentVariable',
-            ],
-        );
-
-        $this->assertEquals('Hello World! testEnviromentVariable', $output);
-
         /**
          * Test for Failure
          */
@@ -241,6 +225,46 @@ abstract class Base extends TestCase
             ],
             $output
         );
+
+        /**
+         * Test for Failure
+         */
+        $output = '';
+
+        $this->expectException(\Exception::class);
+
+        static::getOrchestration()->execute(
+            'TestContainer',
+            [
+                'php',
+                'doesnotexist.php', // Non-Existent File
+            ],
+            $output,
+            [
+                'test' => 'testEnviromentVariable',
+            ],
+            1
+        );
+
+        /**
+         * Test for Success
+         */
+
+        $output = '';
+
+        $response = static::getOrchestration()->execute(
+            'TestContainer',
+            [
+                'php',
+                'index.php',
+            ],
+            $output,
+            [
+                'test' => 'testEnviromentVariable',
+            ],
+        );
+
+        $this->assertEquals('Hello World! testEnviromentVariable', $output);
     }
 
     /**

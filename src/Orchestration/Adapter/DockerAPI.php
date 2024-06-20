@@ -459,6 +459,11 @@ class DockerAPI extends Adapter
         bool $remove = false,
         string $network = ''
     ): string {
+        $result = $this->call('http://localhost/images/'.$image.'/json', 'GET');
+        if ($result['code'] === 404 && ! $this->pull($image)) {
+            throw new Orchestration('Missing image "'.$image.'" and failed to pull it.');
+        }
+
         $parsedVariables = [];
 
         foreach ($vars as $key => $value) {

@@ -207,9 +207,10 @@ class DockerAPI extends Adapter
 
         if ($result['code'] === 404) {
             throw new Orchestration('Network with name "'.$name.'" does not exist: '.$result['response']);
-        } else if ($result['code'] !== 204) {
+        } elseif ($result['code'] !== 204) {
             throw new Orchestration('Error removing network: '.$result['response']);
         }
+
         return true;
     }
 

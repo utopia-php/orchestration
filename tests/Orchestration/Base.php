@@ -16,13 +16,9 @@ abstract class Base extends TestCase
      */
     public static $containerID;
 
-    public function setUp(): void
-    {
-    }
+    public function setUp(): void {}
 
-    public function tearDown(): void
-    {
-    }
+    public function tearDown(): void {}
 
     public function testPullImage(): void
     {

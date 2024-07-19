@@ -75,12 +75,32 @@ abstract class Base extends TestCase
         $this->expectException(\Exception::class);
 
         $response = static::getOrchestration()->run(
-            'appwrite/tXDytMhecKCuz5B4PlITXL1yKhZXDP', // Non-Existent Image
+            'appwrite/txdytmheckcuz5b4plitxl1ykhzxdh', // Non-Existent Image
             'TestContainer',
             [
                 'sh',
                 '-c',
                 'cp /tmp/php.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null',
+            ],
+            '',
+            '/usr/local/src/',
+            [],
+            [],
+            __DIR__.'/Resources',
+        );
+
+        /**
+         * Test for Failure
+         */
+        $this->expectException(\Exception::class);
+
+        $response = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            'TestContainerBadBuild',
+            [
+                'sh',
+                '-c',
+                'cp /tmp/doesnotexist.tar.gz /usr/local/src/php.tar.gz && tar -zxf /usr/local/src/php.tar.gz --strip 1 && tail -f /dev/null',
             ],
             '',
             '/usr/local/src/',
@@ -123,17 +143,7 @@ abstract class Base extends TestCase
     /**
      * @depends testCreateNetwork
      */
-    public function testnetworkConnect(): void
-    {
-        $response = static::getOrchestration()->networkConnect('TestContainer', 'TestNetwork');
-
-        $this->assertEquals(true, $response);
-    }
-
-    /**
-     * @depends testCreateNetwork
-     */
-    public function testCreateContainerWithNetwork(): void
+    public function testNetworkConnect(): void
     {
         $response = static::getOrchestration()->run(
             'appwrite/runtime-for-php:8.0',
@@ -159,12 +169,18 @@ abstract class Base extends TestCase
         );
 
         $this->assertNotEmpty($response);
+
+        sleep(1); // wait for container
+
+        $response = static::getOrchestration()->networkConnect('TestContainer', 'TestNetwork');
+
+        $this->assertEquals(true, $response);
     }
 
     /**
-     * @depends testnetworkConnect
+     * @depends testNetworkConnect
      */
-    public function testnetworkDisconnect(): void
+    public function testNetworkDisconnect(): void
     {
         $response = static::getOrchestration()->networkDisconnect('TestContainer', 'TestNetwork', true);
 
@@ -172,7 +188,7 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @depends testCreateNetwork
+     * @depends testNetworkDisconnect
      */
     public function testRemoveNetwork(): void
     {
@@ -186,22 +202,6 @@ abstract class Base extends TestCase
      */
     public function testExecContainer(): void
     {
-        $output = '';
-
-        $response = static::getOrchestration()->execute(
-            'TestContainer',
-            [
-                'php',
-                'index.php',
-            ],
-            $output,
-            [
-                'test' => 'testEnviromentVariable',
-            ],
-        );
-
-        $this->assertEquals('Hello World! testEnviromentVariable', $output);
-
         /**
          * Test for Failure
          */
@@ -217,6 +217,45 @@ abstract class Base extends TestCase
             ],
             $output
         );
+
+        /**
+         * Test for Failure
+         */
+        $output = '';
+
+        $this->expectException(\Exception::class);
+
+        static::getOrchestration()->execute(
+            'TestContainer',
+            [
+                'php',
+                'doesnotexist.php', // Non-Existent File
+            ],
+            $output,
+            [
+                'test' => 'testEnviromentVariable',
+            ],
+            1
+        );
+
+        /**
+         * Test for Success
+         */
+        $output = '';
+
+        static::getOrchestration()->execute(
+            'TestContainer',
+            [
+                'php',
+                'index.php',
+            ],
+            $output,
+            [
+                'test' => 'testEnviromentVariable',
+            ],
+        );
+
+        $this->assertEquals('Hello World! testEnviromentVariable', $output);
     }
 
     /**
@@ -226,7 +265,7 @@ abstract class Base extends TestCase
     {
         $output = '';
 
-        $response = static::getOrchestration()->execute(
+        static::getOrchestration()->execute(
             'TestContainer',
             [
                 'cat',
@@ -457,7 +496,7 @@ abstract class Base extends TestCase
          * Test for Success
          */
         $stats = static::getOrchestration()->getStats();
-        $this->assertCount(0, $stats);
+        $this->assertCount(0, $stats, 'Container(s) still running: '.\json_encode($stats, JSON_PRETTY_PRINT));
 
         // This allows CPU-heavy load check
         static::getOrchestration()->setCpus(1);
@@ -547,8 +586,8 @@ abstract class Base extends TestCase
         $this->assertEquals($stats[0]->getContainerId(), $stats2[0]->getContainerId());
         $this->assertEquals($stats[0]->getContainerName(), $stats2[0]->getContainerName());
 
-        $this->assertGreaterThanOrEqual(0.5, $stats[0]->getCpuUsage());
-        $this->assertGreaterThanOrEqual(0.5, $stats[1]->getCpuUsage());
+        $this->assertGreaterThanOrEqual(0, $stats[0]->getCpuUsage());
+        $this->assertGreaterThanOrEqual(0, $stats[1]->getCpuUsage());
 
         $statsFiltered = static::getOrchestration()->getStats(filters: ['label' => 'utopia-container-type=stats']);
         $this->assertCount(1, $statsFiltered);

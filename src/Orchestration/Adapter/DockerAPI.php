@@ -2,7 +2,6 @@
 
 namespace Utopia\Orchestration\Adapter;
 
-use CurlHandle;
 use stdClass;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
@@ -22,7 +21,7 @@ class DockerAPI extends Adapter
             $this->registryAuth = base64_encode(json_encode([
                 'username' => $username,
                 'password' => $password,
-                'serveraddress' => 'https://index.docker.io/v1/',
+                'serveraddress' => 'index.docker.io/v1/',
                 'email' => $email,
             ]));
         }
@@ -44,6 +43,7 @@ class DockerAPI extends Adapter
      */
     protected function call(string $url, string $method, $body = null, array $headers = [], int $timeout = -1): array
     {
+        $headers[] = 'Host: utopia-php'; // Fix Swoole headers bug with socket requests
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
@@ -94,17 +94,19 @@ class DockerAPI extends Adapter
      */
     protected function streamCall(string $url, int $timeout = -1): array
     {
+        $body = \json_encode(['Detach' => false]);
+
         $ch = \curl_init();
         \curl_setopt($ch, CURLOPT_URL, $url);
         \curl_setopt($ch, CURLOPT_UNIX_SOCKET_PATH, '/var/run/docker.sock');
         \curl_setopt($ch, CURLOPT_POST, 1);
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, '{}'); // body is required
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
         $headers = [
             'Content-Type: application/json',
-            'Content-Length: 2',
-            'host: null',
+            'Content-Length: '.\strlen($body),
+            'Host: utopia-php', // Fix Swoole headers bug with socket requests
         ];
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
@@ -128,7 +130,11 @@ class DockerAPI extends Adapter
         $stdout = '';
         $stderr = '';
 
-        $callback = function (CurlHandle $ch, string $str) use (&$stdout, &$stderr): int {
+        $callback = function (mixed $ch, string $str) use (&$stdout, &$stderr): int {
+            if (empty($str)) {
+                return 0;
+            }
+
             $rawStream = unpack('C*', $str);
             $stream = $rawStream[1]; // 1-based index, not 0-based
             switch ($stream) { // only 1 or 2, as set while creating exec
@@ -151,7 +157,7 @@ class DockerAPI extends Adapter
         $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
         if (curl_errno($ch)) {
-            if (\curl_errno($ch) == CURLE_OPERATION_TIMEOUTED) {
+            if (\curl_errno($ch) === CURLE_OPERATION_TIMEOUTED) {
                 throw new Timeout('Curl Error: '.curl_error($ch));
             } else {
                 throw new Orchestration('Curl Error: '.curl_error($ch));
@@ -183,7 +189,9 @@ class DockerAPI extends Adapter
             'Content-Length: '.\strlen($body),
         ]);
 
-        if ($result['code'] != 201) {
+        if ($result['code'] === 409) {
+            throw new Orchestration('Network with name "'.$name.'" already exists: '.$result['response']);
+        } elseif ($result['code'] !== 201) {
             throw new Orchestration('Error creating network: '.$result['response']);
         }
 
@@ -197,11 +205,13 @@ class DockerAPI extends Adapter
     {
         $result = $this->call('http://localhost/networks/'.$name, 'DELETE');
 
-        if ($result['code'] != 204) {
+        if ($result['code'] === 404) {
+            throw new Orchestration('Network with name "'.$name.'" does not exist: '.$result['response']);
+        } elseif ($result['code'] !== 204) {
             throw new Orchestration('Error removing network: '.$result['response']);
         }
 
-        return $result['code'] == 204;
+        return true;
     }
 
     /**
@@ -218,11 +228,11 @@ class DockerAPI extends Adapter
             'Content-Length: '.\strlen($body),
         ]);
 
-        if ($result['code'] != 200) {
+        if ($result['code'] !== 200) {
             throw new Orchestration('Error attaching network: '.$result['response']);
         }
 
-        return $result['code'] == 200;
+        return $result['code'] === 200;
     }
 
     /**
@@ -240,11 +250,11 @@ class DockerAPI extends Adapter
             'Content-Length: '.\strlen($body),
         ]);
 
-        if ($result['code'] != 200) {
+        if ($result['code'] !== 200) {
             throw new Orchestration('Error detatching network: '.$result['response']);
         }
 
-        return $result['code'] == 200;
+        return $result['code'] === 200;
     }
 
     /**
@@ -257,7 +267,6 @@ class DockerAPI extends Adapter
     {
         // List ahead of time, since API does not allow listing all usage stats
         $containerIds = [];
-
         if ($container === null) {
             $containers = $this->list($filters);
             $containerIds = \array_map(fn ($c) => $c->getId(), $containers);
@@ -270,15 +279,33 @@ class DockerAPI extends Adapter
         foreach ($containerIds as $containerId) {
             $result = $this->call('http://localhost/containers/'.$containerId.'/stats?stream=false', 'GET');
 
-            if ($result['code'] !== 200) {
+            if ($result['code'] !== 200 || empty($result['response'])) {
                 throw new Orchestration($result['response']);
             }
 
             $stats = \json_decode($result['response'], true);
 
+            if (! isset($stats['id']) || ! isset($stats['precpu_stats']) || ! isset($stats['cpu_stats']) || ! isset($stats['memory_stats']) || ! isset($stats['networks'])) {
+                throw new Orchestration('Failed to get stats for container: '.$containerId);
+            }
+
+            // Calculate CPU usage
             $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
             $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage'] - $stats['precpu_stats']['system_cpu_usage'];
+            $numberCpus = $stats['cpu_stats']['online_cpus'];
+            if ($systemCpuDelta > 0 && $cpuDelta > 0) {
+                $cpuUsage = ($cpuDelta / $systemCpuDelta) * $numberCpus;
+            } else {
+                $cpuUsage = 0.0;
+            }
 
+            // Calculate memory usage (unsafe div /0)
+            $memoryUsage = 0.0;
+            if ($stats['memory_stats']['limit'] > 0 && $stats['memory_stats']['usage'] > 0) {
+                $memoryUsage = ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0;
+            }
+
+            // Calculate network I/O
             $networkIn = 0;
             $networkOut = 0;
             foreach ($stats['networks'] as $network) {
@@ -286,13 +313,30 @@ class DockerAPI extends Adapter
                 $networkOut += $network['tx_bytes'];
             }
 
+            // Calculate disk I/O
+            $diskRead = 0;
+            $diskWrite = 0;
+            if (isset($stats['blkio_stats']['io_service_bytes_recursive'])) {
+                foreach ($stats['blkio_stats']['io_service_bytes_recursive'] as $entry) {
+                    if ($entry['op'] === 'Read') {
+                        $diskRead += $entry['value'];
+                    } elseif ($entry['op'] === 'Write') {
+                        $diskWrite += $entry['value'];
+                    }
+                }
+            }
+
+            // Calculate memory I/O (approximated)
+            $memoryIn = $stats['memory_stats']['usage'] ?? 0;
+            $memoryOut = $stats['memory_stats']['max_usage'] ?? 0;
+
             $list[] = new Stats(
                 containerId: $stats['id'],
                 containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
-                cpuUsage: 1, // TODO: Implement (API seems to give incorrect values)
-                memoryUsage: ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0,
-                diskIO: ['in' => 0, 'out' => 0], // TODO: Implement (API does not provide these values)
-                memoryIO: ['in' => 0, 'out' => 0], // TODO: Implement (API does not provide these values
+                cpuUsage: $cpuUsage,
+                memoryUsage: $memoryUsage,
+                diskIO: ['in' => $diskRead, 'out' => $diskWrite],
+                memoryIO: ['in' => $memoryIn, 'out' => $memoryOut],
                 networkIO: ['in' => $networkIn, 'out' => $networkOut],
             );
         }
@@ -415,6 +459,11 @@ class DockerAPI extends Adapter
         bool $remove = false,
         string $network = ''
     ): string {
+        $result = $this->call('http://localhost/images/'.$image.'/json', 'GET');
+        if ($result['code'] === 404 && ! $this->pull($image)) {
+            throw new Orchestration('Missing image "'.$image.'" and failed to pull it.');
+        }
+
         $parsedVariables = [];
 
         foreach ($vars as $key => $value) {
@@ -424,7 +473,8 @@ class DockerAPI extends Adapter
 
         $vars = $parsedVariables;
 
-        // TODO: Connect to $network if not empty
+        $labels[$this->namespace.'-type'] = 'runtime';
+        $labels[$this->namespace.'-created'] = (string) time();
 
         $body = [
             'Hostname' => $hostname,
@@ -441,6 +491,7 @@ class DockerAPI extends Adapter
                 'Memory' => intval($this->memory) * 1e+6, // Convert into bytes
                 'MemorySwap' => intval($this->swap) * 1e+6, // Convert into bytes
                 'AutoRemove' => $remove,
+                'NetworkMode' => ! empty($network) ? $network : null,
             ],
         ];
 
@@ -457,20 +508,24 @@ class DockerAPI extends Adapter
             'Content-Length: '.\strlen(\json_encode($body)),
         ]);
 
-        if ($result['code'] !== 201) {
+        if ($result['code'] === 404) {
+            throw new Orchestration('Container image "'.$image.'" not found.');
+        } elseif ($result['code'] === 409) {
+            throw new Orchestration('Container with name "'.$name.'" already exists.');
+        } elseif ($result['code'] !== 201) {
             throw new Orchestration('Failed to create function environment: '.$result['response'].' Response Code: '.$result['code']);
         }
 
         $parsedResponse = json_decode($result['response'], true);
+        $containerId = $parsedResponse['Id'];
 
         // Run Created Container
-        $result = $this->call('http://localhost/containers/'.$parsedResponse['Id'].'/start', 'POST', '{}');
-
-        if ($result['code'] !== 204) {
-            throw new Orchestration('Failed to create function environment: '.$result['response'].' Response Code: '.$result['code']);
-        } else {
-            return $parsedResponse['Id'];
+        $startResult = $this->call('http://localhost/containers/'.$containerId.'/start', 'POST', '{}');
+        if ($startResult['code'] !== 204) {
+            throw new Orchestration('Failed to start container: '.$startResult['response']);
         }
+
+        return $containerId;
     }
 
     /**
@@ -519,9 +574,20 @@ class DockerAPI extends Adapter
 
         if ($result['code'] !== 200) {
             throw new Orchestration('Failed to create execute command: '.$result['response'].' Response Code: '.$result['code']);
-        } else {
-            return true;
         }
+
+        $result = $this->call('http://localhost/exec/'.$parsedResponse['Id'].'/json', 'GET');
+
+        if ($result['code'] !== 200) {
+            throw new Orchestration('Failed to inspect status of execute command: '.$result['response'].' Response Code: '.$result['code']);
+        }
+
+        $parsedResponse = json_decode($result['response'], true);
+        if ($parsedResponse['Running'] === true || $parsedResponse['ExitCode'] !== 0) {
+            throw new Orchestration('Failed to execute command. Exit code: '.$parsedResponse['ExitCode']);
+        }
+
+        return true;
     }
 
     /**

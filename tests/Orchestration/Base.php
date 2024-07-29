@@ -3,6 +3,7 @@
 namespace Utopia\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Orchestration;
 
 abstract class Base extends TestCase
@@ -16,13 +17,9 @@ abstract class Base extends TestCase
      */
     public static $containerID;
 
-    public function setUp(): void
-    {
-    }
+    public function setUp(): void {}
 
-    public function tearDown(): void
-    {
-    }
+    public function tearDown(): void {}
 
     public function testPullImage(): void
     {
@@ -68,6 +65,70 @@ abstract class Base extends TestCase
         );
 
         $this->assertNotEmpty($response);
+
+        // "Always" Restart policy test
+        $response = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            'TestContainerWithRestart',
+            [
+                'sh',
+                '-c',
+                'echo "Custom start" && sleep 1 && exit 0',
+            ],
+            '',
+            '/usr/local/src/',
+            [
+                __DIR__.'/Resources:/test:rw',
+            ],
+            [],
+            __DIR__.'/Resources',
+            restart: DockerAPI::RESTART_ALWAYS
+        );
+
+        $this->assertNotEmpty($response);
+
+        sleep(7);
+
+        $output = [];
+        \exec('docker logs '.$response, $output);
+        $output = \implode("\n", $output);
+        $occurances = \substr_count($output, 'Custom start');
+        $this->assertGreaterThanOrEqual(5, $occurances);
+
+        $response = static::getOrchestration()->remove('TestContainerWithRestart', true);
+        $this->assertEquals(true, $response);
+
+        // "No" Restart policy test
+        $response = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            'TestContainerWithoutRestart',
+            [
+                'sh',
+                '-c',
+                'echo "Custom start" && sleep 1 && exit 0',
+            ],
+            '',
+            '/usr/local/src/',
+            [
+                __DIR__.'/Resources:/test:rw',
+            ],
+            [],
+            __DIR__.'/Resources',
+            restart: DockerAPI::RESTART_NO
+        );
+
+        $this->assertNotEmpty($response);
+
+        sleep(7);
+
+        $output = [];
+        \exec('docker logs '.$response, $output);
+        $output = \implode("\n", $output);
+        $occurances = \substr_count($output, 'Custom start');
+        $this->assertEquals(1, $occurances);
+
+        $response = static::getOrchestration()->remove('TestContainerWithoutRestart', true);
+        $this->assertEquals(true, $response);
 
         /**
          * Test for Failure

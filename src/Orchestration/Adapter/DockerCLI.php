@@ -305,7 +305,8 @@ class DockerCLI extends Adapter
         array $labels = [],
         string $hostname = '',
         bool $remove = false,
-        string $network = ''
+        string $network = '',
+        string $restart = self::RESTART_NO
     ): string {
         $output = '';
 
@@ -354,6 +355,7 @@ class DockerCLI extends Adapter
         (empty($this->cpus) ? '' : (' --cpus='.$this->cpus)).
         (empty($this->memory) ? '' : (' --memory='.$this->memory.'m')).
         (empty($this->swap) ? '' : (' --memory-swap='.$this->swap.'m')).
+        " --restart={$restart}".
         " --name={$name}".
         " --label {$this->namespace}-type=runtime".
         " --label {$this->namespace}-created={$time}".

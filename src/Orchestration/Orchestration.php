@@ -167,9 +167,10 @@ class Orchestration
         array $labels = [],
         string $hostname = '',
         bool $remove = false,
-        string $network = ''
+        string $network = '',
+        string $restart = Adapter::RESTART_NO
     ): string {
-        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname, $remove, $network);
+        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname, $remove, $network, $restart);
     }
 
     /**

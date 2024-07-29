@@ -66,7 +66,7 @@ abstract class Base extends TestCase
 
         $this->assertNotEmpty($response);
 
-        // Restart policy test
+        // "Always" Restart policy test
         $response = static::getOrchestration()->run(
             'appwrite/runtime-for-php:8.0',
             'TestContainerWithRestart',
@@ -89,11 +89,36 @@ abstract class Base extends TestCase
 
         sleep(7);
 
-        // Use Docker CLI for simplicity, as method to get logs isnt implemented yet
-        // Test is still valid. Test is to ensure restart policy prints multiple times.
         $response = \exec('docker logs '.$response);
-        $occurances = \explode('Custom start', $response);
-        $this->assertGreaterThanOrEqual(5, \count($occurances));
+        $occurances = \substr_count($response, 'Custom start');
+        $this->assertGreaterThanOrEqual(5, $occurances);
+
+        // "No" Restart policy test
+        $response = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            'TestContainerWithRestart',
+            [
+                'sh',
+                '-c',
+                'echo "Custom start" && sleep 1 && exit 0',
+            ],
+            '',
+            '/usr/local/src/',
+            [
+                __DIR__.'/Resources:/test:rw',
+            ],
+            [],
+            __DIR__.'/Resources',
+            restart: DockerAPI::RESTART_NO
+        );
+
+        $this->assertNotEmpty($response);
+
+        sleep(7);
+
+        $response = \exec('docker logs '.$response);
+        $occurances = \substr_count($response, 'Custom start');
+        $this->assertEquals(1, $occurances);
 
         /**
          * Test for Failure

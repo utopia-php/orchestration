@@ -407,7 +407,7 @@ class DockerAPI extends Adapter
 
         $body = [
             'all' => true,
-            'filters' => empty($filtersSorted) ? new stdClass() : json_encode($filtersSorted),
+            'filters' => empty($filtersSorted) ? new stdClass : json_encode($filtersSorted),
         ];
 
         $result = $this->call('http://localhost/containers/json'.'?'.\http_build_query($body), 'GET');
@@ -457,7 +457,8 @@ class DockerAPI extends Adapter
         array $labels = [],
         string $hostname = '',
         bool $remove = false,
-        string $network = ''
+        string $network = '',
+        string $restart = self::RESTART_NO
     ): string {
         $result = $this->call('http://localhost/images/'.$image.'/json', 'GET');
         if ($result['code'] === 404 && ! $this->pull($image)) {
@@ -492,6 +493,7 @@ class DockerAPI extends Adapter
                 'MemorySwap' => intval($this->swap) * 1e+6, // Convert into bytes
                 'AutoRemove' => $remove,
                 'NetworkMode' => ! empty($network) ? $network : null,
+                'RestartPolicy' => $restart,
             ],
         ];
 

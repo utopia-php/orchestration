@@ -3,6 +3,7 @@
 namespace Utopia\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Orchestration;
 
 abstract class Base extends TestCase
@@ -16,13 +17,9 @@ abstract class Base extends TestCase
      */
     public static $containerID;
 
-    public function setUp(): void
-    {
-    }
+    public function setUp(): void {}
 
-    public function tearDown(): void
-    {
-    }
+    public function tearDown(): void {}
 
     public function testPullImage(): void
     {
@@ -68,6 +65,35 @@ abstract class Base extends TestCase
         );
 
         $this->assertNotEmpty($response);
+
+        // Restart policy test
+        $response = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            'TestContainerWithRestart',
+            [
+                'sh',
+                '-c',
+                'echo "Custom start" && sleep 1 && exit 0',
+            ],
+            '',
+            '/usr/local/src/',
+            [
+                __DIR__.'/Resources:/test:rw',
+            ],
+            [],
+            __DIR__.'/Resources',
+            restart: DockerAPI::RESTART_ALWAYS
+        );
+
+        $this->assertNotEmpty($response);
+
+        sleep(7);
+
+        // Use Docker CLI for simplicity, as method to get logs isnt implemented yet
+        // Test is still valid. Test is to ensure restart policy prints multiple times.
+        $response = \exec('docker logs '.$response);
+        $occurances = \explode('Custom start', $response);
+        $this->assertGreaterThanOrEqual(5, \count($occurances));
 
         /**
          * Test for Failure

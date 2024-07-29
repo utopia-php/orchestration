@@ -4,6 +4,14 @@ namespace Utopia\Orchestration;
 
 abstract class Adapter
 {
+    public const RESTART_NO = 'no'; // Never restart
+
+    public const RESTART_ALWAYS = 'always'; // Restart after any exit code
+
+    public const RESTART_ON_FAILURE = 'on-failure'; // Restart on after non-zero exit code
+
+    public const RESTART_UNLESS_STOPPED = 'unless-stopped'; // Restart after any exit code, if not stopped manually
+
     /**
      * @var string
      */
@@ -103,7 +111,8 @@ abstract class Adapter
         array $labels = [],
         string $hostname = '',
         bool $remove = false,
-        string $network = ''): string;
+        string $network = '',
+        string $restart = self::RESTART_NO): string;
 
     /**
      * Execute Container

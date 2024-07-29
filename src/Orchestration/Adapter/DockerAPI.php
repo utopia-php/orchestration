@@ -493,7 +493,9 @@ class DockerAPI extends Adapter
                 'MemorySwap' => intval($this->swap) * 1e+6, // Convert into bytes
                 'AutoRemove' => $remove,
                 'NetworkMode' => ! empty($network) ? $network : null,
-                'RestartPolicy' => $restart,
+                'RestartPolicy' => [
+                    'Name' => $restart,
+                ],
             ],
         ];
 

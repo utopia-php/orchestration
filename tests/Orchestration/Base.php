@@ -89,8 +89,10 @@ abstract class Base extends TestCase
 
         sleep(7);
 
-        $response = \exec('docker logs '.$response);
-        $occurances = \substr_count($response, 'Custom start');
+        $output = [];
+        \exec('docker logs '.$response, $output);
+        $output = \implode("\n", $output);
+        $occurances = \substr_count($output, 'Custom start');
         $this->assertGreaterThanOrEqual(5, $occurances);
 
         $response = static::getOrchestration()->remove('TestContainerWithRestart', true);
@@ -119,8 +121,10 @@ abstract class Base extends TestCase
 
         sleep(7);
 
-        $response = \exec('docker logs '.$response);
-        $occurances = \substr_count($response, 'Custom start');
+        $output = [];
+        \exec('docker logs '.$response, $output);
+        $output = \implode("\n", $output);
+        $occurances = \substr_count($output, 'Custom start');
         $this->assertEquals(1, $occurances);
 
         $response = static::getOrchestration()->remove('TestContainerWithoutRestart', true);

@@ -93,10 +93,13 @@ abstract class Base extends TestCase
         $occurances = \substr_count($response, 'Custom start');
         $this->assertGreaterThanOrEqual(5, $occurances);
 
+        $response = static::getOrchestration()->remove('TestContainerWithRestart', true);
+        $this->assertEquals(true, $response);
+
         // "No" Restart policy test
         $response = static::getOrchestration()->run(
             'appwrite/runtime-for-php:8.0',
-            'TestContainerWithRestart',
+            'TestContainerWithoutRestart',
             [
                 'sh',
                 '-c',
@@ -119,6 +122,9 @@ abstract class Base extends TestCase
         $response = \exec('docker logs '.$response);
         $occurances = \substr_count($response, 'Custom start');
         $this->assertEquals(1, $occurances);
+
+        $response = static::getOrchestration()->remove('TestContainerWithoutRestart', true);
+        $this->assertEquals(true, $response);
 
         /**
          * Test for Failure

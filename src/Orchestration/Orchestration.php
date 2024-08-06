@@ -208,11 +208,11 @@ class Orchestration
     }
 
     /**
-     * Set max allowed CPU Quota per container
+     * Set max allowed CPU cores per container
      *
      * @return $this
      */
-    public function setCpus(float $cores): self
+    public function setCpus(int $cores): self
     {
         $this->adapter->setCpus($cores);
 

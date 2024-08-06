@@ -10,7 +10,7 @@ abstract class Adapter
     protected $namespace = 'utopia';
 
     /**
-     * @var float
+     * @var int
      */
     protected $cpus = 0;
 
@@ -129,11 +129,11 @@ abstract class Adapter
     }
 
     /**
-     * Set max allowed CPU Quota per container
+     * Set max allowed CPU cores per container
      *
      * @return $this
      */
-    public function setCpus(float $cores): self
+    public function setCpus(int $cores): self
     {
         $this->cpus = $cores;
 

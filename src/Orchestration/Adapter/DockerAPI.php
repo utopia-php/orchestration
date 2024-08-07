@@ -137,6 +137,14 @@ class DockerAPI extends Adapter
 
             $rawStream = unpack('C*', $str);
             $stream = $rawStream[1]; // 1-based index, not 0-based
+
+            // Ascii encoding support
+            if ($stream === \ord('1')) {
+                $stream = 1;
+            } elseif ($stream === \ord('2')) {
+                $stream = 2;
+            }
+
             switch ($stream) { // only 1 or 2, as set while creating exec
                 case 1:
                     $packed = pack('C*', ...\array_slice($rawStream, 8));

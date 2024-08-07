@@ -139,9 +139,9 @@ class DockerAPI extends Adapter
             $stream = $rawStream[1]; // 1-based index, not 0-based
 
             // Ascii encoding support
-            if ($stream === \ord("1")) {
+            if ($stream === \ord('1')) {
                 $stream = 1;
-            } elseif ($stream === \ord("2")) {
+            } elseif ($stream === \ord('2')) {
                 $stream = 2;
             }
 

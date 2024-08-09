@@ -9,6 +9,7 @@ services:
             - orchestration
         volumes: 
             - ./:/usr/src/code
+            - /var/run/docker.sock:/var/run/docker.sock
 
 networks:
     orchestration:

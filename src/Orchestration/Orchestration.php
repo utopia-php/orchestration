@@ -3,7 +3,6 @@
 namespace Utopia\Orchestration;
 
 use Exception;
-use Utopia\Orchestration\Container\Stats;
 
 class Orchestration
 {
@@ -91,6 +90,8 @@ class Orchestration
 
     /**
      * List Networks
+     *
+     * @return Network[]
      */
     public function listNetworks(): array
     {
@@ -108,11 +109,10 @@ class Orchestration
     /**
      * Get usage stats of containers
      *
-     * @param  string  $container
      * @param  array<string, string>  $filters
-     * @return array<Stats>
+     * @return array<\Utopia\Orchestration\Container\Stats>
      */
-    public function getStats(string $container = null, array $filters = []): array
+    public function getStats(?string $container = null, array $filters = []): array
     {
         return $this->adapter->getStats($container, $filters);
     }
@@ -152,6 +152,7 @@ class Orchestration
      *
      * @param  string[]  $command
      * @param  string[]  $volumes
+     * @param  array<string, string>  $labels
      * @param  array<string, string>  $vars
      */
     public function run(
@@ -166,9 +167,10 @@ class Orchestration
         array $labels = [],
         string $hostname = '',
         bool $remove = false,
-        string $network = ''
+        string $network = '',
+        string $restart = Adapter::RESTART_NO
     ): string {
-        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname, $remove, $network);
+        return $this->adapter->run($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname, $remove, $network, $restart);
     }
 
     /**
@@ -208,11 +210,11 @@ class Orchestration
     }
 
     /**
-     * Set max allowed CPU cores per container
+     * Set max allowed CPU Quota per container
      *
      * @return $this
      */
-    public function setCpus(int $cores): self
+    public function setCpus(float $cores): self
     {
         $this->adapter->setCpus($cores);
 

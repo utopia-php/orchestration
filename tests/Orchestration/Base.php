@@ -277,8 +277,8 @@ abstract class Base extends TestCase
                     'index.php',
                 ],
                 $output
-            ); 
-        } catch(\Exception $err) {
+            );
+        } catch (\Exception $err) {
             $threwException = true;
         }
         $this->assertTrue($threwException);
@@ -302,7 +302,7 @@ abstract class Base extends TestCase
                 ],
                 1
             );
-        } catch(\Exception $err) {
+        } catch (\Exception $err) {
             $threwException = true;
         }
         $this->assertTrue($threwException);
@@ -421,7 +421,7 @@ abstract class Base extends TestCase
                 [],
                 1
             );
-        } catch(\Exception $err) {
+        } catch (\Exception $err) {
             $threwException = true;
         }
         $this->assertTrue($threwException);

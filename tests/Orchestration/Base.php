@@ -17,7 +17,9 @@ abstract class Base extends TestCase
      */
     public static $containerID;
 
-    public function setUp(): void {}
+    public function setUp(): void {
+        \exec("rm -rf /usr/src/code/tests/Orchestration/Resources/screens"); // cleanup
+    }
 
     public function tearDown(): void {}
 
@@ -329,7 +331,6 @@ abstract class Base extends TestCase
         /**
          * Test for Success
          */
-        /*
         $output = '';
 
         static::getOrchestration()->execute(
@@ -346,14 +347,9 @@ abstract class Base extends TestCase
         $length += 5; // "start"
         $length += 3; // "end"
 
-        \var_dump(\strlen($output));
-        \var_dump(\substr($output, 0, 100));
-        \var_dump(\substr($output, -100));
-
         $this->assertEquals($length, \strlen($output));
-        $this->assertStringStartsWith('start', $output);
-        $this->assertStringEndsWith('end', $output);
-        */
+        $this->assertStringStartsWith('START', $output);
+        $this->assertStringEndsWith('END', $output);
     }
 
     /**

@@ -327,7 +327,7 @@ abstract class Base extends TestCase
             'TestContainer',
             [
                 'sh',
-                'logs.sh'
+                'logs.sh',
             ],
             $output,
             [
@@ -341,8 +341,8 @@ abstract class Base extends TestCase
         $length += 3; // "end"
 
         $this->assertStringStartsWith($length, \strlen($output));
-        $this->assertEquals("start", $output);
-        $this->assertStringEndsWith("end", $output);
+        $this->assertEquals('start', $output);
+        $this->assertStringEndsWith('end', $output);
     }
 
     /**

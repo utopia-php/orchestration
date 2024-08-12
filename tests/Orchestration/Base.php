@@ -329,10 +329,7 @@ abstract class Base extends TestCase
                 'sh',
                 'logs.sh',
             ],
-            $output,
-            [
-                'test' => 'testEnviromentVariable',
-            ],
+            $output
         );
 
         $length = 0;
@@ -340,8 +337,8 @@ abstract class Base extends TestCase
         $length += 5; // "start"
         $length += 3; // "end"
 
-        $this->assertStringStartsWith($length, \strlen($output));
-        $this->assertEquals('start', $output);
+        $this->assertEquals($length, \strlen($output));
+        $this->assertStringStartsWith('start', $output);
         $this->assertStringEndsWith('end', $output);
     }
 

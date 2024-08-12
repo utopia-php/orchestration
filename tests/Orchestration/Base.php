@@ -317,6 +317,32 @@ abstract class Base extends TestCase
         );
 
         $this->assertEquals('Hello World! testEnviromentVariable', $output);
+
+        /**
+         * Test for Success
+         */
+        $output = '';
+
+        static::getOrchestration()->execute(
+            'TestContainer',
+            [
+                'sh',
+                'logs.sh'
+            ],
+            $output,
+            [
+                'test' => 'testEnviromentVariable',
+            ],
+        );
+
+        $length = 0;
+        $length += 917504; // 128kb * 7
+        $length += 5; // "start"
+        $length += 3; // "end"
+
+        $this->assertStringStartsWith($length, \strlen($output));
+        $this->assertEquals("start", $output);
+        $this->assertStringEndsWith("end", $output);
     }
 
     /**

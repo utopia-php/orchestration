@@ -20,6 +20,9 @@ abstract class Base extends TestCase
     public function setUp(): void
     {
         \exec('rm -rf /usr/src/code/tests/Orchestration/Resources/screens'); // cleanup
+
+        \exec('sh -c "cd /usr/src/code/tests/Orchestration/Resources && tar -zcf ./php.tar.gz php"');
+        \exec('sh -c "cd /usr/src/code/tests/Orchestration/Resources && tar -zcf ./timeout.tar.gz timeout"');
     }
 
     public function tearDown(): void

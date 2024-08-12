@@ -17,11 +17,15 @@ abstract class Base extends TestCase
      */
     public static $containerID;
 
-    public function setUp(): void {
-        \exec("rm -rf /usr/src/code/tests/Orchestration/Resources/screens"); // cleanup
+    public function setUp(): void
+    {
+        \exec('rm -rf /usr/src/code/tests/Orchestration/Resources/screens'); // cleanup
     }
 
-    public function tearDown(): void {}
+    public function tearDown(): void
+    {
+        \exec('rm -rf /usr/src/code/tests/Orchestration/Resources/screens'); // cleanup
+    }
 
     public function testPullImage(): void
     {
@@ -343,7 +347,7 @@ abstract class Base extends TestCase
         );
 
         $length = 0;
-        $length += 917504; // 128kb * 7
+        $length += 1024 * 1024 * 5; // 5MB
         $length += 5; // "start"
         $length += 3; // "end"
 

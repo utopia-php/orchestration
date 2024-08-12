@@ -268,36 +268,44 @@ abstract class Base extends TestCase
          */
         $output = '';
 
-        $this->expectException(\Exception::class);
-
-        static::getOrchestration()->execute(
-            '60clotVWpufbEpy33zJLcoYHrUTqWaD1FV0FZWsw', // Non-Existent Container
-            [
-                'php',
-                'index.php',
-            ],
-            $output
-        );
+        $threwException = false;
+        try {
+            static::getOrchestration()->execute(
+                '60clotVWpufbEpy33zJLcoYHrUTqWaD1FV0FZWsw', // Non-Existent Container
+                [
+                    'php',
+                    'index.php',
+                ],
+                $output
+            ); 
+        } catch(\Exception $err) {
+            $threwException = true;
+        }
+        $this->assertTrue($threwException);
 
         /**
          * Test for Failure
          */
         $output = '';
 
-        $this->expectException(\Exception::class);
-
-        static::getOrchestration()->execute(
-            'TestContainer',
-            [
-                'php',
-                'doesnotexist.php', // Non-Existent File
-            ],
-            $output,
-            [
-                'test' => 'testEnviromentVariable',
-            ],
-            1
-        );
+        $threwException = false;
+        try {
+            static::getOrchestration()->execute(
+                'TestContainer',
+                [
+                    'php',
+                    'doesnotexist.php', // Non-Existent File
+                ],
+                $output,
+                [
+                    'test' => 'testEnviromentVariable',
+                ],
+                1
+            );
+        } catch(\Exception $err) {
+            $threwException = true;
+        }
+        $this->assertTrue($threwException);
 
         /**
          * Test for Success
@@ -337,6 +345,10 @@ abstract class Base extends TestCase
         $length += 917504; // 128kb * 7
         $length += 5; // "start"
         $length += 3; // "end"
+
+        \var_dump(\strlen($output));
+        \var_dump(\substr($output, 0, 100));
+        \var_dump(\substr($output, -100));
 
         $this->assertEquals($length, \strlen($output));
         $this->assertStringStartsWith('start', $output);
@@ -397,19 +409,22 @@ abstract class Base extends TestCase
          * Test for Failure
          */
         $output = '';
-
-        $this->expectException(\Exception::class);
-
-        $response = static::getOrchestration()->execute(
-            'TestContainerTimeout',
-            [
-                'php',
-                'index.php',
-            ],
-            $output,
-            [],
-            1
-        );
+        $threwException = false;
+        try {
+            $response = static::getOrchestration()->execute(
+                'TestContainerTimeout',
+                [
+                    'php',
+                    'index.php',
+                ],
+                $output,
+                [],
+                1
+            );
+        } catch(\Exception $err) {
+            $threwException = true;
+        }
+        $this->assertTrue($threwException);
 
         /**
          * Test for Success
@@ -439,7 +454,7 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'echo Hello World!',
+                'echo -n Hello World!', // -n prevents from adding linebreak afterwards
             ],
             $output,
             [],

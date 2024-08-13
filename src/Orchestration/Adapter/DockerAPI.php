@@ -153,7 +153,7 @@ class DockerAPI extends Adapter
 
                     if (\strlen($str) >= $size) {
                         $currentData .= \substr($str, 0, $size);
-                        $str = \strcut($str, $size, null);
+                        $str = \substr($str, $size, null);
                         $isHeader = true;
                         $currentHeader = null;
 

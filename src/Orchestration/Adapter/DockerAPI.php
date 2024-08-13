@@ -139,21 +139,21 @@ class DockerAPI extends Adapter
                 return 0;
             }
 
-            $originalSize = \strlen($str);
+            $originalSize = \mb_strlen($str);
 
-            while (\strlen($str) > 0) {
+            while (\mb_strlen($str) > 0) {
                 if ($isHeader) {
                     $header = \unpack('Ctype/Cfill1/Cfill2/Cfill3/Nsize', $str);
-                    $str = \substr($str, 8, null);
+                    $str = \mb_strcut($str, 8, null);
                     $isHeader = false;
                     $currentHeader = $header;
                 } else {
                     $size = $currentHeader['size'];
                     $type = $currentHeader['type'];
 
-                    if (\strlen($str) >= $size) {
-                        $currentData .= \substr($str, 0, $size);
-                        $str = \substr($str, $size, null);
+                    if (\mb_strlen($str) >= $size) {
+                        $currentData .= \mb_strcut($str, 0, $size);
+                        $str = \mb_strcut($str, $size, null);
                         $isHeader = true;
                         $currentHeader = null;
 
@@ -164,7 +164,7 @@ class DockerAPI extends Adapter
                         }
                         $currentData = '';
                     } else {
-                        $currentHeader['size'] -= \strlen($str);
+                        $currentHeader['size'] -= \mb_strlen($str);
                         $currentData .= $str;
                         $str = '';
                     }

@@ -141,10 +141,10 @@ class DockerAPI extends Adapter
 
             $originalSize = \strlen($str);
 
-            while (! empty($str)) {
+            while (\strlen($str) > 0) {
                 if ($isHeader) {
                     $header = \unpack('Ctype/Cfill1/Cfill2/Cfill3/Nsize', $str);
-                    $str = \mb_strcut($str, 8, null);
+                    $str = \substr($str, 8, null);
                     $isHeader = false;
                     $currentHeader = $header;
                 } else {
@@ -152,8 +152,8 @@ class DockerAPI extends Adapter
                     $type = $currentHeader['type'];
 
                     if (\strlen($str) >= $size) {
-                        $currentData .= \mb_substr($str, 0, $size);
-                        $str = \mb_strcut($str, $size, null);
+                        $currentData .= \substr($str, 0, $size);
+                        $str = \substr($str, $size, null);
                         $isHeader = true;
                         $currentHeader = null;
 

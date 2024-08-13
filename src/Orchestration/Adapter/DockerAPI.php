@@ -139,7 +139,7 @@ class DockerAPI extends Adapter
                 return 0;
             }
 
-            $originalSize = \mb_strlen($str);
+            $originalSize = \strlen($str);
 
             while (! empty($str)) {
                 if ($isHeader) {
@@ -164,7 +164,7 @@ class DockerAPI extends Adapter
                         }
                         $currentData = '';
                     } else {
-                        $currentHeader['size'] -= \mb_strlen($str);
+                        $currentHeader['size'] -= \strlen($str);
                         $currentData .= $str;
                         $str = '';
                     }

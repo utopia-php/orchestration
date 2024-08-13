@@ -20,9 +20,13 @@ jobs:
 
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
+
+    - name: Install dependencies
+      run: composer install --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist
     
-    - name: Compose install
-      run: composer install --ignore-platform-reqs
+    - name: Start container
+      # For local testing, also run this before retrying tests: docker rm --force $(docker ps -aq)
+      run: docker compose up -d && sleep 15
 
     - name: Run tests
-      run: composer test
+      run: docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml

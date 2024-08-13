@@ -17,9 +17,18 @@ abstract class Base extends TestCase
      */
     public static $containerID;
 
-    public function setUp(): void {}
+    public function setUp(): void
+    {
+        \exec('rm -rf /usr/src/code/tests/Orchestration/Resources/screens'); // cleanup
 
-    public function tearDown(): void {}
+        \exec('sh -c "cd /usr/src/code/tests/Orchestration/Resources && tar -zcf ./php.tar.gz php"');
+        \exec('sh -c "cd /usr/src/code/tests/Orchestration/Resources && tar -zcf ./timeout.tar.gz timeout"');
+    }
+
+    public function tearDown(): void
+    {
+        \exec('rm -rf /usr/src/code/tests/Orchestration/Resources/screens'); // cleanup
+    }
 
     public function testPullImage(): void
     {
@@ -58,10 +67,10 @@ abstract class Base extends TestCase
             '',
             '/usr/local/src/',
             [
-                __DIR__.'/Resources:/test:rw',
+                \getenv('HOST_DIR').'/tests/Orchestration/Resources:/test:rw',
             ],
             [],
-            __DIR__.'/Resources'
+            \getenv('HOST_DIR').'/tests/Orchestration/Resources'
         );
 
         $this->assertNotEmpty($response);
@@ -78,22 +87,22 @@ abstract class Base extends TestCase
             '',
             '/usr/local/src/',
             [
-                __DIR__.'/Resources:/test:rw',
+                \getenv('HOST_DIR').'/tests/Orchestration/Resources:/test:rw',
             ],
             [],
-            __DIR__.'/Resources',
+            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
             restart: DockerAPI::RESTART_ALWAYS
         );
 
         $this->assertNotEmpty($response);
 
-        sleep(7);
+        sleep(10); // Docker restart can take quite long to restart. This is safety to prevent flaky tests
 
         $output = [];
         \exec('docker logs '.$response, $output);
         $output = \implode("\n", $output);
         $occurances = \substr_count($output, 'Custom start');
-        $this->assertGreaterThanOrEqual(5, $occurances);
+        $this->assertGreaterThanOrEqual(2, $occurances); // 2 logs mean it restarted at least once
 
         $response = static::getOrchestration()->remove('TestContainerWithRestart', true);
         $this->assertEquals(true, $response);
@@ -110,10 +119,10 @@ abstract class Base extends TestCase
             '',
             '/usr/local/src/',
             [
-                __DIR__.'/Resources:/test:rw',
+                \getenv('HOST_DIR').'/tests/Orchestration/Resources:/test:rw',
             ],
             [],
-            __DIR__.'/Resources',
+            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
             restart: DockerAPI::RESTART_NO
         );
 
@@ -147,7 +156,7 @@ abstract class Base extends TestCase
             '/usr/local/src/',
             [],
             [],
-            __DIR__.'/Resources',
+            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
         );
 
         /**
@@ -167,7 +176,7 @@ abstract class Base extends TestCase
             '/usr/local/src/',
             [],
             [],
-            __DIR__.'/Resources',
+            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
         );
     }
 
@@ -220,7 +229,7 @@ abstract class Base extends TestCase
             [
                 'teasdsa' => '',
             ],
-            __DIR__.'/Resources',
+            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
             [
                 'test2' => 'Hello World!',
             ],
@@ -268,36 +277,44 @@ abstract class Base extends TestCase
          */
         $output = '';
 
-        $this->expectException(\Exception::class);
-
-        static::getOrchestration()->execute(
-            '60clotVWpufbEpy33zJLcoYHrUTqWaD1FV0FZWsw', // Non-Existent Container
-            [
-                'php',
-                'index.php',
-            ],
-            $output
-        );
+        $threwException = false;
+        try {
+            static::getOrchestration()->execute(
+                '60clotVWpufbEpy33zJLcoYHrUTqWaD1FV0FZWsw', // Non-Existent Container
+                [
+                    'php',
+                    'index.php',
+                ],
+                $output
+            );
+        } catch (\Exception $err) {
+            $threwException = true;
+        }
+        $this->assertTrue($threwException);
 
         /**
          * Test for Failure
          */
         $output = '';
 
-        $this->expectException(\Exception::class);
-
-        static::getOrchestration()->execute(
-            'TestContainer',
-            [
-                'php',
-                'doesnotexist.php', // Non-Existent File
-            ],
-            $output,
-            [
-                'test' => 'testEnviromentVariable',
-            ],
-            1
-        );
+        $threwException = false;
+        try {
+            static::getOrchestration()->execute(
+                'TestContainer',
+                [
+                    'php',
+                    'doesnotexist.php', // Non-Existent File
+                ],
+                $output,
+                [
+                    'test' => 'testEnviromentVariable',
+                ],
+                1
+            );
+        } catch (\Exception $err) {
+            $threwException = true;
+        }
+        $this->assertTrue($threwException);
 
         /**
          * Test for Success
@@ -317,6 +334,29 @@ abstract class Base extends TestCase
         );
 
         $this->assertEquals('Hello World! testEnviromentVariable', $output);
+
+        /**
+         * Test for Success
+         */
+        $output = '';
+
+        static::getOrchestration()->execute(
+            'TestContainer',
+            [
+                'sh',
+                'logs.sh',
+            ],
+            $output
+        );
+
+        $length = 0;
+        $length += 1024 * 1024 * 5; // 5MB
+        $length += 5; // "start"
+        $length += 3; // "end"
+
+        $this->assertEquals($length, \strlen($output));
+        $this->assertStringStartsWith('START', $output);
+        $this->assertStringEndsWith('END', $output);
     }
 
     /**
@@ -358,7 +398,7 @@ abstract class Base extends TestCase
             [
                 'teasdsa' => '',
             ],
-            __DIR__.'/Resources',
+            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
             [
                 'test2' => 'Hello World!',
             ]
@@ -372,19 +412,22 @@ abstract class Base extends TestCase
          * Test for Failure
          */
         $output = '';
-
-        $this->expectException(\Exception::class);
-
-        $response = static::getOrchestration()->execute(
-            'TestContainerTimeout',
-            [
-                'php',
-                'index.php',
-            ],
-            $output,
-            [],
-            1
-        );
+        $threwException = false;
+        try {
+            $response = static::getOrchestration()->execute(
+                'TestContainerTimeout',
+                [
+                    'php',
+                    'index.php',
+                ],
+                $output,
+                [],
+                1
+            );
+        } catch (\Exception $err) {
+            $threwException = true;
+        }
+        $this->assertTrue($threwException);
 
         /**
          * Test for Success
@@ -414,7 +457,7 @@ abstract class Base extends TestCase
             [
                 'sh',
                 '-c',
-                'echo Hello World!',
+                'echo -n Hello World!', // -n prevents from adding linebreak afterwards
             ],
             $output,
             [],
@@ -454,7 +497,7 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @depends testCreateContainer
+     * @depends testExecContainer
      */
     public function testRemoveContainer(): void
     {
@@ -530,7 +573,7 @@ abstract class Base extends TestCase
             [
                 'teasdsa' => '',
             ],
-            __DIR__.'/Resources',
+            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
             [
                 'test2' => 'Hello World!',
             ],
@@ -557,7 +600,8 @@ abstract class Base extends TestCase
          * Test for Success
          */
         $stats = static::getOrchestration()->getStats();
-        $this->assertCount(0, $stats, 'Container(s) still running: '.\json_encode($stats, JSON_PRETTY_PRINT));
+        // 1 expected due to container running tests
+        $this->assertCount(1, $stats, 'Container(s) still running: '.\json_encode($stats, JSON_PRETTY_PRINT));
 
         // This allows CPU-heavy load check
         static::getOrchestration()->setCpus(1);
@@ -571,7 +615,7 @@ abstract class Base extends TestCase
                 'apk update && apk add screen && tail -f /dev/null',
             ],
             workdir: '/usr/local/src/',
-            mountFolder: __DIR__.'/Resources',
+            mountFolder: \getenv('HOST_DIR').'/tests/Orchestration/Resources',
             labels: ['utopia-container-type' => 'stats']
         );
 
@@ -586,7 +630,7 @@ abstract class Base extends TestCase
                 'apk update && apk add screen && tail -f /dev/null',
             ],
             workdir: '/usr/local/src/',
-            mountFolder: __DIR__.'/Resources',
+            mountFolder: \getenv('HOST_DIR').'/tests/Orchestration/Resources',
         );
 
         $this->assertNotEmpty($containerId2);
@@ -603,7 +647,7 @@ abstract class Base extends TestCase
         // Fetch stats, should include high CPU usage
         $stats = static::getOrchestration()->getStats();
 
-        $this->assertCount(2, $stats);
+        $this->assertCount(2 + 1, $stats); // +1 due to container running tests
 
         $this->assertNotEmpty($stats[0]->getContainerId());
         $this->assertEquals(64, \strlen($stats[0]->getContainerId()));

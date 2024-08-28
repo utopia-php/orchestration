@@ -282,6 +282,16 @@ class DockerAPI extends Adapter
     }
 
     /**
+     * Check if a network exists
+     */
+    public function networkExists(string $name): bool
+    {
+        $result = $this->call('http://localhost/networks/'.$name, 'GET');
+
+        return $result['code'] === 200;
+    }
+
+    /**
      * Get usage stats of containers
      *
      * @param  array<string, string>  $filters

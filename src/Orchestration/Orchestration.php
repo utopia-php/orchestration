@@ -108,11 +108,10 @@ class Orchestration
     /**
      * Get usage stats of containers
      *
-     * @param  string  $container
      * @param  array<string, string>  $filters
      * @return array<Stats>
      */
-    public function getStats(string $container = null, array $filters = []): array
+    public function getStats(?string $container = null, array $filters = []): array
     {
         return $this->adapter->getStats($container, $filters);
     }

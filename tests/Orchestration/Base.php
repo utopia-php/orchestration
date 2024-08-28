@@ -16,13 +16,9 @@ abstract class Base extends TestCase
      */
     public static $containerID;
 
-    public function setUp(): void
-    {
-    }
+    public function setUp(): void {}
 
-    public function tearDown(): void
-    {
-    }
+    public function tearDown(): void {}
 
     public function testPullImage(): void
     {
@@ -574,7 +570,7 @@ abstract class Base extends TestCase
 
     public function testNetworkExists(): void
     {
-        $networkName = 'test_network_' . uniqid();
+        $networkName = 'test_network_'.uniqid();
 
         // Test non-existent network
         $this->assertFalse(static::getOrchestration()->networkExists($networkName));

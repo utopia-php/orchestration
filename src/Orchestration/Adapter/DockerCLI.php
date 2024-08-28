@@ -15,11 +15,9 @@ class DockerCLI extends Adapter
     /**
      * Constructor
      *
-     * @param  string  $username
-     * @param  string  $password
      * @return void
      */
-    public function __construct(string $username = null, string $password = null)
+    public function __construct(?string $username = null, ?string $password = null)
     {
         if ($username && $password) {
             $output = '';
@@ -93,11 +91,10 @@ class DockerCLI extends Adapter
     /**
      * Get usage stats of containers
      *
-     * @param  string  $container
      * @param  array<string, string>  $filters
      * @return array<Stats>
      */
-    public function getStats(string $container = null, array $filters = []): array
+    public function getStats(?string $container = null, array $filters = []): array
     {
         // List ahead of time, since docker stats does not allow filtering
         $containerIds = [];
@@ -175,7 +172,7 @@ class DockerCLI extends Adapter
             'TiB' => 1000000000000,
         ];
 
-        [ $inStr, $outStr ] = \explode(' / ', $stats);
+        [$inStr, $outStr] = \explode(' / ', $stats);
 
         $inUnit = null;
         $outUnit = null;

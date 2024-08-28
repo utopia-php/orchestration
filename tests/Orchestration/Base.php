@@ -185,15 +185,15 @@ abstract class Base extends TestCase
     /**
      * @depends testCreateContainer
      */
-    public function testNetworkCreate(): void
+    public function testCreateNetwork(): void
     {
-        $response = static::getOrchestration()->networkCreate('TestNetwork');
+        $response = static::getOrchestration()->createNetwork('TestNetwork');
 
         $this->assertEquals(true, $response);
     }
 
     /**
-     * @depends testNetworkCreate
+     * @depends testCreateNetwork
      */
     public function testListNetworks(): void
     {
@@ -211,7 +211,7 @@ abstract class Base extends TestCase
     }
 
     /**
-     * @depends testNetworkCreate
+     * @depends testCreateNetwork
      */
     public function testNetworkConnect(): void
     {
@@ -260,9 +260,9 @@ abstract class Base extends TestCase
     /**
      * @depends testNetworkDisconnect
      */
-    public function testNetworkRemove(): void
+    public function testRemoveNetwork(): void
     {
-        $response = static::getOrchestration()->networkRemove('TestNetwork');
+        $response = static::getOrchestration()->removeNetwork('TestNetwork');
 
         $this->assertEquals(true, $response);
     }
@@ -725,12 +725,12 @@ abstract class Base extends TestCase
         $this->assertFalse(static::getOrchestration()->networkExists($networkName));
 
         // Create network and test it exists
-        $response = static::getOrchestration()->networkCreate($networkName);
+        $response = static::getOrchestration()->createNetwork($networkName);
         $this->assertTrue($response);
         $this->assertTrue(static::getOrchestration()->networkExists($networkName));
 
         // Remove network
-        $response = static::getOrchestration()->networkRemove($networkName);
+        $response = static::getOrchestration()->removeNetwork($networkName);
         $this->assertTrue($response);
 
         // Test removed network

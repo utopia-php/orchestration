@@ -281,7 +281,7 @@ Once you have initialised your Orchestration object the following methods can be
     This method creates a new network and returns a boolean value indicating if the network was created successfully.
 
     ```php
-    $orchestration->networkCreate('name', false);
+    $orchestration->createNetwork('name', false);
     ```
 
     <details>
@@ -305,7 +305,7 @@ Once you have initialised your Orchestration object the following methods can be
     This method removes a network and returns a boolean value indicating if the network was removed successfully.
 
     ```php
-    $orchestration->networkRemove('network_id');
+    $orchestration->removeNetwork('network_id');
     ```
 
     <details>

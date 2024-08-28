@@ -201,7 +201,7 @@ class DockerAPI extends Adapter
     /**
      * Create Network
      */
-    public function networkCreate(string $name, bool $internal = false): bool
+    public function createNetwork(string $name, bool $internal = false): bool
     {
         $body = \json_encode([
             'Name' => $name,
@@ -225,7 +225,7 @@ class DockerAPI extends Adapter
     /**
      * Remove Network
      */
-    public function networkRemove(string $name): bool
+    public function removeNetwork(string $name): bool
     {
         $result = $this->call('http://localhost/networks/'.$name, 'DELETE');
 

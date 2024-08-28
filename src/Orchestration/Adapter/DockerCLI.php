@@ -31,7 +31,7 @@ class DockerCLI extends Adapter
     /**
      * Create Network
      */
-    public function createNetwork(string $name, bool $internal = false): bool
+    public function networkCreate(string $name, bool $internal = false): bool
     {
         $output = '';
 
@@ -43,7 +43,7 @@ class DockerCLI extends Adapter
     /**
      * Remove Network
      */
-    public function removeNetwork(string $name): bool
+    public function networkRemove(string $name): bool
     {
         $output = '';
 

@@ -75,17 +75,17 @@ class Orchestration
     /**
      * Create Network
      */
-    public function createNetwork(string $name, bool $internal = false): bool
+    public function networkCreate(string $name, bool $internal = false): bool
     {
-        return $this->adapter->createNetwork($name, $internal);
+        return $this->adapter->networkCreate($name, $internal);
     }
 
     /**
      * Remove Network
      */
-    public function removeNetwork(string $name): bool
+    public function networkRemove(string $name): bool
     {
-        return $this->adapter->removeNetwork($name);
+        return $this->adapter->networkRemove($name);
     }
 
     /**

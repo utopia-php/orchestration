@@ -43,12 +43,12 @@ abstract class Adapter
     /**
      * Create Network
      */
-    abstract public function createNetwork(string $name, bool $internal = false): bool;
+    abstract public function networkCreate(string $name, bool $internal = false): bool;
 
     /**
      * Remove Network
      */
-    abstract public function removeNetwork(string $name): bool;
+    abstract public function networkRemove(string $name): bool;
 
     /**
      * Connect a container to a network

@@ -79,6 +79,18 @@ class DockerCLI extends Adapter
     }
 
     /**
+     * Check if a network exists
+     */
+    public function networkExists(string $name): bool
+    {
+        $output = '';
+
+        $result = Console::execute('docker network inspect '.$name.' --format "{{.Name}}"', '', $output);
+
+        return $result === 0 && trim($output) === $name;
+    }
+
+    /**
      * Get usage stats of containers
      *
      * @param  string  $container

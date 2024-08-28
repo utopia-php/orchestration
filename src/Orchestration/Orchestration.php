@@ -126,6 +126,14 @@ class Orchestration
     }
 
     /**
+     * Check if a network exists
+     */
+    public function networkExists(string $name): bool
+    {
+        return $this->adapter->networkExists($name);
+    }
+
+    /**
      * Pull Image
      */
     public function pull(string $image): bool

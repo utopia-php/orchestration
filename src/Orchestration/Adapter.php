@@ -53,6 +53,11 @@ abstract class Adapter
     abstract public function networkDisconnect(string $container, string $network, bool $force = false): bool;
 
     /**
+     * Check if a network exists
+     */
+    abstract public function networkExists(string $name): bool;
+
+    /**
      * List Networks
      */
     abstract public function listNetworks(): array;

@@ -108,11 +108,10 @@ class Orchestration
     /**
      * Get usage stats of containers
      *
-     * @param  string  $container
      * @param  array<string, string>  $filters
      * @return array<Stats>
      */
-    public function getStats(string $container = null, array $filters = []): array
+    public function getStats(?string $container = null, array $filters = []): array
     {
         return $this->adapter->getStats($container, $filters);
     }
@@ -123,6 +122,14 @@ class Orchestration
     public function networkDisconnect(string $container, string $network, bool $force = false): bool
     {
         return $this->adapter->networkDisconnect($container, $network, $force);
+    }
+
+    /**
+     * Check if a network exists
+     */
+    public function networkExists(string $name): bool
+    {
+        return $this->adapter->networkExists($name);
     }
 
     /**

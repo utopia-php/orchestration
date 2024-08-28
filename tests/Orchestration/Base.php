@@ -719,7 +719,7 @@ abstract class Base extends TestCase
 
     public function testNetworkExists(): void
     {
-        $networkName = 'test_network_' . uniqid();
+        $networkName = 'test_network_'.uniqid();
 
         // Test non-existent network
         $this->assertFalse(static::getOrchestration()->networkExists($networkName));

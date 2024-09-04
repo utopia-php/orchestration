@@ -130,34 +130,50 @@ class DockerAPI extends Adapter
         $stdout = '';
         $stderr = '';
 
-        $callback = function (mixed $ch, string $str) use (&$stdout, &$stderr): int {
+        $isHeader = true;
+        $currentHeader = null;
+        $currentData = '';
+
+        $callback = function (mixed $ch, string $str) use (&$stdout, &$stderr, &$isHeader, &$currentHeader, &$currentData): int {
             if (empty($str)) {
                 return 0;
             }
 
-            $rawStream = unpack('C*', $str);
-            $stream = $rawStream[1]; // 1-based index, not 0-based
+            $originalSize = \strlen($str);
 
-            // Ascii encoding support
-            if ($stream === \ord('1')) {
-                $stream = 1;
-            } elseif ($stream === \ord('2')) {
-                $stream = 2;
+            while (\strlen($str) > 0) {
+                if ($isHeader) {
+                    $header = \unpack('Ctype/Cfill1/Cfill2/Cfill3/Nsize', $str);
+                    $str = \substr($str, 8, null);
+                    $isHeader = false;
+                    $currentHeader = $header;
+                } else {
+                    $size = $currentHeader['size'];
+                    $type = $currentHeader['type'];
+
+                    if (\strlen($str) >= $size) {
+                        $currentData .= \substr($str, 0, $size);
+                        $str = \substr($str, $size, null);
+                        $isHeader = true;
+                        $currentHeader = null;
+
+                        if ($type === 1) {
+                            $stdout .= $currentData;
+                        } else {
+                            $stderr .= $currentData;
+                        }
+                        $currentData = '';
+                    } else {
+                        $currentHeader['size'] -= \strlen($str);
+                        $currentData .= $str;
+                        $str = '';
+                    }
+                }
             }
 
-            switch ($stream) { // only 1 or 2, as set while creating exec
-                case 1:
-                    $packed = pack('C*', ...\array_slice($rawStream, 8));
-                    $stdout .= $packed;
-                    break;
-                case 2:
-                    $packed = pack('C*', ...\array_slice($rawStream, 8));
-                    $stderr .= $packed;
-                    break;
-            }
-
-            return strlen($str); // must return full frame from callback
+            return $originalSize; // must return full frame from callback
         };
+
         \curl_setopt($ch, CURLOPT_WRITEFUNCTION, $callback);
 
         \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
@@ -261,6 +277,16 @@ class DockerAPI extends Adapter
         if ($result['code'] !== 200) {
             throw new Orchestration('Error detatching network: '.$result['response']);
         }
+
+        return $result['code'] === 200;
+    }
+
+    /**
+     * Check if a network exists
+     */
+    public function networkExists(string $name): bool
+    {
+        $result = $this->call('http://localhost/networks/'.$name, 'GET');
 
         return $result['code'] === 200;
     }

@@ -4,33 +4,31 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9df3ba5cdbb0b79eaf17b4bcb407c05b",
+    "content-hash": "48c2bbcd6ef1dc35e86875383889ffa9",
     "packages": [
         {
             "name": "utopia-php/cli",
-            "version": "1.0.0-RC1",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "7664161dcdb9b76a3ece0ae2f36a9aca1e548e80"
+                "reference": "5b936638c90c86d1bae83d0dbe81fe14d12ff8ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/7664161dcdb9b76a3ece0ae2f36a9aca1e548e80",
-                "reference": "7664161dcdb9b76a3ece0ae2f36a9aca1e548e80",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/5b936638c90c86d1bae83d0dbe81fe14d12ff8ff",
+                "reference": "5b936638c90c86d1bae83d0dbe81fe14d12ff8ff",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.4",
-                "utopia-php/di": "0.1.*",
-                "utopia-php/framework": "1.0.*"
+                "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "^1.10",
                 "phpunit/phpunit": "^9.3",
                 "squizlabs/php_codesniffer": "^3.6",
-                "swoole/ide-helper": "4.8.8"
+                "vimeo/psalm": "4.0.1"
             },
             "type": "library",
             "autoload": {
@@ -53,26 +51,27 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/1.0.0-RC1"
+                "source": "https://github.com/utopia-php/cli/tree/0.16.0"
             },
-            "time": "2024-08-09T17:35:04+00:00"
+            "time": "2023-08-05T13:13:08+00:00"
         },
         {
-            "name": "utopia-php/di",
-            "version": "0.1.0",
+            "name": "utopia-php/framework",
+            "version": "0.34.3",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/di.git",
-                "reference": "22490c95f7ac3898ed1c33f1b1b5dd577305ee31"
+                "url": "https://github.com/utopia-php/http.git",
+                "reference": "e3bbca07c1df4e908ea9d3ce4f59367a7696b66b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/di/zipball/22490c95f7ac3898ed1c33f1b1b5dd577305ee31",
-                "reference": "22490c95f7ac3898ed1c33f1b1b5dd577305ee31",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/e3bbca07c1df4e908ea9d3ce4f59367a7696b66b",
+                "reference": "e3bbca07c1df4e908ea9d3ce4f59367a7696b66b",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.2"
+                "ext-swoole": "*",
+                "php": ">=8.0"
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
@@ -92,56 +91,6 @@
             "license": [
                 "MIT"
             ],
-            "description": "A simple and lite library for managing dependency injections",
-            "keywords": [
-                "framework",
-                "http",
-                "php",
-                "upf"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/di/issues",
-                "source": "https://github.com/utopia-php/di/tree/0.1.0"
-            },
-            "time": "2024-08-08T14:35:19+00:00"
-        },
-        {
-            "name": "utopia-php/framework",
-            "version": "1.0.0-RC2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/http.git",
-                "reference": "d1e9674dbf33bed03fa53854ec1f2c6e074cf4d7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/d1e9674dbf33bed03fa53854ec1f2c6e074cf4d7",
-                "reference": "d1e9674dbf33bed03fa53854ec1f2c6e074cf4d7",
-                "shasum": ""
-            },
-            "require": {
-                "ext-swoole": "*",
-                "php": ">=8.0",
-                "utopia-php/servers": "0.1.* "
-            },
-            "require-dev": {
-                "ext-xdebug": "*",
-                "laravel/pint": "^1.2",
-                "phpbench/phpbench": "^1.2",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.5.25",
-                "swoole/ide-helper": "4.8.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
             "description": "A simple, light and advanced PHP HTTP framework",
             "keywords": [
                 "framework",
@@ -151,62 +100,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/1.0.0-RC2"
+                "source": "https://github.com/utopia-php/http/tree/0.34.3"
             },
-            "time": "2024-08-08T14:46:41+00:00"
-        },
-        {
-            "name": "utopia-php/servers",
-            "version": "0.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/servers.git",
-                "reference": "7d9e4f364fb1ab1889fb89ca96eb9946467cb09c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/servers/zipball/7d9e4f364fb1ab1889fb89ca96eb9946467cb09c",
-                "reference": "7d9e4f364fb1ab1889fb89ca96eb9946467cb09c",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0",
-                "utopia-php/di": "0.1.*"
-            },
-            "require-dev": {
-                "laravel/pint": "^0.2.3",
-                "phpstan/phpstan": "^1.8",
-                "phpunit/phpunit": "^9.5.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Servers\\": "src/Servers"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Team Appwrite",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "A base library for building Utopia style servers.",
-            "keywords": [
-                "framework",
-                "php",
-                "servers",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/servers/issues",
-                "source": "https://github.com/utopia-php/servers/tree/0.1.0"
-            },
-            "time": "2024-08-08T14:31:39+00:00"
+            "time": "2024-07-02T15:08:46+00:00"
         }
     ],
     "packages-dev": [
@@ -584,16 +480,16 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.11.10",
+            "version": "1.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "640410b32995914bde3eed26fa89552f9c2c082f"
+                "reference": "384af967d35b2162f69526c7276acadce534d0e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/640410b32995914bde3eed26fa89552f9c2c082f",
-                "reference": "640410b32995914bde3eed26fa89552f9c2c082f",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/384af967d35b2162f69526c7276acadce534d0e1",
+                "reference": "384af967d35b2162f69526c7276acadce534d0e1",
                 "shasum": ""
             },
             "require": {
@@ -638,39 +534,39 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-08-08T09:02:50+00:00"
+            "time": "2024-08-27T09:18:05+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.31",
+            "version": "9.2.32",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "48c34b5d8d983006bd2adc2d0de92963b9155965"
+                "reference": "85402a822d1ecf1db1096959413d35e1c37cf1a5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/48c34b5d8d983006bd2adc2d0de92963b9155965",
-                "reference": "48c34b5d8d983006bd2adc2d0de92963b9155965",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/85402a822d1ecf1db1096959413d35e1c37cf1a5",
+                "reference": "85402a822d1ecf1db1096959413d35e1c37cf1a5",
                 "shasum": ""
             },
             "require": {
                 "ext-dom": "*",
                 "ext-libxml": "*",
                 "ext-xmlwriter": "*",
-                "nikic/php-parser": "^4.18 || ^5.0",
+                "nikic/php-parser": "^4.19.1 || ^5.1.0",
                 "php": ">=7.3",
-                "phpunit/php-file-iterator": "^3.0.3",
-                "phpunit/php-text-template": "^2.0.2",
-                "sebastian/code-unit-reverse-lookup": "^2.0.2",
-                "sebastian/complexity": "^2.0",
-                "sebastian/environment": "^5.1.2",
-                "sebastian/lines-of-code": "^1.0.3",
-                "sebastian/version": "^3.0.1",
-                "theseer/tokenizer": "^1.2.0"
+                "phpunit/php-file-iterator": "^3.0.6",
+                "phpunit/php-text-template": "^2.0.4",
+                "sebastian/code-unit-reverse-lookup": "^2.0.3",
+                "sebastian/complexity": "^2.0.3",
+                "sebastian/environment": "^5.1.5",
+                "sebastian/lines-of-code": "^1.0.4",
+                "sebastian/version": "^3.0.2",
+                "theseer/tokenizer": "^1.2.3"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.3"
+                "phpunit/phpunit": "^9.6"
             },
             "suggest": {
                 "ext-pcov": "PHP extension that provides line coverage",
@@ -679,7 +575,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "9.2-dev"
+                    "dev-main": "9.2.x-dev"
                 }
             },
             "autoload": {
@@ -708,7 +604,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
                 "security": "https://github.com/sebastianbergmann/php-code-coverage/security/policy",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.31"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.32"
             },
             "funding": [
                 {
@@ -716,7 +612,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-03-02T06:37:42+00:00"
+            "time": "2024-08-22T04:23:01+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -2077,7 +1973,7 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "RC",
+    "minimum-stability": "stable",
     "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,

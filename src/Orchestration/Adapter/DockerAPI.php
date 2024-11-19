@@ -307,23 +307,23 @@ class DockerAPI extends Adapter
         } else {
             $containerIds[] = $container;
         }
-    
+
         $list = [];
-    
+
         foreach ($containerIds as $containerId) {
             try {
                 $result = $this->call('http://localhost/containers/'.$containerId.'/stats?stream=false', 'GET');
-    
+
                 if ($result['code'] !== 200 || empty($result['response'])) {
                     continue; // Skip to the next container
                 }
-    
+
                 $stats = \json_decode($result['response'], true);
-    
+
                 if (! isset($stats['id']) || ! isset($stats['precpu_stats']) || ! isset($stats['cpu_stats']) || ! isset($stats['memory_stats']) || ! isset($stats['networks'])) {
                     continue; // Skip to the next container
                 }
-    
+
                 // Calculate CPU usage
                 $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
                 $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage'] - $stats['precpu_stats']['system_cpu_usage'];
@@ -333,13 +333,13 @@ class DockerAPI extends Adapter
                 } else {
                     $cpuUsage = 0.0;
                 }
-    
+
                 // Calculate memory usage (unsafe div /0)
                 $memoryUsage = 0.0;
                 if ($stats['memory_stats']['limit'] > 0 && $stats['memory_stats']['usage'] > 0) {
                     $memoryUsage = ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0;
                 }
-    
+
                 // Calculate network I/O
                 $networkIn = 0;
                 $networkOut = 0;
@@ -347,11 +347,11 @@ class DockerAPI extends Adapter
                     $networkIn += $network['rx_bytes'];
                     $networkOut += $network['tx_bytes'];
                 }
-    
+
                 // Calculate disk I/O
                 $diskRead = 0;
                 $diskWrite = 0;
-            if (isset($stats['blkio_stats']['io_service_bytes_recursive'])) {
+                if (isset($stats['blkio_stats']['io_service_bytes_recursive'])) {
                     foreach ($stats['blkio_stats']['io_service_bytes_recursive'] as $entry) {
                         if ($entry['op'] === 'Read') {
                             $diskRead += $entry['value'];
@@ -360,11 +360,11 @@ class DockerAPI extends Adapter
                         }
                     }
                 }
-    
+
                 // Calculate memory I/O (approximated)
                 $memoryIn = $stats['memory_stats']['usage'] ?? 0;
                 $memoryOut = $stats['memory_stats']['max_usage'] ?? 0;
-    
+
                 $list[] = new Stats(
                     containerId: $stats['id'],
                     containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
@@ -378,7 +378,7 @@ class DockerAPI extends Adapter
                 continue;
             }
         }
-    
+
         return $list;
     }
 

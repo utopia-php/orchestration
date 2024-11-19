@@ -3,7 +3,6 @@
 namespace Utopia\Orchestration\Adapter;
 
 use stdClass;
-use Utopia\CLI\Console;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
 use Utopia\Orchestration\Container\Stats;

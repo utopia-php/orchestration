@@ -311,68 +311,72 @@ class DockerAPI extends Adapter
         $list = [];
 
         foreach ($containerIds as $containerId) {
-            $result = $this->call('http://localhost/containers/'.$containerId.'/stats?stream=false', 'GET');
+            try {
+                $result = $this->call('http://localhost/containers/'.$containerId.'/stats?stream=false', 'GET');
 
-            if ($result['code'] !== 200 || empty($result['response'])) {
-                throw new Orchestration($result['response']);
-            }
+                if ($result['code'] !== 200 || empty($result['response'])) {
+                    continue; // Skip to the next container
+                }
 
-            $stats = \json_decode($result['response'], true);
+                $stats = \json_decode($result['response'], true);
 
-            if (! isset($stats['id']) || ! isset($stats['precpu_stats']) || ! isset($stats['cpu_stats']) || ! isset($stats['memory_stats']) || ! isset($stats['networks'])) {
-                throw new Orchestration('Failed to get stats for container: '.$containerId);
-            }
+                if (! isset($stats['id']) || ! isset($stats['precpu_stats']) || ! isset($stats['cpu_stats']) || ! isset($stats['memory_stats']) || ! isset($stats['networks'])) {
+                    continue; // Skip to the next container
+                }
 
-            // Calculate CPU usage
-            $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
-            $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage'] - $stats['precpu_stats']['system_cpu_usage'];
-            $numberCpus = $stats['cpu_stats']['online_cpus'];
-            if ($systemCpuDelta > 0 && $cpuDelta > 0) {
-                $cpuUsage = ($cpuDelta / $systemCpuDelta) * $numberCpus;
-            } else {
-                $cpuUsage = 0.0;
-            }
+                // Calculate CPU usage
+                $cpuDelta = $stats['cpu_stats']['cpu_usage']['total_usage'] - $stats['precpu_stats']['cpu_usage']['total_usage'];
+                $systemCpuDelta = $stats['cpu_stats']['system_cpu_usage'] - $stats['precpu_stats']['system_cpu_usage'];
+                $numberCpus = $stats['cpu_stats']['online_cpus'];
+                if ($systemCpuDelta > 0 && $cpuDelta > 0) {
+                    $cpuUsage = ($cpuDelta / $systemCpuDelta) * $numberCpus;
+                } else {
+                    $cpuUsage = 0.0;
+                }
 
-            // Calculate memory usage (unsafe div /0)
-            $memoryUsage = 0.0;
-            if ($stats['memory_stats']['limit'] > 0 && $stats['memory_stats']['usage'] > 0) {
-                $memoryUsage = ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0;
-            }
+                // Calculate memory usage (unsafe div /0)
+                $memoryUsage = 0.0;
+                if ($stats['memory_stats']['limit'] > 0 && $stats['memory_stats']['usage'] > 0) {
+                    $memoryUsage = ($stats['memory_stats']['usage'] / $stats['memory_stats']['limit']) * 100.0;
+                }
 
-            // Calculate network I/O
-            $networkIn = 0;
-            $networkOut = 0;
-            foreach ($stats['networks'] as $network) {
-                $networkIn += $network['rx_bytes'];
-                $networkOut += $network['tx_bytes'];
-            }
+                // Calculate network I/O
+                $networkIn = 0;
+                $networkOut = 0;
+                foreach ($stats['networks'] as $network) {
+                    $networkIn += $network['rx_bytes'];
+                    $networkOut += $network['tx_bytes'];
+                }
 
-            // Calculate disk I/O
-            $diskRead = 0;
-            $diskWrite = 0;
-            if (isset($stats['blkio_stats']['io_service_bytes_recursive'])) {
-                foreach ($stats['blkio_stats']['io_service_bytes_recursive'] as $entry) {
-                    if ($entry['op'] === 'Read') {
-                        $diskRead += $entry['value'];
-                    } elseif ($entry['op'] === 'Write') {
-                        $diskWrite += $entry['value'];
+                // Calculate disk I/O
+                $diskRead = 0;
+                $diskWrite = 0;
+                if (isset($stats['blkio_stats']['io_service_bytes_recursive'])) {
+                    foreach ($stats['blkio_stats']['io_service_bytes_recursive'] as $entry) {
+                        if ($entry['op'] === 'Read') {
+                            $diskRead += $entry['value'];
+                        } elseif ($entry['op'] === 'Write') {
+                            $diskWrite += $entry['value'];
+                        }
                     }
                 }
+
+                // Calculate memory I/O (approximated)
+                $memoryIn = $stats['memory_stats']['usage'] ?? 0;
+                $memoryOut = $stats['memory_stats']['max_usage'] ?? 0;
+
+                $list[] = new Stats(
+                    containerId: $stats['id'],
+                    containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
+                    cpuUsage: $cpuUsage,
+                    memoryUsage: $memoryUsage,
+                    diskIO: ['in' => $diskRead, 'out' => $diskWrite],
+                    memoryIO: ['in' => $memoryIn, 'out' => $memoryOut],
+                    networkIO: ['in' => $networkIn, 'out' => $networkOut],
+                );
+            } catch (\Throwable $e) {
+                continue;
             }
-
-            // Calculate memory I/O (approximated)
-            $memoryIn = $stats['memory_stats']['usage'] ?? 0;
-            $memoryOut = $stats['memory_stats']['max_usage'] ?? 0;
-
-            $list[] = new Stats(
-                containerId: $stats['id'],
-                containerName: \ltrim($stats['name'], '/'), // Remove '/' prefix
-                cpuUsage: $cpuUsage,
-                memoryUsage: $memoryUsage,
-                diskIO: ['in' => $diskRead, 'out' => $diskWrite],
-                memoryIO: ['in' => $memoryIn, 'out' => $memoryOut],
-                networkIO: ['in' => $networkIn, 'out' => $networkOut],
-            );
         }
 
         return $list;

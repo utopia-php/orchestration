@@ -712,9 +712,8 @@ abstract class Base extends TestCase
         /**
          * Test for Failure
          */
-        $this->expectException(\Exception::class);
-
         $stats = static::getOrchestration()->getStats('IDontExist');
+        $this->assertCount(0, $stats);
     }
 
     public function testNetworkExists(): void

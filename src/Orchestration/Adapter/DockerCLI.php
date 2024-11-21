@@ -123,7 +123,7 @@ class DockerCLI extends Adapter
         $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream'.$containersString, '', $output);
 
         if ($result !== 0) {
-            throw new Orchestration("Docker Error: {$output}");
+            return [];
         }
 
         $lines = \explode("\n", $output);

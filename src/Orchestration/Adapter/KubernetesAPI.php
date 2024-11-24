@@ -4,6 +4,7 @@ namespace Utopia\Orchestration\Adapter;
 
 use Utopia\App;
 use Utopia\Orchestration\Adapter;
+use Utopia\System\System;
 use WebSocket;
 
 class KubernetesAPI extends Adapter
@@ -103,7 +104,7 @@ class KubernetesAPI extends Adapter
      */
     protected function call(string $url, string $method, $body = null, array $headers = [], int $timeout = -1): array
     {
-        $url = 'https://'.App::getEnv('KUBERNETES_SERVICE_HOST', 'kubernetes.default.svc').'/'.$url;
+        $url = 'https://'.System::getEnv('KUBERNETES_SERVICE_HOST', 'kubernetes.default.svc').'/'.$url;
         $token = file_get_contents('/var/run/secrets/kubernetes.io/serviceaccount/token', false);
 
         array_push($headers, 'Authorization: Bearer '.$token);

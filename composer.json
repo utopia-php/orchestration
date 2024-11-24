@@ -20,7 +20,8 @@
     "require": {
         "php": ">=8.0",
         "utopia-php/cli": "0.19.*",
-        "phrity/websocket": "^3.2"
+        "phrity/websocket": "^3.2",
+        "utopia-php/system": "0.9.*"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.3",

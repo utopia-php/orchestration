@@ -4,13 +4,21 @@ namespace Utopia\Orchestration;
 
 abstract class Adapter
 {
+    public const RESTART_NO = 'no'; // Never restart
+
+    public const RESTART_ALWAYS = 'always'; // Restart after any exit code
+
+    public const RESTART_ON_FAILURE = 'on-failure'; // Restart on after non-zero exit code
+
+    public const RESTART_UNLESS_STOPPED = 'unless-stopped'; // Restart after any exit code, if not stopped manually
+
     /**
      * @var string
      */
     protected $namespace = 'utopia';
 
     /**
-     * @var int
+     * @var float
      */
     protected $cpus = 0;
 
@@ -53,18 +61,24 @@ abstract class Adapter
     abstract public function networkDisconnect(string $container, string $network, bool $force = false): bool;
 
     /**
+     * Check if a network exists
+     */
+    abstract public function networkExists(string $name): bool;
+
+    /**
      * List Networks
+     *
+     * @return Network[]
      */
     abstract public function listNetworks(): array;
 
     /**
      * Get usage stats of containers
      *
-     * @param  string  $container
      * @param  array<string, string>  $filters
-     * @return array<Stats>
+     * @return array<\Utopia\Orchestration\Container\Stats>
      */
-    abstract public function getStats(string $container = null, array $filters = []): array;
+    abstract public function getStats(?string $container = null, array $filters = []): array;
 
     /**
      * Pull Image
@@ -88,6 +102,7 @@ abstract class Adapter
      * @param  string[]  $command
      * @param  string[]  $volumes
      * @param  array<string, string>  $vars
+     * @param  array<string, string>  $labels
      */
     abstract public function run(
         string $image,
@@ -101,7 +116,8 @@ abstract class Adapter
         array $labels = [],
         string $hostname = '',
         bool $remove = false,
-        string $network = ''): string;
+        string $network = '',
+        string $restart = self::RESTART_NO): string;
 
     /**
      * Execute Container
@@ -129,11 +145,11 @@ abstract class Adapter
     }
 
     /**
-     * Set max allowed CPU cores per container
+     * Set max allowed CPU Quota per container
      *
      * @return $this
      */
-    public function setCpus(int $cores): self
+    public function setCpus(float $cores): self
     {
         $this->cpus = $cores;
 

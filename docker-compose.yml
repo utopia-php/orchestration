@@ -7,8 +7,11 @@ services:
             context: .
         networks:
             - orchestration
-        volumes: 
+        environment:
+            HOST_DIR: "$PWD" # Nessessary to mount test resources to child containers
+        volumes:
             - ./:/usr/src/code
+            - /var/run/docker.sock:/var/run/docker.sock
 
 networks:
     orchestration:

@@ -9,7 +9,7 @@ use Utopia\Tests\Base;
 class DockerAPITest extends Base
 {
     /**
-     * @var Orchestration
+     * @var Orchestration|null
      */
     public static $orchestration = null;
 
@@ -27,7 +27,7 @@ class DockerAPITest extends Base
             return self::$orchestration;
         }
 
-        $orchestration = new Orchestration(new DockerAPI());
+        $orchestration = new Orchestration(new DockerAPI);
 
         return self::$orchestration = $orchestration;
     }

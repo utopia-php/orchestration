@@ -4,17 +4,16 @@ namespace Utopia\Orchestration\Adapter;
 
 use Utopia\App;
 use Utopia\Orchestration\Adapter;
+use WebSocket;
 
 class KubernetesAPI extends Adapter
 {
     /**
      * Constructor
      */
-    public function __construct(string $namespace = null, string $username = null, string $password = null, string $email = null)
+    public function __construct(string $namespace, string $username = null, string $password = null, string $email = null)
     {
-        if (! empty($namespace)) {
-            $this->namespace = $namespace;
-        }
+        $this->namespace = $namespace;
 
         if ($username && $password && $email) {
             $registryAuth = base64_encode(json_encode([
@@ -58,32 +57,37 @@ class KubernetesAPI extends Adapter
      */
     private $regCred = false;
 
-    public function createNetwork(string $name, bool $internal = false)
+    public function createNetwork(string $name, bool $internal = false): bool
     {
         return true;
     }
 
-    public function removeNetwork(string $name)
+    public function removeNetwork(string $name): bool
     {
         return true;
     }
 
-    public function networkConnect(string $container, string $network)
+    public function networkConnect(string $container, string $network): bool
     {
         return true;
     }
 
-    public function networkDisconnect(string $container, string $network, bool $force = false)
+    public function networkDisconnect(string $container, string $network, bool $force = false): bool
     {
         return true;
     }
 
-    public function listNetworks()
+    public function listNetworks(): array
     {
         return [];
     }
 
-    public function pull(string $image)
+    public function networkExists(string $name): bool
+    {
+        return true;
+    }
+
+    public function pull(string $image): bool
     {
         return true;
     }
@@ -141,6 +145,36 @@ class KubernetesAPI extends Adapter
         return [
             'response' => $result,
             'code' => $responseCode,
+        ];
+    }
+
+    /**
+     * Create a WebSocket request via the Kubernetes API
+     *
+     * @param  string[]  $headers
+     * @return (bool|mixed|string)[]
+     *
+     * @psalm-return array{response: mixed, code: mixed}
+     */
+    public function callSocket(string $url, int $timeout = 60, array $headers = []): array
+    {
+          $url = 'wss://'.App::getEnv('KUBERNETES_SERVICE_HOST', 'kubernetes.default.svc').'/'.$url;
+          $token = file_get_contents('/var/run/secrets/kubernetes.io/serviceaccount/token', false);
+
+          array_push($headers, 'Authorization: Bearer '.$token);
+
+          $client = new WebSocket\Client($url, [
+            'headers' => $headers,
+            'return_obj' => true,
+            'timeout' => $timeout,
+          ]);
+
+          $response = $client->receive();
+          $client->close();
+
+          return [
+            'response' => $response->getContent(),
+            'code' => $client->getCloseStatus(),
         ];
     }
 
@@ -236,23 +270,22 @@ class KubernetesAPI extends Adapter
      * Creates and runs a new pod, On success it will return a string containing the pod name.
      * On fail it will throw an exception.
      *
-     * @param  string[]  $command
-     * @param  string[]  $volumes
-     * @param  array<string, string>  $vars
+     * @param string $image
+     * @param string $name
+     * @param array $command
+     * @param string $entrypoint
+     * @param string $workdir
+     * @param array $volumes
+     * @param array $vars
+     * @param string $mountFolder
+     * @param array $labels
+     * @param string $hostname
+     * @param bool $remove
+     * @param string $network
+     * @param string $restart
      */
     public function run(
-        string $image,
-        string $name,
-        array $command = [],
-        string $entrypoint = '',
-        string $workdir = '',
-        array $volumes = [],
-        array $vars = [],
-        string $mountFolder = '',
-        array $labels = [],
-        string $hostname = '',
-        bool $remove = false
-    ): string {
+        string $image, string $name, array $command = [], string $entrypoint = '', string $workdir = '', array $volumes = [], array $vars = [], string $mountFolder = '', array $labels = [], string $hostname = '', bool $remove = false, string $network = '', string $restart = self::RESTART_NO): string {
         $parsedVariables = [];
 
         foreach ($vars as $key => $value) {
@@ -327,7 +360,7 @@ class KubernetesAPI extends Adapter
     }
 
     /**
-     * Execute Pod
+     * Execute Command in Pod
      *
      * @param  string[]  $command
      * @param  array<string, string>  $vars
@@ -339,19 +372,17 @@ class KubernetesAPI extends Adapter
         array $vars = [],
         int $timeout = -1
     ): bool {
-        $body = [
-            'Env' => \array_values($vars),
-            'Cmd' => $command,
-            'AttachStdout' => true,
-            'AttachStderr' => true,
-        ];
+        // TODO: need to solve to can change the environment variables
 
-        // /api/v1/namespaces/:namespace/pods/:name/exec?command=laboris anim ullamco consequat&stderr=true&stdout=true&container=
-        // Connection upgrade needed to websocket
+        $parsedCommand = [];
 
-        $result = [];
+        foreach ($command as $value) {
+          array_push($parsedCommand, 'command='.$value);
+        }
 
-        $output = $result['stdout'].$result['stderr'];
+        $result = $this->callSocket('/api/v1/namespaces/'.$this->namespace.'/pods/'.$name.'/exec?stderr=true&stdout=true&'.implode('&', $parsedCommand));
+
+        $output = $result['response'];
 
         if ($result['code'] !== 200) {
             throw new Orchestration('Failed to create execute command: '.$result['response'].' Response Code: '.$result['code']);

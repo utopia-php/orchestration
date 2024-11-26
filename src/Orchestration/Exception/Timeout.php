@@ -2,4 +2,6 @@
 
 namespace Utopia\Orchestration\Exception;
 
-class Timeout extends \Exception {}
+class Timeout extends \Exception
+{
+}

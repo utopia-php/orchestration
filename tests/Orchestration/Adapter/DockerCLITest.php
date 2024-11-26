@@ -27,7 +27,7 @@ class DockerCLITest extends Base
             return self::$orchestration;
         }
 
-        $orchestration = new Orchestration(new DockerCLI);
+        $orchestration = new Orchestration(new DockerCLI());
 
         return self::$orchestration = $orchestration;
     }

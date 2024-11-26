@@ -117,7 +117,8 @@ abstract class Adapter
         string $hostname = '',
         bool $remove = false,
         string $network = '',
-        string $restart = self::RESTART_NO): string;
+        string $restart = self::RESTART_NO
+    ): string;
 
     /**
      * Execute Container

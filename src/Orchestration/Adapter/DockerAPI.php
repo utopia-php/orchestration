@@ -445,7 +445,7 @@ class DockerAPI extends Adapter
 
         $body = [
             'all' => true,
-            'filters' => empty($filtersSorted) ? new stdClass : json_encode($filtersSorted),
+            'filters' => empty($filtersSorted) ? new stdClass() : json_encode($filtersSorted),
         ];
 
         $result = $this->call('http://localhost/containers/json'.'?'.\http_build_query($body), 'GET');

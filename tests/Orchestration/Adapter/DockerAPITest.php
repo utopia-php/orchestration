@@ -27,7 +27,7 @@ class DockerAPITest extends Base
             return self::$orchestration;
         }
 
-        $orchestration = new Orchestration(new DockerAPI);
+        $orchestration = new Orchestration(new DockerAPI());
 
         return self::$orchestration = $orchestration;
     }

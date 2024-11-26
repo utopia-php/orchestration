@@ -306,7 +306,8 @@ class DockerCLI extends Adapter
      * @param  array<string, string>  $vars
      * @param  array<string, string>  $labels
      */
-    public function run(string $image,
+    public function run(
+        string $image,
         string $name,
         array $command = [],
         string $entrypoint = '',

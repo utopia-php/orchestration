@@ -2,6 +2,7 @@
 
 namespace Utopia\Tests;
 
+use Utopia\CLI\Console;
 use PHPUnit\Framework\TestCase;
 use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Orchestration;
@@ -618,8 +619,22 @@ abstract class Base extends TestCase
             mountFolder: \getenv('HOST_DIR').'/tests/Orchestration/Resources',
             labels: ['utopia-container-type' => 'stats']
         );
+        $dump = function($value) {
+            $p = var_export($value, true);
+            $b = debug_backtrace();
+            print($b[0]['file'] . ':' . $b[0]['line'] . ' - ' . $p . "\n");
+        };
+        $dump($containerId1);
+
+        $output = '';
+        Console::execute("docker logs $containerId1", '', $output);
+        $dump($output);
 
         $this->assertNotEmpty($containerId1);
+
+        $output = '';
+        Console::execute("docker inspect $containerId1", '', $output);
+        $dump($output);
 
         $containerId2 = static::getOrchestration()->run(
             'containerstack/alpine-stress',
@@ -632,17 +647,45 @@ abstract class Base extends TestCase
             workdir: '/usr/local/src/',
             mountFolder: \getenv('HOST_DIR').'/tests/Orchestration/Resources',
         );
+        $dump($containerId2);
+
+        $output = '';
+        Console::execute("docker logs $containerId2", '', $output);
+        $dump($output);
 
         $this->assertNotEmpty($containerId2);
-        sleep(2);
+
+        $output = '';
+        Console::execute("docker inspect $containerId2", '', $output);
+        $dump($output);
+
+        $output = '';
+        static::getOrchestration()->execute($containerId1, ['which', 'screen'], $output);
+        $dump($output);
+        sleep(5);
+
+        $output = '';
+        Console::execute('docker ps -a', '', $output);
+        $dump($output);
+
+        $output = '';
+        Console::execute('docker stats --no-stream', '', $output);
+        $dump($output);
 
         // This allows CPU-heavy load check
         $output = '';
-        static::getOrchestration()->execute($containerId1, ['screen', '-d', '-m', "'stress --cpu 1 --timeout 5'"], $output); // Run in screen so it's background task
-        static::getOrchestration()->execute($containerId2, ['screen', '-d', '-m', "'stress --cpu 1 --timeout 5'"], $output);
+        static::getOrchestration()->execute($containerId1, ['screen', '-d', '-m', 'stress --cpu 1 --timeout 5'], $output); // Run in screen so it's background task
+        $dump($output);
+        $output = '';
+        static::getOrchestration()->execute($containerId2, ['screen', '-d', '-m', 'stress --cpu 1 --timeout 5'], $output);
+        $dump($output);
 
         // Set CPU stress-test start
         \sleep(1);
+
+        $output = '';
+        Console::execute('docker stats --no-stream', '', $output);
+        $dump($output);
 
         // Fetch stats, should include high CPU usage
         $stats = static::getOrchestration()->getStats();

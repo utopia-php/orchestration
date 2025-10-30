@@ -2,8 +2,8 @@ name: "Tests"
 
 on: [pull_request]
 jobs:
-  lint:
-    name: Tests ${{ matrix.php-versions }}
+  docker-tests:
+    name: Tests ${{ matrix.php-versions }} (Docker)
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -30,3 +30,51 @@ jobs:
 
     - name: Run tests
       run: docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml
+
+  k8s-tests:
+    name: K8s adapters (kind)
+    runs-on: ubuntu-latest
+    needs: docker-tests
+    env:
+      HOST_DIR: ${{ github.workspace }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Set up kind cluster
+        uses: helm/kind-action@v1.10.0
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Create CI service account and token
+        shell: bash
+        run: |
+          set -euo pipefail
+          kubectl create serviceaccount ci -n default
+          kubectl create clusterrolebinding ci-admin --clusterrole=cluster-admin --serviceaccount=default:ci
+          # Get API server URL and CA
+          API_SERVER=$(kubectl config view --raw -o jsonpath='{.clusters[0].cluster.server}')
+          CA_DATA=$(kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
+          echo "$CA_DATA" | base64 -d > ca.crt
+          # Create token (K8s 1.24+)
+          TOKEN=$(kubectl -n default create token ci)
+          echo "K8S_API_URL=$API_SERVER" >> $GITHUB_ENV
+          echo "K8S_TOKEN=$TOKEN" >> $GITHUB_ENV
+          echo "K8S_NAMESPACE=default" >> $GITHUB_ENV
+          echo "K8S_CA_FILE=$(pwd)/ca.crt" >> $GITHUB_ENV
+
+      - name: Run K8s CLI adapter tests
+        run: vendor/bin/phpunit tests/Orchestration/Adapter/K8sCLITest.php
+
+      - name: Run K8s SDK adapter tests
+        run: vendor/bin/phpunit tests/Orchestration/Adapter/K8sTest.php

@@ -309,13 +309,90 @@ YAML;
     /**
      * Pull Image
      * Note: In K8s, images are pulled automatically when pods are created.
-     * This method can be used to pre-pull images using a temporary pod.
+     * This method attempts to validate the image by creating a temporary pod.
      */
     public function pull(string $image): bool
     {
-        // In K8s, we can create an imagePullJob or just verify the image exists
-        // For simplicity, we'll return true as K8s handles image pulling automatically
-        return true;
+        // Try to validate the image by creating a temporary pod with imagePullPolicy: IfNotPresent
+        // and then deleting it. If the image doesn't exist or is invalid, this will fail.
+        $tempPodName = 'pull-test-'.uniqid();
+        $output = '';
+
+        $yaml = <<<YAML
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {$tempPodName}
+  namespace: {$this->k8sNamespace}
+spec:
+  containers:
+  - name: validator
+    image: {$image}
+    command: ['sh', '-c', 'exit 0']
+  restartPolicy: Never
+YAML;
+
+        try {
+            // Create the pod
+            $exitCode = Console::execute(
+                $this->buildKubectlCmd().' apply -f -',
+                $yaml,
+                $output,
+                '',
+                30
+            );
+
+            if ($exitCode !== 0) {
+                return false;
+            }
+
+            // Wait a bit for the pod to be scheduled and image pull to start
+            sleep(2);
+
+            // Check pod status for image pull errors
+            $statusOutput = '';
+            Console::execute(
+                $this->buildKubectlCmd().' get pod '.$tempPodName.' -o json',
+                '',
+                $statusOutput
+            );
+
+            $podData = \json_decode($statusOutput, true);
+            $containerStatuses = $podData['status']['containerStatuses'] ?? [];
+
+            // Check for image pull errors
+            foreach ($containerStatuses as $status) {
+                if (isset($status['state']['waiting']['reason'])) {
+                    $reason = $status['state']['waiting']['reason'];
+                    if (in_array($reason, ['ErrImagePull', 'ImagePullBackOff', 'InvalidImageName'])) {
+                        // Clean up
+                        Console::execute(
+                            $this->buildKubectlCmd().' delete pod '.$tempPodName.' --grace-period=0 --force',
+                            '',
+                            $output
+                        );
+                        return false;
+                    }
+                }
+            }
+
+            // Clean up the test pod
+            Console::execute(
+                $this->buildKubectlCmd().' delete pod '.$tempPodName.' --grace-period=0 --force',
+                '',
+                $output
+            );
+
+            return true;
+        } catch (\Exception $e) {
+            // Clean up on error
+            Console::execute(
+                $this->buildKubectlCmd().' delete pod '.$tempPodName.' --ignore-not-found=true --grace-period=0 --force',
+                '',
+                $output
+            );
+            return false;
+        }
     }
 
     /**

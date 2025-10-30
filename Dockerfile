@@ -23,9 +23,14 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apk update \
-  && apk add --no-cache make automake autoconf gcc g++ git brotli-dev docker-cli \
+  && apk add --no-cache make automake autoconf gcc g++ git brotli-dev docker-cli curl \
   && docker-php-ext-install sockets \
   && docker-php-ext-install opcache
+
+# Install kubectl for K8s CLI adapter tests
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+  && chmod +x kubectl \
+  && mv kubectl /usr/local/bin/kubectl
 
 WORKDIR /usr/src/code
 

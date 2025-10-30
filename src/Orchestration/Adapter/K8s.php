@@ -1,0 +1,580 @@
+<?php
+
+namespace Utopia\Orchestration\Adapter;
+
+use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
+use RenokiCo\PhpK8s\K8s as PhpK8s;
+use RenokiCo\PhpK8s\KubernetesCluster;
+use Utopia\Orchestration\Adapter;
+use Utopia\Orchestration\Container;
+use Utopia\Orchestration\Container\Stats;
+use Utopia\Orchestration\Exception\Orchestration;
+use Utopia\Orchestration\Network;
+
+class K8s extends Adapter
+{
+    /**
+     * @var KubernetesCluster
+     */
+    private KubernetesCluster $cluster;
+
+    /**
+     * @var string
+     */
+    private string $k8sNamespace;
+
+    /**
+     * Constructor
+     *
+     * @param  string|null  $url  Kubernetes API URL
+     * @param  string  $namespace  Kubernetes namespace
+     * @param  array  $auth  Authentication configuration
+     */
+    public function __construct(?string $url = null, string $namespace = 'default', array $auth = [])
+    {
+        $this->k8sNamespace = $namespace;
+
+        if (empty($url)) {
+            throw new Orchestration('K8s adapter requires an API URL (fromURL).');
+        }
+
+        // Initialize cluster connection using the KubernetesCluster::fromUrl helper
+        $this->cluster = KubernetesCluster::fromUrl($url);
+
+        // Configure authentication if provided
+        if (! empty($auth)) {
+            if (isset($auth['token'])) {
+                $this->cluster->withToken($auth['token']);
+            } elseif (isset($auth['username']) && isset($auth['password'])) {
+                $this->cluster->httpAuthentication($auth['username'], $auth['password']);
+            } elseif (isset($auth['cert']) && isset($auth['key'])) {
+                // php-k8s expects separate calls for cert & private key
+                $this->cluster->withCertificate($auth['cert']);
+                $this->cluster->withPrivateKey($auth['key']);
+            }
+
+            // TLS verification options
+            if (isset($auth['ca']) && is_string($auth['ca']) && $auth['ca'] !== '') {
+                $this->cluster->withCaCertificate($auth['ca']);
+            }
+
+            if ((isset($auth['verify']) && $auth['verify'] === false) || (!empty($auth['insecure']))) {
+                $this->cluster->withoutSslChecks();
+            }
+        }
+    }
+
+    /**
+     * Create Network (K8s NetworkPolicy)
+     */
+    public function createNetwork(string $name, bool $internal = false): bool
+    {
+        try {
+            $payload = [
+                'apiVersion' => 'networking.k8s.io/v1',
+                'kind' => 'NetworkPolicy',
+                'metadata' => [
+                    'name' => $name,
+                    'namespace' => $this->k8sNamespace,
+                ],
+                'spec' => [
+                    'podSelector' => [
+                        'matchLabels' => ['network' => $name],
+                    ],
+                    'policyTypes' => ['Ingress', 'Egress'],
+                ],
+            ];
+
+            if ($internal) {
+                // Deny all ingress and egress for internal networks
+                $payload['spec']['ingress'] = [];
+                $payload['spec']['egress'] = [];
+            } else {
+                // Allow all ingress and egress for external networks
+                // The correct way to allow-all is [{}] for both ingress & egress.
+                $payload['spec']['ingress'] = [ (object) [] ];
+                $payload['spec']['egress'] = [ (object) [] ];
+            }
+
+            $this->cluster->call(
+                'POST',
+                "/apis/networking.k8s.io/v1/namespaces/{$this->k8sNamespace}/networkpolicies",
+                json_encode($payload)
+            );
+
+            return true;
+        } catch (KubernetesAPIException $e) {
+            throw new Orchestration("Failed to create network: {$e->getMessage()}");
+        }
+    }
+
+    /**
+     * Remove Network (K8s NetworkPolicy)
+     */
+    public function removeNetwork(string $name): bool
+    {
+        try {
+            $this->cluster->call(
+                'DELETE',
+                "/apis/networking.k8s.io/v1/namespaces/{$this->k8sNamespace}/networkpolicies/{$name}"
+            );
+
+            return true;
+        } catch (KubernetesAPIException $e) {
+            throw new Orchestration("Failed to remove network: {$e->getMessage()}");
+        }
+    }
+
+    /**
+     * Connect a container to a network (Add label to pod)
+     */
+    public function networkConnect(string $container, string $network): bool
+    {
+        try {
+            $pod = $this->cluster->getPodByName($container, $this->k8sNamespace);
+
+            $labels = $pod->getLabels();
+            $labels['network'] = $network;
+            $pod->setLabels($labels);
+
+            $pod->update();
+
+            return true;
+        } catch (KubernetesAPIException $e) {
+            throw new Orchestration("Failed to connect network: {$e->getMessage()}");
+        }
+    }
+
+    /**
+     * Disconnect a container from a network (Remove label from pod)
+     */
+    public function networkDisconnect(string $container, string $network, bool $force = false): bool
+    {
+        try {
+            $pod = $this->cluster->getPodByName($container, $this->k8sNamespace);
+
+            $labels = $pod->getLabels();
+            unset($labels['network']);
+            $pod->setLabels($labels);
+
+            $pod->update();
+
+            return true;
+        } catch (KubernetesAPIException $e) {
+            throw new Orchestration("Failed to disconnect network: {$e->getMessage()}");
+        }
+    }
+
+    /**
+     * Check if a network exists
+     */
+    public function networkExists(string $name): bool
+    {
+        try {
+            $this->cluster->call(
+                'GET',
+                "/apis/networking.k8s.io/v1/namespaces/{$this->k8sNamespace}/networkpolicies/{$name}"
+            );
+            return true;
+        } catch (KubernetesAPIException $e) {
+            return false;
+        }
+    }
+
+    /**
+     * List Networks (K8s NetworkPolicies)
+     *
+     * @return Network[]
+     */
+    public function listNetworks(): array
+    {
+        try {
+            $response = $this->cluster->call(
+                'GET',
+                "/apis/networking.k8s.io/v1/namespaces/{$this->k8sNamespace}/networkpolicies"
+            );
+
+            $json = @json_decode((string) $response->getBody(), true) ?: [];
+            $items = $json['items'] ?? [];
+
+            $list = [];
+            foreach ($items as $np) {
+                $metadata = $np['metadata'] ?? [];
+                $list[] = new Network(
+                    $metadata['name'] ?? '',
+                    $metadata['uid'] ?? '',
+                    'NetworkPolicy',
+                    $metadata['namespace'] ?? $this->k8sNamespace
+                );
+            }
+
+            return $list;
+        } catch (KubernetesAPIException $e) {
+            throw new Orchestration("Failed to list networks: {$e->getMessage()}");
+        }
+    }
+
+    /**
+     * Get usage stats of containers
+     *
+     * @param  array<string, string>  $filters
+     * @return array<Stats>
+     */
+    public function getStats(?string $container = null, array $filters = []): array
+    {
+        $stats = [];
+
+        try {
+            if ($container !== null) {
+                $pods = [$this->cluster->getPodByName($container, $this->k8sNamespace)];
+            } else {
+                // Apply label filters
+                $query = ['pretty' => 1];
+                if (! empty($filters)) {
+                    $labelSelector = [];
+                    foreach ($filters as $key => $value) {
+                        $labelSelector[] = "{$key}={$value}";
+                    }
+                    $query['labelSelector'] = implode(',', $labelSelector);
+                }
+
+                $pods = $this->cluster->getAllPods($this->k8sNamespace, $query);
+            }
+
+            foreach ($pods as $pod) {
+                // Get pod metrics - Note: This requires Metrics Server to be installed
+                // The php-k8s library doesn't have direct metrics support, so we'd need to make custom API calls
+                // For now, we'll return basic stats with zero values for metrics
+
+                $podName = $pod->getName();
+                $podId = $pod->getResourceUid();
+
+                // In a real implementation, you would call the metrics API:
+                // GET /apis/metrics.k8s.io/v1beta1/namespaces/{namespace}/pods/{name}
+                // For now, return basic structure
+
+                $stat = new Stats(
+                    containerId: $podId,
+                    containerName: $podName,
+                    cpuUsage: 0.0,
+                    memoryUsage: 0.0,
+                    diskIO: ['in' => 0, 'out' => 0],
+                    memoryIO: ['in' => 0, 'out' => 0],
+                    networkIO: ['in' => 0, 'out' => 0]
+                );
+
+                $stats[] = $stat;
+            }
+
+            return $stats;
+        } catch (KubernetesAPIException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Pull Image
+     * Note: In K8s, images are pulled automatically when pods are created
+     */
+    public function pull(string $image): bool
+    {
+        // Kubernetes handles image pulling automatically
+        return true;
+    }
+
+    /**
+     * List Containers (K8s Pods)
+     *
+     * @param  array<string, string>  $filters
+     * @return Container[]
+     */
+    public function list(array $filters = []): array
+    {
+        try {
+            $query = ['pretty' => 1];
+
+            if (! empty($filters)) {
+                $labelSelector = [];
+                foreach ($filters as $key => $value) {
+                    $labelSelector[] = "{$key}={$value}";
+                }
+                $query['labelSelector'] = implode(',', $labelSelector);
+            }
+
+            $pods = $this->cluster->getAllPods($this->k8sNamespace, $query);
+
+            $list = [];
+
+            foreach ($pods as $pod) {
+                $container = new Container(
+                    $pod->getName(),
+                    $pod->getResourceUid(),
+                    $pod->getAttribute('status.phase', 'Unknown'),
+                    $pod->getLabels()
+                );
+                $list[] = $container;
+            }
+
+            return $list;
+        } catch (KubernetesAPIException $e) {
+            throw new Orchestration("Failed to list containers: {$e->getMessage()}");
+        }
+    }
+
+    /**
+     * Run Container (Create and run a K8s Pod)
+     *
+     * @param  string[]  $command
+     * @param  string[]  $volumes
+     * @param  array<string, string>  $vars
+     * @param  array<string, string>  $labels
+     */
+    public function run(
+        string $image,
+        string $name,
+        array $command = [],
+        string $entrypoint = '',
+        string $workdir = '',
+        array $volumes = [],
+        array $vars = [],
+        string $mountFolder = '',
+        array $labels = [],
+        string $hostname = '',
+        bool $remove = false,
+        string $network = '',
+        string $restart = self::RESTART_NO
+    ): string {
+        try {
+            // Add default labels
+            $labels[$this->namespace.'-type'] = 'runtime';
+            $labels[$this->namespace.'-created'] = (string) time();
+
+            if (! empty($network)) {
+                $labels['network'] = $network;
+            }
+
+            // Create container configuration
+            $container = PhpK8s::container()
+                ->setName('main');
+
+            // Correctly set image name & tag without corrupting the string.
+            // Rules:
+            // - If image has a digest (e.g., repo@sha256:...), ignore tag and set by name only.
+            // - Otherwise, detect tag using the last ':' that appears after the last '/'.
+            // - Default tag to 'latest' when none provided.
+            $imageName = $image; // full reference by default
+            $imageTag = null;
+
+            $digestPos = strpos($image, '@');
+            if ($digestPos !== false) {
+                // e.g. alpine@sha256:...
+                $imageName = substr($image, 0, $digestPos);
+                $imageTag = null; // tag ignored when digest present
+            } else {
+                $lastSlash = strrpos($image, '/');
+                $lastColon = strrpos($image, ':');
+                if ($lastColon !== false && ($lastSlash === false || $lastColon > $lastSlash)) {
+                    // There is a tag part after the last '/'
+                    $imageName = substr($image, 0, $lastColon);
+                    $imageTag = substr($image, $lastColon + 1);
+                } else {
+                    // No explicit tag -> default to latest
+                    $imageName = $image;
+                    $imageTag = 'latest';
+                }
+            }
+
+            if ($imageTag !== null && $imageTag !== '') {
+                $container->setImage($imageName, $imageTag);
+            } else {
+                $container->setImage($imageName);
+            }
+
+            // Set command and args
+            if (! empty($entrypoint)) {
+                $container->setCommand([$entrypoint]);
+            }
+
+            if (! empty($command)) {
+                $container->setArgs($command);
+            }
+
+            // Set working directory
+            if (! empty($workdir)) {
+                $container->setWorkingDir($workdir);
+            }
+
+            // Set environment variables
+            if (! empty($vars)) {
+                $envVars = [];
+                foreach ($vars as $key => $value) {
+                    $key = $this->filterEnvKey($key);
+                    $envVars[$key] = $value;
+                }
+                $container->setEnv($envVars);
+            }
+
+            // Set resource limits
+            if ($this->cpus > 0 || $this->memory > 0) {
+                $resources = [];
+
+                if ($this->cpus > 0) {
+                    $resources['limits']['cpu'] = (string) $this->cpus;
+                    $resources['requests']['cpu'] = (string) ($this->cpus / 2);
+                }
+
+                if ($this->memory > 0) {
+                    $resources['limits']['memory'] = $this->memory.'Mi';
+                    $resources['requests']['memory'] = ($this->memory / 2).'Mi';
+                }
+
+                $container->setResources($resources);
+            }
+
+            // Create pod
+            $pod = $this->cluster->pod()
+                ->setName($name)
+                ->setNamespace($this->k8sNamespace)
+                ->setLabels($labels)
+                ->setContainers([$container]);
+
+            // Set hostname
+            if (! empty($hostname)) {
+                $pod->setSpec(array_merge($pod->getSpec(), ['hostname' => $hostname]));
+            }
+
+            // Set restart policy
+            $restartPolicies = [
+                self::RESTART_NO => 'Never',
+                self::RESTART_ALWAYS => 'Always',
+                self::RESTART_ON_FAILURE => 'OnFailure',
+                self::RESTART_UNLESS_STOPPED => 'Always',
+            ];
+            $pod->setRestartPolicy($restartPolicies[$restart] ?? 'Never');
+
+            // Handle volumes
+            if (! empty($volumes) || ! empty($mountFolder)) {
+                $volumeList = [];
+                $volumeMounts = [];
+                $volumeIndex = 0;
+
+                foreach ($volumes as $volume) {
+                    // Parse volume format: /host/path:/container/path or /host/path:/container/path:ro
+                    $parts = \explode(':', $volume);
+                    if (\count($parts) >= 2) {
+                        $volumeName = 'vol-'.$volumeIndex;
+
+                        $volumeList[] = PhpK8s::volume()
+                            ->setName($volumeName)
+                            ->setSource('hostPath', ['path' => $parts[0]]);
+
+                        $volumeMounts[] = [
+                            'name' => $volumeName,
+                            'mountPath' => $parts[1],
+                            'readOnly' => isset($parts[2]) && $parts[2] === 'ro',
+                        ];
+
+                        $volumeIndex++;
+                    }
+                }
+
+                if (! empty($mountFolder)) {
+                    $volumeName = 'mount-folder';
+                    $volumeList[] = PhpK8s::volume()
+                        ->setName($volumeName)
+                        ->setSource('hostPath', ['path' => $mountFolder]);
+
+                    $volumeMounts[] = [
+                        'name' => $volumeName,
+                        'mountPath' => '/tmp',
+                    ];
+                }
+
+                if (! empty($volumeList)) {
+                    $pod->setVolumes($volumeList);
+                    $container->setVolumeMounts($volumeMounts);
+                }
+            }
+
+            // Create the pod
+            $pod = $pod->create();
+
+            return $pod->getResourceUid();
+        } catch (KubernetesAPIException $e) {
+            throw new Orchestration("Failed to run container: {$e->getMessage()}");
+        }
+    }
+
+    /**
+     * Execute Container (Execute command in K8s Pod)
+     *
+     * @param  string[]  $command
+     * @param  array<string, string>  $vars
+     */
+    public function execute(
+        string $name,
+        array $command,
+        string &$output,
+        array $vars = [],
+        int $timeout = -1
+    ): bool {
+        try {
+            $pod = $this->cluster->getPodByName($name, $this->k8sNamespace);
+            // Ensure we have latest pod state
+            $pod->refresh();
+
+            // Environment variables need to be set when the pod is created
+            // Exec doesn't support setting env vars dynamically
+            // For now, we'll just execute the command
+
+            // Determine the container name explicitly to avoid defaults
+            $containerName = $pod->getAttribute('spec.containers.0.name', null);
+            if ($containerName === null) {
+                $statuses = $pod->getContainerStatuses(false);
+                $containerName = $statuses[0]['name'] ?? null;
+            }
+
+            $result = $pod->exec($command, $containerName);
+
+            // The exec method returns an array of messages
+            // We need to concatenate stdout and stderr
+            $stdoutMessages = array_filter($result, fn ($msg) => isset($msg['channel']) && $msg['channel'] === 'stdout');
+            $stderrMessages = array_filter($result, fn ($msg) => isset($msg['channel']) && $msg['channel'] === 'stderr');
+
+            $output = '';
+            foreach ($stdoutMessages as $msg) {
+                $output .= $msg['output'] ?? '';
+            }
+            foreach ($stderrMessages as $msg) {
+                $output .= $msg['output'] ?? '';
+            }
+
+            return true;
+        } catch (\RenokiCo\PhpK8s\Exceptions\KubernetesExecException $e) {
+            throw new Orchestration("Failed to execute command: {$e->getMessage()}");
+        } catch (KubernetesAPIException $e) {
+            throw new Orchestration("Failed to execute command: {$e->getMessage()}");
+        }
+    }
+
+    /**
+     * Remove Container (Delete K8s Pod)
+     */
+    public function remove(string $name, bool $force = false): bool
+    {
+        try {
+            $pod = $this->cluster->getPodByName($name, $this->k8sNamespace);
+
+            if ($force) {
+                // Force delete by setting grace period to 0
+                $pod->delete(['gracePeriodSeconds' => 0]);
+            } else {
+                $pod->delete();
+            }
+
+            return true;
+        } catch (KubernetesAPIException $e) {
+            throw new Orchestration("Failed to remove container: {$e->getMessage()}");
+        }
+    }
+}

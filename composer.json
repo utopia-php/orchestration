@@ -19,7 +19,8 @@
     },
     "require": {
         "php": ">=8.0",
-        "utopia-php/console": "0.0.*"
+        "utopia-php/console": "0.0.*",
+        "renoki-co/php-k8s": "^3.8"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.3",

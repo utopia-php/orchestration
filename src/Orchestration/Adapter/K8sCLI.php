@@ -338,7 +338,6 @@ YAML;
                 $this->buildKubectlCmd().' apply -f -',
                 $yaml,
                 $output,
-                '',
                 30
             );
 

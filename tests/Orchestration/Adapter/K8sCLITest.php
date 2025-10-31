@@ -27,6 +27,14 @@ class K8sCLITest extends Base
             return self::$orchestration;
         }
 
+        // Skip if kubectl cannot reach a cluster (common in docker-compose test container)
+        $rc = 0;
+        $output = [];
+        @\exec('kubectl cluster-info >/dev/null 2>&1', $output, $rc);
+        if ($rc !== 0) {
+            self::markTestSkipped('kubectl not configured or no Kubernetes cluster available. Skipping K8s CLI tests.');
+        }
+
         $orchestration = new Orchestration(new K8sCLI());
 
         return self::$orchestration = $orchestration;

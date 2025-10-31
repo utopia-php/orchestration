@@ -74,7 +74,7 @@ jobs:
           echo "K8S_CA_FILE=$(pwd)/ca.crt" >> $GITHUB_ENV
 
       - name: Run K8s CLI adapter tests
-        run: vendor/bin/phpunit tests/Orchestration/Adapter/K8sCLITest.php
+        run:  docker compose exec tests vendor/bin/phpunit tests/Orchestration/Adapter/K8sCLITest.php
 
       - name: Run K8s SDK adapter tests
-        run: vendor/bin/phpunit tests/Orchestration/Adapter/K8sTest.php
+        run: docker compose exec tests vendor/bin/phpunit tests/Orchestration/Adapter/K8sTest.php

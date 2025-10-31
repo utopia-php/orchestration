@@ -48,12 +48,82 @@ class K8sCLI extends Adapter
     }
 
     /**
+     * Sanitize pod name to comply with K8s RFC 1123 subdomain rules
+     * Converts to lowercase and replaces invalid characters
+     */
+    private function sanitizePodName(string $name): string
+    {
+        $name = \strtolower($name);
+        $name = \preg_replace('/[^a-z0-9\-.]/', '-', $name);
+        return \trim($name, '-.');
+    }
+
+    /**
+     * Sanitize label value to comply with K8s label requirements
+     */
+    private function sanitizeLabelValue(string $value): string
+    {
+        return \preg_replace('/[^A-Za-z0-9\-_.]/', '-', $value);
+    }
+
+    /**
+     * Build label selector string from filters array
+     */
+    private function buildLabelSelector(array $filters): string
+    {
+        if (empty($filters)) {
+            return '';
+        }
+
+        $labelFilters = [];
+        foreach ($filters as $key => $value) {
+            $labelFilters[] = $key.'='.$value;
+        }
+        return ' -l '.implode(',', $labelFilters);
+    }
+
+    /**
+     * Apply YAML content via kubectl
+     * Creates a temporary file, applies it, and cleans up
+     */
+    private function applyYaml(string $yaml, int $timeout = -1): int
+    {
+        $output = '';
+        $tmpFile = \tempnam(\sys_get_temp_dir(), 'k8s-');
+        \file_put_contents($tmpFile, $yaml);
+
+        $result = Console::execute($this->buildKubectlCmd().' apply -f '.$tmpFile, '', $output, $timeout);
+
+        \unlink($tmpFile);
+
+        if ($result !== 0) {
+            throw new Orchestration("K8s Error: {$output}");
+        }
+
+        return $result;
+    }
+
+    /**
+     * Delete pod with cleanup
+     */
+    private function deletePod(string $podName, bool $force = false): void
+    {
+        $output = '';
+        $flags = $force ? ' --grace-period=0 --force' : '';
+        $flags .= ' --ignore-not-found=true';
+
+        Console::execute(
+            $this->buildKubectlCmd().' delete pod '.$podName.$flags,
+            '',
+            $output
+        );
+    }
+
+    /**
      * Create Network (K8s NetworkPolicy)
      */
     public function createNetwork(string $name, bool $internal = false): bool
     {
-        $output = '';
-
         // In Kubernetes, networks are typically managed via NetworkPolicies
         // For simplicity, we'll create a basic NetworkPolicy
         $yaml = <<<YAML
@@ -89,14 +159,9 @@ YAML;
 YAML;
         }
 
-        $tmpFile = \tempnam(\sys_get_temp_dir(), 'k8s-network-');
-        \file_put_contents($tmpFile, $yaml);
+        $this->applyYaml($yaml);
 
-        $result = Console::execute($this->buildKubectlCmd().' apply -f '.$tmpFile, '', $output);
-
-        \unlink($tmpFile);
-
-        return $result === 0;
+        return true;
     }
 
     /**
@@ -144,7 +209,7 @@ YAML;
     {
         $output = '';
 
-        $result = Console::execute($this->buildKubectlCmd().' get networkpolicy '.$name.' -o name', '', $output);
+        $result = Console::execute($this->buildKubectlCmd().' get networkpolicy '.$name.' --namespace='.$this->k8sNamespace.' -o name 2>/dev/null', '', $output);
 
         return $result === 0 && str_contains($output, $name);
     }
@@ -192,25 +257,27 @@ YAML;
      */
     public function getStats(?string $container = null, array $filters = []): array
     {
+        // If no filters provided and no specific container, filter by namespace and created label
+        if ($container === null && empty($filters)) {
+            $filters = ['label' => $this->namespace.'-created'];
+        }
+
         $output = '';
         $stats = [];
 
-        // Get pod metrics using kubectl top
+        // Get pod metrics using kubectl top (requires metrics-server)
         if ($container !== null) {
-            $result = Console::execute($this->buildKubectlCmd().' top pod '.$container.' --no-headers', '', $output);
+            // Sanitize container name
+            $container = $this->sanitizePodName($container);
+
+            $result = Console::execute($this->buildKubectlCmd().' top pod '.$container.' --namespace='.$this->k8sNamespace.' --no-headers 2>/dev/null', '', $output);
         } else {
-            $selector = '';
-            if (! empty($filters)) {
-                $labelFilters = [];
-                foreach ($filters as $key => $value) {
-                    $labelFilters[] = $key.'='.$value;
-                }
-                $selector = ' -l '.implode(',', $labelFilters);
-            }
-            $result = Console::execute($this->buildKubectlCmd().' top pod'.$selector.' --no-headers', '', $output);
+            $selector = $this->buildLabelSelector($filters);
+            $result = Console::execute($this->buildKubectlCmd().' top pod'.$selector.' --namespace='.$this->k8sNamespace.' --no-headers 2>/dev/null', '', $output);
         }
 
-        if ($result !== 0) {
+        // If kubectl top fails (e.g., metrics-server not installed), return empty array
+        if ($result !== 0 || empty(\trim($output))) {
             return [];
         }
 
@@ -365,31 +432,19 @@ YAML;
                     $reason = $status['state']['waiting']['reason'];
                     if (in_array($reason, ['ErrImagePull', 'ImagePullBackOff', 'InvalidImageName'])) {
                         // Clean up
-                        Console::execute(
-                            $this->buildKubectlCmd().' delete pod '.$tempPodName.' --grace-period=0 --force',
-                            '',
-                            $output
-                        );
+                        $this->deletePod($tempPodName, true);
                         return false;
                     }
                 }
             }
 
             // Clean up the test pod
-            Console::execute(
-                $this->buildKubectlCmd().' delete pod '.$tempPodName.' --grace-period=0 --force',
-                '',
-                $output
-            );
+            $this->deletePod($tempPodName, true);
 
             return true;
         } catch (\Exception $e) {
             // Clean up on error
-            Console::execute(
-                $this->buildKubectlCmd().' delete pod '.$tempPodName.' --ignore-not-found=true --grace-period=0 --force',
-                '',
-                $output
-            );
+            $this->deletePod($tempPodName, true);
             return false;
         }
     }
@@ -404,16 +459,9 @@ YAML;
     {
         $output = '';
 
-        $selector = '';
-        if (! empty($filters)) {
-            $labelFilters = [];
-            foreach ($filters as $key => $value) {
-                $labelFilters[] = $key.'='.$value;
-            }
-            $selector = ' -l '.implode(',', $labelFilters);
-        }
+        $selector = $this->buildLabelSelector($filters);
 
-        $result = Console::execute($this->buildKubectlCmd().' get pods'.$selector.' -o json', '', $output);
+        $result = Console::execute($this->buildKubectlCmd().' get pods'.$selector.' --namespace='.$this->k8sNamespace.' -o json', '', $output);
 
         if ($result !== 0) {
             throw new Orchestration("K8s Error: {$output}");
@@ -462,7 +510,8 @@ YAML;
         string $network = '',
         string $restart = self::RESTART_NO
     ): string {
-        $output = '';
+        // Kubernetes pod names must be lowercase RFC 1123 subdomain
+        $name = $this->sanitizePodName($name);
 
         // Add default labels
         $labels[$this->namespace.'-type'] = 'runtime';
@@ -470,6 +519,11 @@ YAML;
 
         if (! empty($network)) {
             $labels['network'] = $network;
+        }
+
+        // Sanitize label values - must be alphanumeric, '-', '_', '.' only
+        foreach ($labels as $key => $value) {
+            $labels[$key] = $this->sanitizeLabelValue((string) $value);
         }
 
         // Build pod specification
@@ -623,16 +677,8 @@ YAML;
         array $vars = [],
         int $timeout = -1
     ): bool {
-        $envArgs = '';
-
-        if (! empty($vars)) {
-            $envVars = [];
-            foreach ($vars as $key => $value) {
-                $key = $this->filterEnvKey($key);
-                $envVars[] = $key.'='.\escapeshellarg($value);
-            }
-            $envArgs = ' -- env '.implode(' ', $envVars);
-        }
+        // Sanitize pod name to match K8s naming rules
+        $name = $this->sanitizePodName($name);
 
         $cmdStr = '';
         foreach ($command as $cmd) {
@@ -643,7 +689,7 @@ YAML;
             }
         }
 
-        $execCmd = $this->buildKubectlCmd().' exec '.$name.' -- ';
+        $execCmd = $this->buildKubectlCmd().' exec '.$name.' --namespace='.$this->k8sNamespace.' -- ';
 
         if (! empty($vars)) {
             $execCmd .= 'env ';
@@ -673,10 +719,13 @@ YAML;
      */
     public function remove(string $name, bool $force = false): bool
     {
+        // Sanitize pod name to match K8s naming rules
+        $name = $this->sanitizePodName($name);
+
         $output = '';
 
         $forceFlag = $force ? ' --force --grace-period=0' : '';
-        $result = Console::execute($this->buildKubectlCmd().' delete pod '.$name.$forceFlag, '', $output);
+        $result = Console::execute($this->buildKubectlCmd().' delete pod '.$name.$forceFlag.' --namespace='.$this->k8sNamespace, '', $output);
 
         if ($result !== 0) {
             throw new Orchestration("K8s Error: {$output}");

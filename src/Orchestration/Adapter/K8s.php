@@ -65,6 +65,76 @@ class K8s extends Adapter
     }
 
     /**
+     * Build label selector query parameter from filters
+     */
+    private function buildLabelSelector(array $filters): array
+    {
+        $query = ['pretty' => 1];
+        if (! empty($filters)) {
+            $labelSelector = [];
+            foreach ($filters as $key => $value) {
+                $labelSelector[] = "{$key}={$value}";
+            }
+            $query['labelSelector'] = implode(',', $labelSelector);
+        }
+        return $query;
+    }
+
+    /**
+     * Sanitize pod name to comply with K8s RFC 1123 subdomain rules
+     */
+    private function sanitizePodName(string $name): string
+    {
+        $name = \strtolower($name);
+        $name = \preg_replace('/[^a-z0-9\-.]/', '-', $name);
+        return \trim($name, '-.');
+    }
+
+    /**
+     * Sanitize label value to comply with K8s label requirements
+     */
+    private function sanitizeLabelValue(string $value): string
+    {
+        return \preg_replace('/[^A-Za-z0-9\-_.]/', '-', $value);
+    }
+
+    /**
+     * Parse image reference into name and tag components
+     * Rules:
+     * - If image has a digest (e.g., repo@sha256:...), ignore tag and set by name only.
+     * - Otherwise, detect tag using the last ':' that appears after the last '/'.
+     * - Default tag to 'latest' when none provided.
+     *
+     * @return array{0: string, 1: string|null} [imageName, imageTag]
+     */
+    private function parseImageReference(string $image): array
+    {
+        $imageName = $image; // full reference by default
+        $imageTag = null;
+
+        $digestPos = strpos($image, '@');
+        if ($digestPos !== false) {
+            // e.g. alpine@sha256:...
+            $imageName = substr($image, 0, $digestPos);
+            $imageTag = null; // tag ignored when digest present
+        } else {
+            $lastSlash = strrpos($image, '/');
+            $lastColon = strrpos($image, ':');
+            if ($lastColon !== false && ($lastSlash === false || $lastColon > $lastSlash)) {
+                // There is a tag part after the last '/'
+                $imageName = substr($image, 0, $lastColon);
+                $imageTag = substr($image, $lastColon + 1);
+            } else {
+                // No explicit tag -> default to latest
+                $imageName = $image;
+                $imageTag = 'latest';
+            }
+        }
+
+        return [$imageName, $imageTag];
+    }
+
+    /**
      * Create Network (K8s NetworkPolicy)
      */
     public function createNetwork(string $name, bool $internal = false): bool
@@ -229,15 +299,7 @@ class K8s extends Adapter
                 $pods = [$this->cluster->getPodByName($container, $this->k8sNamespace)];
             } else {
                 // Apply label filters
-                $query = ['pretty' => 1];
-                if (! empty($filters)) {
-                    $labelSelector = [];
-                    foreach ($filters as $key => $value) {
-                        $labelSelector[] = "{$key}={$value}";
-                    }
-                    $query['labelSelector'] = implode(',', $labelSelector);
-                }
-
+                $query = $this->buildLabelSelector($filters);
                 $pods = $this->cluster->getAllPods($this->k8sNamespace, $query);
             }
 
@@ -291,16 +353,7 @@ class K8s extends Adapter
     public function list(array $filters = []): array
     {
         try {
-            $query = ['pretty' => 1];
-
-            if (! empty($filters)) {
-                $labelSelector = [];
-                foreach ($filters as $key => $value) {
-                    $labelSelector[] = "{$key}={$value}";
-                }
-                $query['labelSelector'] = implode(',', $labelSelector);
-            }
-
+            $query = $this->buildLabelSelector($filters);
             $pods = $this->cluster->getAllPods($this->k8sNamespace, $query);
 
             $list = [];
@@ -345,6 +398,9 @@ class K8s extends Adapter
         string $restart = self::RESTART_NO
     ): string {
         try {
+            // Sanitize pod name
+            $name = $this->sanitizePodName($name);
+
             // Add default labels
             $labels[$this->namespace.'-type'] = 'runtime';
             $labels[$this->namespace.'-created'] = (string) time();
@@ -353,36 +409,17 @@ class K8s extends Adapter
                 $labels['network'] = $network;
             }
 
+            // Sanitize label values
+            foreach ($labels as $key => $value) {
+                $labels[$key] = $this->sanitizeLabelValue((string) $value);
+            }
+
             // Create container configuration
             $container = PhpK8s::container()
                 ->setName('main');
 
-            // Correctly set image name & tag without corrupting the string.
-            // Rules:
-            // - If image has a digest (e.g., repo@sha256:...), ignore tag and set by name only.
-            // - Otherwise, detect tag using the last ':' that appears after the last '/'.
-            // - Default tag to 'latest' when none provided.
-            $imageName = $image; // full reference by default
-            $imageTag = null;
-
-            $digestPos = strpos($image, '@');
-            if ($digestPos !== false) {
-                // e.g. alpine@sha256:...
-                $imageName = substr($image, 0, $digestPos);
-                $imageTag = null; // tag ignored when digest present
-            } else {
-                $lastSlash = strrpos($image, '/');
-                $lastColon = strrpos($image, ':');
-                if ($lastColon !== false && ($lastSlash === false || $lastColon > $lastSlash)) {
-                    // There is a tag part after the last '/'
-                    $imageName = substr($image, 0, $lastColon);
-                    $imageTag = substr($image, $lastColon + 1);
-                } else {
-                    // No explicit tag -> default to latest
-                    $imageName = $image;
-                    $imageTag = 'latest';
-                }
-            }
+            // Parse and set image
+            [$imageName, $imageTag] = $this->parseImageReference($image);
 
             if ($imageTag !== null && $imageTag !== '') {
                 $container->setImage($imageName, $imageTag);

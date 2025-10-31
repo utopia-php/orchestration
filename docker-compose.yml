@@ -11,4 +11,4 @@ services:
         volumes:
             - ./:/usr/src/code
             - /var/run/docker.sock:/var/run/docker.sock
-            - /tmp/kube-config/config:/root/.kube/config:ro
+            - /tmp/kind-kubeconfig:/root/.kube/config:ro

@@ -58,22 +58,23 @@ jobs:
       - name: Verify KinD Cluster
         run: |
           kubectl cluster-info
-          kubectl get nodes
-          mkdir -p ~/.kube
-          cp ~/.kube/config ~/.kube/config.backup
+          kind create cluster --name test-cluster
 
       - name: Setup Docker network for KinD access
         run: |
           # Make kubeconfig accessible to containers
-          mkdir -p /tmp/kube-config
-          cp ~/.kube/config /tmp/kube-config
-          chmod -R 666 /tmp/kube-config/config
+          kind get kubeconfig --name test-cluster --internal > /tmp/kind-kubeconfig
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
 
       - name: Start container
         run: docker compose up -d && sleep 15
+
+      - name: Connect container to kind network
+        run: |
+          CONTAINER_ID=$(docker compose ps -q tests)
+          docker network connect kind "$CONTAINER_ID" || true
 
       - name: Run K8s CLI adapter tests
         run: docker compose exec tests vendor/bin/phpunit tests/Orchestration/Adapter/K8sCLITest.php

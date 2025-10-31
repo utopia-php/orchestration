@@ -66,8 +66,8 @@ jobs:
         run: |
           # Make kubeconfig accessible to containers
           mkdir -p /tmp/kube-config
-          cp ~/.kube/config /tmp/kube-config/config
-          chmod 644 /tmp/kube-config/config
+          cp ~/.kube/config /tmp/kube-config
+          chmod -R 666 /tmp/kube-config/config
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4

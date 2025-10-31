@@ -53,28 +53,34 @@ jobs:
       - name: Set up kind cluster
         uses: helm/kind-action@v1.10.0
 
+      - name: Verify KinD Cluster
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+          mkdir -p ~/.kube
+          cp ~/.kube/config ~/.kube/config.backup
+
+      - name: Setup Docker network for KinD access
+        run: |
+          # Make kubeconfig accessible to containers
+          mkdir -p /tmp/kube-config
+          cp ~/.kube/config /tmp/kube-config/config
+          chmod 644 /tmp/kube-config/config
+
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
 
-      - name: Create CI service account and token
-        shell: bash
-        run: |
-          set -euo pipefail
-          kubectl create serviceaccount ci -n default
-          kubectl create clusterrolebinding ci-admin --clusterrole=cluster-admin --serviceaccount=default:ci
-          # Get API server URL and CA
-          API_SERVER=$(kubectl config view --raw -o jsonpath='{.clusters[0].cluster.server}')
-          CA_DATA=$(kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
-          echo "$CA_DATA" | base64 -d > ca.crt
-          # Create token (K8s 1.24+)
-          TOKEN=$(kubectl -n default create token ci)
-          echo "K8S_API_URL=$API_SERVER" >> $GITHUB_ENV
-          echo "K8S_TOKEN=$TOKEN" >> $GITHUB_ENV
-          echo "K8S_NAMESPACE=default" >> $GITHUB_ENV
-          echo "K8S_CA_FILE=$(pwd)/ca.crt" >> $GITHUB_ENV
+      - name: Start container
+        run: docker compose up -d && sleep 15
 
       - name: Run K8s CLI adapter tests
-        run:  docker compose exec tests vendor/bin/phpunit tests/Orchestration/Adapter/K8sCLITest.php
+        run: docker compose exec tests vendor/bin/phpunit tests/Orchestration/Adapter/K8sCLITest.php
 
       - name: Run K8s SDK adapter tests
-        run: docker compose exec tests vendor/bin/phpunit tests/Orchestration/Adapter/K8sTest.php
+        run: |
+          docker compose exec tests vendor/bin/phpunit tests/Orchestration/Adapter/K8sTest.php
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose -f docker-compose.yml down -v || true

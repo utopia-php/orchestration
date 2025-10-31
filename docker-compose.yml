@@ -5,13 +5,10 @@ services:
         container_name: tests
         build: 
             context: .
-        networks:
-            - orchestration
         environment:
             HOST_DIR: "$PWD" # Nessessary to mount test resources to child containers
+            KUBECONFIG: /root/.kube/config
         volumes:
             - ./:/usr/src/code
             - /var/run/docker.sock:/var/run/docker.sock
-
-networks:
-    orchestration:
+            - /tmp/kube-config/config:/root/.kube/config:ro

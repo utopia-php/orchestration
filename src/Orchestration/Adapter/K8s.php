@@ -95,7 +95,28 @@ class K8s extends Adapter
      */
     private function sanitizeLabelValue(string $value): string
     {
-        return \preg_replace('/[^A-Za-z0-9\-_.]/', '-', $value);
+        // Replace invalid characters with '-'
+        $value = \preg_replace('/[^A-Za-z0-9\-_.]+/', '-', $value);
+
+        // Collapse consecutive separators to a single hyphen
+        $value = \preg_replace('/[-_.]{2,}/', '-', $value);
+
+        // Trim separators from the start and end (labels must start/end with alphanumeric)
+        $value = \trim($value, '-_.');
+
+        // Truncate to max 63 characters for k8s label value
+        if (\strlen($value) > 63) {
+            $value = \substr($value, 0, 63);
+            // Ensure truncated value doesn't end with a separator
+            $value = rtrim($value, '-_.');
+        }
+
+        // Fallback to a safe value if all characters were invalid
+        if ($value === '') {
+            return 'value';
+        }
+
+        return $value;
     }
 
     /**
@@ -140,16 +161,22 @@ class K8s extends Adapter
     public function createNetwork(string $name, bool $internal = false): bool
     {
         try {
+            $resourceName = $this->sanitizePodName($name);
+            $labelValue = $this->sanitizeLabelValue($name);
+
             $payload = [
                 'apiVersion' => 'networking.k8s.io/v1',
                 'kind' => 'NetworkPolicy',
                 'metadata' => [
-                    'name' => $name,
+                    'name' => $resourceName,
                     'namespace' => $this->k8sNamespace,
+                    'annotations' => [
+                        'orchestration/original-name' => $name,
+                    ],
                 ],
                 'spec' => [
                     'podSelector' => [
-                        'matchLabels' => ['network' => $name],
+                        'matchLabels' => ['network' => $labelValue],
                     ],
                     'policyTypes' => ['Ingress', 'Egress'],
                 ],
@@ -184,9 +211,10 @@ class K8s extends Adapter
     public function removeNetwork(string $name): bool
     {
         try {
+            $resourceName = $this->sanitizePodName($name);
             $this->cluster->call(
                 'DELETE',
-                "/apis/networking.k8s.io/v1/namespaces/{$this->k8sNamespace}/networkpolicies/{$name}"
+                "/apis/networking.k8s.io/v1/namespaces/{$this->k8sNamespace}/networkpolicies/{$resourceName}"
             );
 
             return true;
@@ -201,10 +229,11 @@ class K8s extends Adapter
     public function networkConnect(string $container, string $network): bool
     {
         try {
+            $labelValue = $this->sanitizeLabelValue($network);
             $pod = $this->cluster->getPodByName($container, $this->k8sNamespace);
 
             $labels = $pod->getLabels();
-            $labels['network'] = $network;
+            $labels['network'] = $labelValue;
             $pod->setLabels($labels);
 
             $pod->update();
@@ -241,9 +270,10 @@ class K8s extends Adapter
     public function networkExists(string $name): bool
     {
         try {
+            $resourceName = $this->sanitizePodName($name);
             $this->cluster->call(
                 'GET',
-                "/apis/networking.k8s.io/v1/namespaces/{$this->k8sNamespace}/networkpolicies/{$name}"
+                "/apis/networking.k8s.io/v1/namespaces/{$this->k8sNamespace}/networkpolicies/{$resourceName}"
             );
             return true;
         } catch (KubernetesAPIException $e) {
@@ -270,8 +300,11 @@ class K8s extends Adapter
             $list = [];
             foreach ($items as $np) {
                 $metadata = $np['metadata'] ?? [];
+                $annotations = $metadata['annotations'] ?? [];
+                $displayName = $annotations['orchestration/original-name'] ?? $metadata['name'] ?? '';
+
                 $list[] = new Network(
-                    $metadata['name'] ?? '',
+                    $displayName,
                     $metadata['uid'] ?? '',
                     'NetworkPolicy',
                     $metadata['namespace'] ?? $this->k8sNamespace
@@ -359,11 +392,34 @@ class K8s extends Adapter
             $list = [];
 
             foreach ($pods as $pod) {
+                $podName = $pod->getName();
+                $phase = $pod->getAttribute('status.phase', 'Unknown');
+                $labels = $pod->getLabels();
+
+                // Skip pods that are being deleted (have deletionTimestamp set)
+                $deletionTimestamp = $pod->getAttribute('metadata.deletionTimestamp', null);
+                if ($deletionTimestamp !== null) {
+                    continue;
+                }
+
+                // Check if this is an auto-remove pod that has completed
+                $autoRemove = $labels[$this->namespace.'-auto-remove'] ?? '';
+                if ($autoRemove === 'true' && in_array($phase, ['Succeeded', 'Failed'])) {
+                    // Delete the completed pod in the background
+                    try {
+                        $pod->delete();
+                    } catch (KubernetesAPIException $e) {
+                        // Ignore deletion errors
+                    }
+                    // Don't include in list since it's being removed
+                    continue;
+                }
+
                 $container = new Container(
-                    $pod->getName(),
+                    $podName,
                     $pod->getResourceUid(),
-                    $pod->getAttribute('status.phase', 'Unknown'),
-                    $pod->getLabels()
+                    $phase,
+                    $labels
                 );
                 $list[] = $container;
             }
@@ -407,6 +463,11 @@ class K8s extends Adapter
 
             if (! empty($network)) {
                 $labels['network'] = $network;
+            }
+
+            // Track auto-remove pods with a label
+            if ($remove) {
+                $labels[$this->namespace.'-auto-remove'] = 'true';
             }
 
             // Sanitize label values
@@ -536,6 +597,26 @@ class K8s extends Adapter
             // Create the pod
             $pod = $pod->create();
 
+            // Wait for container to be ready
+            $tries = 0;
+            while ($tries < 30) {
+                try {
+                    $pod->refresh();
+                    $containerStatuses = $pod->getAttribute('status.containerStatuses', []);
+                    if (!empty($containerStatuses)) {
+                        $mainContainer = $containerStatuses[0] ?? null;
+                        if ($mainContainer && ($mainContainer['ready'] ?? false)) {
+                            break;
+                        }
+                    }
+                } catch (KubernetesAPIException $e) {
+                    // Pod might not be fully created yet
+                }
+
+                \sleep(1);
+                $tries++;
+            }
+
             return $pod->getResourceUid();
         } catch (KubernetesAPIException $e) {
             throw new Orchestration("Failed to run container: {$e->getMessage()}");
@@ -556,6 +637,7 @@ class K8s extends Adapter
         int $timeout = -1
     ): bool {
         try {
+            $name = $this->sanitizePodName($name);
             $pod = $this->cluster->getPodByName($name, $this->k8sNamespace);
             // Ensure we have latest pod state
             $pod->refresh();
@@ -600,6 +682,7 @@ class K8s extends Adapter
     public function remove(string $name, bool $force = false): bool
     {
         try {
+            $name = $this->sanitizePodName($name);
             $pod = $this->cluster->getPodByName($name, $this->k8sNamespace);
 
             if ($force) {

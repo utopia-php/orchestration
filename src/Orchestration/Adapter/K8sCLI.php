@@ -501,11 +501,28 @@ YAML;
         if (isset($data['items']) && \is_array($data['items'])) {
             foreach ($data['items'] as $item) {
                 if (isset($item['metadata']['name'])) {
+                    $podName = $item['metadata']['name'];
+                    $phase = $item['status']['phase'] ?? 'Unknown';
+                    $labels = $item['metadata']['labels'] ?? [];
+
+                    // Check if this is an auto-remove pod that has completed
+                    $autoRemove = $labels[$this->namespace.'-auto-remove'] ?? '';
+                    if ($autoRemove === 'true' && in_array($phase, ['Succeeded', 'Failed'])) {
+                        // Delete the completed pod in the background
+                        try {
+                            $this->deletePod($podName, false);
+                        } catch (\Exception $e) {
+                            // Ignore deletion errors
+                        }
+                        // Don't include in list since it's being removed
+                        continue;
+                    }
+
                     $container = new Container(
-                        $item['metadata']['name'],
+                        $podName,
                         $item['metadata']['uid'] ?? '',
-                        $item['status']['phase'] ?? 'Unknown',
-                        $item['metadata']['labels'] ?? []
+                        $phase,
+                        $labels
                     );
                     $list[] = $container;
                 }
@@ -547,6 +564,11 @@ YAML;
 
         if (! empty($network)) {
             $labels['network'] = $network;
+        }
+
+        // Track auto-remove pods with a label
+        if ($remove) {
+            $labels[$this->namespace.'-auto-remove'] = 'true';
         }
 
         // Sanitize label values - must be alphanumeric, '-', '_', '.' only
@@ -737,6 +759,33 @@ YAML;
                 $cmd = $this->buildKubectlCmd().' cp '.\escapeshellarg($local).' '.$this->k8sNamespace.'/'.$name.':/tmp/'.str_replace("'", "'\\''", $file).' -c main';
                 Console::execute($cmd, '', $output, 30);
             }
+        }
+
+        // Wait for container to be ready (not just pod running)
+        $tries = 0;
+        while ($tries < 30) {
+            $statusOutput = '';
+            Console::execute($this->buildKubectlCmd().' get pod '.$name.' -o json', '', $statusOutput);
+            $statusData = \json_decode($statusOutput, true);
+
+            // Check if container is ready
+            $containerStatuses = $statusData['status']['containerStatuses'] ?? [];
+            if (!empty($containerStatuses)) {
+                $mainContainer = $containerStatuses[0] ?? null;
+                if ($mainContainer && ($mainContainer['ready'] ?? false)) {
+                    break;
+                }
+            }
+
+            \sleep(1);
+            $tries++;
+        }
+
+        // If auto-remove is enabled and pod has completed, schedule deletion
+        if ($remove) {
+            // Start a background process to watch and delete the pod when it completes
+            // For now, we'll just mark it with the label - actual cleanup happens in a separate call
+            // or the test can check for completion and clean up
         }
 
         return $podData['metadata']['uid'] ?? $name;

@@ -781,13 +781,6 @@ YAML;
             $tries++;
         }
 
-        // If auto-remove is enabled and pod has completed, schedule deletion
-        if ($remove) {
-            // Start a background process to watch and delete the pod when it completes
-            // For now, we'll just mark it with the label - actual cleanup happens in a separate call
-            // or the test can check for completion and clean up
-        }
-
         return $podData['metadata']['uid'] ?? $name;
     }
 

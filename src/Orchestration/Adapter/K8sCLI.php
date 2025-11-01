@@ -63,7 +63,28 @@ class K8sCLI extends Adapter
      */
     private function sanitizeLabelValue(string $value): string
     {
-        return \preg_replace('/[^A-Za-z0-9\-_.]/', '-', $value);
+        // Replace invalid characters with '-'
+        $value = \preg_replace('/[^A-Za-z0-9\-_.]+/', '-', $value);
+
+        // Collapse consecutive separators to a single hyphen
+        $value = \preg_replace('/[-_.]{2,}/', '-', $value);
+
+        // Trim separators from the start and end (labels must start/end with alphanumeric)
+        $value = \trim($value, '-_.');
+
+        // Truncate to max 63 characters for k8s label value
+        if (\strlen($value) > 63) {
+            $value = \substr($value, 0, 63);
+            // Ensure truncated value doesn't end with a separator
+            $value = rtrim($value, '-_.');
+        }
+
+        // Fallback to a safe value if all characters were invalid
+        if ($value === '') {
+            return 'value';
+        }
+
+        return $value;
     }
 
     /**
@@ -124,42 +145,44 @@ class K8sCLI extends Adapter
      */
     public function createNetwork(string $name, bool $internal = false): bool
     {
-        // In Kubernetes, networks are typically managed via NetworkPolicies
-        // For simplicity, we'll create a basic NetworkPolicy
-        $yaml = <<<YAML
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: {$name}
-  namespace: {$this->k8sNamespace}
-spec:
-  podSelector:
-    matchLabels:
-      network: {$name}
-  policyTypes:
-YAML;
+        // In Kubernetes, networks are typically represented via NetworkPolicies.
+        // Use a sanitized resource name (RFC1123) for metadata.name and a
+        // sanitized label value for the pod selector. Store the original
+        // requested name in an annotation so callers can map back if needed.
+
+        $resourceName = $this->sanitizePodName($name);
+        $labelValue = $this->sanitizeLabelValue($name);
+
+        $policy = [
+            'apiVersion' => 'networking.k8s.io/v1',
+            'kind' => 'NetworkPolicy',
+            'metadata' => [
+                'name' => $resourceName,
+                'namespace' => $this->k8sNamespace,
+                'annotations' => [
+                    'orchestration/original-name' => $name,
+                ],
+            ],
+            'spec' => [
+                'podSelector' => [
+                    'matchLabels' => [
+                        'network' => $labelValue,
+                    ],
+                ],
+                'policyTypes' => ['Ingress', 'Egress'],
+            ],
+        ];
 
         if ($internal) {
-            $yaml .= <<<YAML
-
-  - Ingress
-  - Egress
-  ingress: []
-  egress: []
-YAML;
+            $policy['spec']['ingress'] = [];
+            $policy['spec']['egress'] = [];
         } else {
-            $yaml .= <<<YAML
-
-  - Ingress
-  - Egress
-  ingress:
-  - {}
-  egress:
-  - {}
-YAML;
+            // Use an empty object inside the array to indicate "allow all" for that direction
+            $policy['spec']['ingress'] = [new \stdClass()];
+            $policy['spec']['egress'] = [new \stdClass()];
         }
 
-        $this->applyYaml($yaml);
+        $this->applyYaml(json_encode($policy));
 
         return true;
     }
@@ -171,7 +194,8 @@ YAML;
     {
         $output = '';
 
-        $result = Console::execute($this->buildKubectlCmd().' delete networkpolicy '.$name, '', $output);
+        $resourceName = $this->sanitizePodName($name);
+        $result = Console::execute($this->buildKubectlCmd().' delete networkpolicy '.$resourceName, '', $output);
 
         return $result === 0;
     }
@@ -184,7 +208,8 @@ YAML;
         $output = '';
 
         // In K8s, we add a network label to the pod
-        $result = Console::execute($this->buildKubectlCmd().' label pod '.$container.' network='.$network.' --overwrite', '', $output);
+        $labelValue = $this->sanitizeLabelValue($network);
+        $result = Console::execute($this->buildKubectlCmd().' label pod '.$container.' network='.$labelValue.' --overwrite', '', $output);
 
         return $result === 0;
     }
@@ -209,9 +234,10 @@ YAML;
     {
         $output = '';
 
-        $result = Console::execute($this->buildKubectlCmd().' get networkpolicy '.$name.' --namespace='.$this->k8sNamespace.' -o name 2>/dev/null', '', $output);
+        $resourceName = $this->sanitizePodName($name);
+        $result = Console::execute($this->buildKubectlCmd().' get networkpolicy '.$resourceName.' --namespace='.$this->k8sNamespace.' -o name 2>/dev/null', '', $output);
 
-        return $result === 0 && str_contains($output, $name);
+        return $result === 0 && str_contains($output, $resourceName);
     }
 
     /**
@@ -235,8 +261,10 @@ YAML;
         if (isset($data['items']) && \is_array($data['items'])) {
             foreach ($data['items'] as $item) {
                 if (isset($item['metadata']['name'])) {
+                    $displayName = $item['metadata']['annotations']['orchestration/original-name'] ?? $item['metadata']['name'];
+
                     $network = new Network(
-                        $item['metadata']['name'],
+                        $displayName,
                         $item['metadata']['uid'] ?? '',
                         'NetworkPolicy',
                         $item['metadata']['namespace'] ?? 'default'
@@ -626,13 +654,18 @@ YAML;
             }
 
             if (! empty($mountFolder)) {
+                // Use an emptyDir inside the pod as hostPath won't work in many
+                // kubernetes environments (hostPath mounts the node filesystem,
+                // not the test runner container). We'll copy files into the pod
+                // via `kubectl cp` after the pod is Running.
                 $volumeMounts[] = [
                     'name' => 'mount-folder',
                     'mountPath' => '/tmp',
                 ];
+                // emptyDir represented as an empty object in JSON
                 $volumeList[] = [
                     'name' => 'mount-folder',
-                    'hostPath' => ['path' => $mountFolder],
+                    'emptyDir' => new \stdClass(),
                 ];
             }
 
@@ -647,6 +680,7 @@ YAML;
         $tmpFile = \tempnam(\sys_get_temp_dir(), 'k8s-pod-');
         \file_put_contents($tmpFile, $yaml);
 
+        $output = '';
         $result = Console::execute($this->buildKubectlCmd().' apply -f '.$tmpFile, '', $output, 30);
 
         \unlink($tmpFile);
@@ -656,10 +690,54 @@ YAML;
         }
 
         // Wait for pod to be created and get its UID
-        \sleep(1);
-        $podOutput = '';
-        Console::execute($this->buildKubectlCmd().' get pod '.$name.' -o json', '', $podOutput);
-        $podData = \json_decode($podOutput, true);
+        $podData = null;
+
+        // Poll the pod until it exists (or timeout)
+        $tries = 0;
+        while ($tries < 20) {
+            $podOutput = '';
+            Console::execute($this->buildKubectlCmd().' get pod '.$name.' -o json', '', $podOutput);
+            $podData = \json_decode($podOutput, true);
+            if (is_array($podData) && isset($podData['metadata']['uid'])) {
+                break;
+            }
+            \sleep(1);
+            $tries++;
+        }
+
+        // If a local mountFolder was provided, copy its files into the pod's /tmp
+        if (!empty($mountFolder) && is_dir($mountFolder) && is_array($podData) && isset($podData['metadata']['uid'])) {
+            // Wait for the pod to be in Running (or Succeeded) state
+            $tries = 0;
+            while ($tries < 20) {
+                $statusOutput = '';
+                Console::execute($this->buildKubectlCmd().' get pod '.$name.' -o json', '', $statusOutput);
+                $statusData = \json_decode($statusOutput, true);
+                $phase = $statusData['status']['phase'] ?? '';
+                if ($phase === 'Running' || $phase === 'Succeeded') {
+                    break;
+                }
+                \sleep(1);
+                $tries++;
+            }
+
+            // Copy files from the local mount folder into /tmp in the pod
+            $files = @\scandir(rtrim($mountFolder, '/')) ?: [];
+            foreach ($files as $file) {
+                if ($file === '.' || $file === '..') {
+                    continue;
+                }
+                $local = rtrim($mountFolder, '/').'/'.$file;
+                if (!is_file($local)) {
+                    continue;
+                }
+
+                $output = '';
+                // Use kubectl cp: <local> <namespace>/<pod>:/tmp/<file> -c main
+                $cmd = $this->buildKubectlCmd().' cp '.\escapeshellarg($local).' '.$this->k8sNamespace.'/'.$name.':/tmp/'.str_replace("'", "'\\''", $file).' -c main';
+                Console::execute($cmd, '', $output, 30);
+            }
+        }
 
         return $podData['metadata']['uid'] ?? $name;
     }

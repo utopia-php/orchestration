@@ -39,10 +39,10 @@ class K8sCLI extends Adapter
         $cmd = 'kubectl';
 
         if (! empty($this->kubeconfig)) {
-            $cmd .= ' --kubeconfig='.$this->kubeconfig;
+            $cmd .= ' --kubeconfig='. escapeshellarg($this->kubeconfig);
         }
 
-        $cmd .= ' --namespace='.$this->k8sNamespace;
+        $cmd .= ' --namespace='. escapeshellarg($this->k8sNamespace);
 
         return $cmd;
     }
@@ -89,6 +89,8 @@ class K8sCLI extends Adapter
 
     /**
      * Build label selector string from filters array
+     *
+     * @param array<string, string> $filters
      */
     private function buildLabelSelector(array $filters): string
     {

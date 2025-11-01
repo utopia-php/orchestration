@@ -13,16 +13,6 @@ class K8sTest extends TestCase
      */
     private static ?Orchestration $orchestration = null;
 
-    /**
-     * @var string|null
-     */
-    private static ?string $testPodId = null;
-
-    /**
-     * @var string|null
-     */
-    private static ?string $timeoutPodId = null;
-
     public static function setUpBeforeClass(): void
     {
         // Try to get K8s configuration from environment or kubectl
@@ -218,7 +208,6 @@ class K8sTest extends TestCase
         );
 
         $this->assertNotEmpty($response);
-        self::$testPodId = $response;
 
         // Wait for pod to be fully ready
         sleep(2);
@@ -469,6 +458,7 @@ class K8sTest extends TestCase
         // Succeeded phase quickly enough for deterministic testing
         $this->markTestSkipped('Auto-remove timing is unreliable in K8s SDK - pods may not reach Succeeded phase quickly enough');
 
+        /* Code below is unreachable but kept for documentation:
         $response = self::getOrchestration()->run(
             'alpine:latest',
             'TestContainerRMSDK',
@@ -500,6 +490,7 @@ class K8sTest extends TestCase
 
         // After cleanup, should be empty
         $this->assertCount(0, $containers, 'Container with remove=true should be auto-removed');
+        */
     }    public function testParseCLICommand(): void
     {
         // Test parsing simple command
@@ -522,6 +513,7 @@ class K8sTest extends TestCase
     {
         $this->markTestSkipped('K8s SDK library does not support timeout parameter in exec()');
 
+        /* Code below is unreachable but kept for documentation:
         // Create a timeout test container
         $podId = self::getOrchestration()->run(
             'alpine:latest',
@@ -531,7 +523,6 @@ class K8sTest extends TestCase
         );
 
         $this->assertNotEmpty($podId);
-        self::$timeoutPodId = $podId;
 
         // Wait for pod to be running
         sleep(3);
@@ -567,6 +558,7 @@ class K8sTest extends TestCase
 
         // Clean up
         self::getOrchestration()->remove('testcontainertimeoutsdk', true);
+        */
     }
 
     public function testNetworkWithSpecialCharacters(): void

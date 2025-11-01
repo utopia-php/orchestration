@@ -28,7 +28,7 @@ class K8s extends Adapter
      *
      * @param  string|null  $url  Kubernetes API URL
      * @param  string  $namespace  Kubernetes namespace
-     * @param  array  $auth  Authentication configuration
+     * @param  array<string, mixed>  $auth  Authentication configuration
      */
     public function __construct(?string $url = null, string $namespace = 'default', array $auth = [])
     {
@@ -66,6 +66,9 @@ class K8s extends Adapter
 
     /**
      * Build label selector query parameter from filters
+     *
+     * @param array<string, string> $filters
+     * @return array<string, mixed>
      */
     private function buildLabelSelector(array $filters): array
     {
@@ -476,8 +479,8 @@ class K8s extends Adapter
             }
 
             // Create container configuration
-            $container = PhpK8s::container()
-                ->setName('main');
+            $container = PhpK8s::container();
+            $container->setAttribute('name', 'main');
 
             // Parse and set image
             [$imageName, $imageTag] = $this->parseImageReference($image);
@@ -490,16 +493,16 @@ class K8s extends Adapter
 
             // Set command and args
             if (! empty($entrypoint)) {
-                $container->setCommand([$entrypoint]);
+                $container->setAttribute('command', [$entrypoint]);
             }
 
             if (! empty($command)) {
-                $container->setArgs($command);
+                $container->setAttribute('args', $command);
             }
 
             // Set working directory
             if (! empty($workdir)) {
-                $container->setWorkingDir($workdir);
+                $container->setAttribute('workingDir', $workdir);
             }
 
             // Set environment variables
@@ -526,7 +529,7 @@ class K8s extends Adapter
                     $resources['requests']['memory'] = ($this->memory / 2).'Mi';
                 }
 
-                $container->setResources($resources);
+                $container->setAttribute('resources', $resources);
             }
 
             // Create pod
@@ -538,7 +541,9 @@ class K8s extends Adapter
 
             // Set hostname
             if (! empty($hostname)) {
-                $pod->setSpec(array_merge($pod->getSpec(), ['hostname' => $hostname]));
+                $spec = $pod->getAttribute('spec', []);
+                $spec['hostname'] = $hostname;
+                $pod->setAttribute('spec', $spec);
             }
 
             // Set restart policy
@@ -548,7 +553,10 @@ class K8s extends Adapter
                 self::RESTART_ON_FAILURE => 'OnFailure',
                 self::RESTART_UNLESS_STOPPED => 'Always',
             ];
-            $pod->setRestartPolicy($restartPolicies[$restart] ?? 'Never');
+            $restartPolicy = $restartPolicies[$restart] ?? 'Never';
+            $spec = $pod->getAttribute('spec', []);
+            $spec['restartPolicy'] = $restartPolicy;
+            $pod->setAttribute('spec', $spec);
 
             // Handle volumes
             if (! empty($volumes) || ! empty($mountFolder)) {
@@ -562,9 +570,10 @@ class K8s extends Adapter
                     if (\count($parts) >= 2) {
                         $volumeName = 'vol-'.$volumeIndex;
 
-                        $volumeList[] = PhpK8s::volume()
-                            ->setName($volumeName)
-                            ->setSource('hostPath', ['path' => $parts[0]]);
+                        $vol = PhpK8s::volume();
+                        $vol->setAttribute('name', $volumeName);
+                        $vol->setAttribute('hostPath', ['path' => $parts[0]]);
+                        $volumeList[] = $vol;
 
                         $volumeMounts[] = [
                             'name' => $volumeName,
@@ -578,9 +587,10 @@ class K8s extends Adapter
 
                 if (! empty($mountFolder)) {
                     $volumeName = 'mount-folder';
-                    $volumeList[] = PhpK8s::volume()
-                        ->setName($volumeName)
-                        ->setSource('hostPath', ['path' => $mountFolder]);
+                    $vol = PhpK8s::volume();
+                    $vol->setAttribute('name', $volumeName);
+                    $vol->setAttribute('hostPath', ['path' => $mountFolder]);
+                    $volumeList[] = $vol;
 
                     $volumeMounts[] = [
                         'name' => $volumeName,
@@ -590,7 +600,7 @@ class K8s extends Adapter
 
                 if (! empty($volumeList)) {
                     $pod->setVolumes($volumeList);
-                    $container->setVolumeMounts($volumeMounts);
+                    $container->setAttribute('volumeMounts', $volumeMounts);
                 }
             }
 
@@ -655,18 +665,8 @@ class K8s extends Adapter
 
             $result = $pod->exec($command, $containerName);
 
-            // The exec method returns an array of messages
-            // We need to concatenate stdout and stderr
-            $stdoutMessages = array_filter($result, fn ($msg) => isset($msg['channel']) && $msg['channel'] === 'stdout');
-            $stderrMessages = array_filter($result, fn ($msg) => isset($msg['channel']) && $msg['channel'] === 'stderr');
-
-            $output = '';
-            foreach ($stdoutMessages as $msg) {
-                $output .= $msg['output'] ?? '';
-            }
-            foreach ($stderrMessages as $msg) {
-                $output .= $msg['output'] ?? '';
-            }
+            // The exec method returns a string
+            $output = (string) $result;
 
             return true;
         } catch (\RenokiCo\PhpK8s\Exceptions\KubernetesExecException $e) {

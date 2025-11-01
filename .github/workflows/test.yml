@@ -55,6 +55,9 @@ jobs:
       - name: Set up kind cluster
         uses: helm/kind-action@v1.10.0
 
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
       - name: Verify KinD Cluster
         run: |
           kubectl cluster-info
@@ -64,9 +67,6 @@ jobs:
         run: |
           # Make kubeconfig accessible to containers
           kind get kubeconfig --name test-cluster --internal > /tmp/kind-kubeconfig
-
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v4
 
       - name: Start container
         run: docker compose up -d && sleep 15

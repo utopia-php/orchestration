@@ -13,16 +13,6 @@ class K8sCLITest extends TestCase
      */
     private static ?Orchestration $orchestration = null;
 
-    /**
-     * @var string|null
-     */
-    private static ?string $testPodId = null;
-
-    /**
-     * @var string|null
-     */
-    private static ?string $timeoutPodId = null;
-
     public static function setUpBeforeClass(): void
     {
         // Skip if kubectl cannot reach a cluster
@@ -115,7 +105,6 @@ class K8sCLITest extends TestCase
         );
 
         $this->assertNotEmpty($response);
-        self::$testPodId = $response;
 
         // Wait for pod to be fully ready (run() already waits for container ready)
         sleep(2);
@@ -408,7 +397,6 @@ class K8sCLITest extends TestCase
         );
 
         $this->assertNotEmpty($podId);
-        self::$timeoutPodId = $podId;
 
         // Wait for pod to be running
         sleep(3);

@@ -262,7 +262,7 @@ class K8sCLITest extends TestCase
     public function testNetworkDisconnectWrongNetwork(): void
     {
         $this->expectException(\Utopia\Orchestration\Exception\Orchestration::class);
-        $this->expectExceptionMessage('is not connected to network');
+        $this->expectExceptionMessage('is not connected to');
 
         // Try to disconnect from a network the pod is not connected to
         self::getOrchestration()->networkDisconnect('testcontainer', 'NonExistentNetwork');

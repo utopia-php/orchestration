@@ -13,6 +13,11 @@ class K8sTest extends TestCase
      */
     private static ?Orchestration $orchestration = null;
 
+    /**
+     * @var array<string>
+     */
+    private static array $tempFiles = [];
+
     public static function setUpBeforeClass(): void
     {
         // Try to get K8s configuration from environment or kubectl
@@ -64,6 +69,10 @@ class K8sTest extends TestCase
 
                     $auth['cert'] = $certFile;
                     $auth['key'] = $keyFile;
+
+                    // Track temp files for cleanup
+                    self::$tempFiles[] = $certFile;
+                    self::$tempFiles[] = $keyFile;
                 }
 
                 // Try token if present
@@ -78,6 +87,9 @@ class K8sTest extends TestCase
                 $caFile = tempnam(sys_get_temp_dir(), 'k8s-ca-');
                 file_put_contents($caFile, $caData);
                 $auth['ca'] = $caFile;
+
+                // Track temp file for cleanup
+                self::$tempFiles[] = $caFile;
             }
         }
 
@@ -122,12 +134,12 @@ class K8sTest extends TestCase
         \exec('sh -c "cd /usr/src/code/tests/Orchestration/Resources && tar -zcf ./timeout.tar.gz timeout"');
 
         // Force cleanup of any leftover pods from previous runs to prevent 409 conflicts
-        $pods = ['testcontainersdk', 'testcontainerrmsdk', 'testcontainerexecsdk'];
+        $pods = ['testcontainer', 'testcontainerrmsdk', 'testcontainertimeoutsdk', 'usagestatssdk1', 'usagestats2', 'testcontainerwithlimits', 'test-container-sdk-with-underscores'];
         foreach ($pods as $pod) {
             try {
                 $output = '';
                 $returnVar = 0;
-                exec("kubectl delete pod {$pod} -n default --force --grace-period=0 2>/dev/null", $output, $returnVar);
+                exec("kubectl delete pod ".\escapeshellarg($pod)." -n default --force --grace-period=0 2>/dev/null", $output, $returnVar);
             } catch (\Exception $e) {
                 // Ignore errors - pod might not exist
             }
@@ -164,6 +176,13 @@ class K8sTest extends TestCase
                 self::$orchestration->remove($podName, true);
             } catch (\Exception $e) {
                 // Ignore
+            }
+        }
+
+        // Clean up temporary certificate files
+        foreach (self::$tempFiles as $file) {
+            if (file_exists($file)) {
+                @unlink($file);
             }
         }
     }
@@ -393,6 +412,28 @@ class K8sTest extends TestCase
     public function testNetworkDisconnect(): void
     {
         $response = self::getOrchestration()->networkDisconnect('testcontainer', 'TestNetworkSDK');
+        $this->assertTrue($response);
+    }
+
+    /**
+     * @depends testNetworkDisconnect
+     */
+    public function testNetworkDisconnectWrongNetwork(): void
+    {
+        $this->expectException(\Utopia\Orchestration\Exception\Orchestration::class);
+        $this->expectExceptionMessage('is not connected to network');
+
+        // Try to disconnect from a network the pod is not connected to
+        self::getOrchestration()->networkDisconnect('testcontainer', 'NonExistentNetwork');
+    }
+
+    /**
+     * @depends testNetworkDisconnect
+     */
+    public function testNetworkDisconnectWithForce(): void
+    {
+        // With force=true, should succeed even if not connected
+        $response = self::getOrchestration()->networkDisconnect('testcontainer', 'NonExistentNetwork', true);
         $this->assertTrue($response);
     }
 

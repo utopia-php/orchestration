@@ -217,11 +217,36 @@ class K8sCLI extends Adapter
     }
 
     /**
-     * Disconnect a container from a network (Remove label from pod)
+     * Disconnect a container from a network (Remove network label from pod)
      */
     public function networkDisconnect(string $container, string $network, bool $force = false): bool
     {
         $output = '';
+        $labelValue = $this->sanitizeLabelValue($network);
+
+        // First check if the pod is connected to this network
+        Console::execute($this->buildKubectlCmd().' get pod '.\escapeshellarg($container).' -o json', '', $output);
+        $podData = \json_decode($output, true);
+
+        if ($podData && isset($podData['metadata']['labels']['network'])) {
+            $currentNetwork = $podData['metadata']['labels']['network'];
+
+            // Only disconnect if pod is connected to this specific network
+            if ($currentNetwork !== $labelValue) {
+                if (! $force) {
+                    throw new Orchestration("Pod {$container} is not connected to network {$network}");
+                }
+
+                return true;
+            }
+        } else {
+            // Pod has no network label
+            if (! $force) {
+                throw new Orchestration("Pod {$container} is not connected to any network");
+            }
+
+            return true;
+        }
 
         // Remove the network label from the pod
         $result = Console::execute($this->buildKubectlCmd().' label pod '.\escapeshellarg($container).' network-', '', $output);

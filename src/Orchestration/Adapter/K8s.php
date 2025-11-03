@@ -5,6 +5,7 @@ namespace Utopia\Orchestration\Adapter;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\K8s as PhpK8s;
 use RenokiCo\PhpK8s\KubernetesCluster;
+use Utopia\Console;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
 use Utopia\Orchestration\Container\Stats;
@@ -248,14 +249,25 @@ class K8s extends Adapter
     }
 
     /**
-     * Disconnect a container from a network (Remove label from pod)
+     * Disconnect a container from a network (Remove network label from pod)
      */
     public function networkDisconnect(string $container, string $network, bool $force = false): bool
     {
         try {
+            $labelValue = $this->sanitizeLabelValue($network);
             $pod = $this->cluster->getPodByName($container, $this->k8sNamespace);
 
             $labels = $pod->getLabels();
+
+            // Only disconnect if pod is connected to this specific network
+            if (! isset($labels['network']) || $labels['network'] !== $labelValue) {
+                if (! $force) {
+                    throw new Orchestration("Pod {$container} is not connected to network {$network}");
+                }
+
+                return true;
+            }
+
             unset($labels['network']);
             $pod->setLabels($labels);
 
@@ -643,7 +655,10 @@ class K8s extends Adapter
                     // Use kubectl cp to copy files into the pod
                     $output = '';
                     $cmd = 'kubectl cp '.\escapeshellarg($local).' '.\escapeshellarg($this->k8sNamespace.'/'.$name.':/tmp/'.$file).' -c main';
-                    @\exec($cmd, $output);
+                    $result = Console::execute($cmd, '', $output, 30);
+                    if ($result !== 0) {
+                        throw new Orchestration("Failed to copy {$file} to pod: {$output}");
+                    }
                 }
             }
 

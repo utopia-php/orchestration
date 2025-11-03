@@ -125,15 +125,9 @@ class K8sTest extends TestCase
         } catch (\Exception $e) {
             self::markTestSkipped('Failed to initialize K8s adapter: ' . $e->getMessage());
         }
-    }
 
-    public function setUp(): void
-    {
-        \exec('rm -rf /usr/src/code/tests/Orchestration/Resources/screens'); // cleanup
-        \exec('sh -c "cd /usr/src/code/tests/Orchestration/Resources && tar -zcf ./php.tar.gz php"');
-        \exec('sh -c "cd /usr/src/code/tests/Orchestration/Resources && tar -zcf ./timeout.tar.gz timeout"');
-
-        // Force cleanup of any leftover pods from previous runs to prevent 409 conflicts
+        // Force cleanup of any leftover pods from previous test runs to prevent 409 conflicts
+        // This should only run once before all tests start
         $pods = ['testcontainer', 'testcontainerrmsdk', 'testcontainertimeoutsdk', 'usagestatssdk1', 'usagestats2', 'testcontainerwithlimits', 'test-container-sdk-with-underscores'];
         foreach ($pods as $pod) {
             try {
@@ -147,6 +141,13 @@ class K8sTest extends TestCase
 
         // Give K8s time to complete deletion
         sleep(2);
+    }
+
+    public function setUp(): void
+    {
+        \exec('rm -rf /usr/src/code/tests/Orchestration/Resources/screens'); // cleanup
+        \exec('sh -c "cd /usr/src/code/tests/Orchestration/Resources && tar -zcf ./php.tar.gz php"');
+        \exec('sh -c "cd /usr/src/code/tests/Orchestration/Resources && tar -zcf ./timeout.tar.gz timeout"');
     }
 
     public function tearDown(): void

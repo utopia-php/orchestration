@@ -292,6 +292,43 @@ class K8sTest extends TestCase
         );
     }
 
+    /**
+     * @depends testRunContainer
+     */
+    public function testExecuteWithEnvVarsThrowsException(): void
+    {
+        $output = '';
+
+        $this->expectException(\Utopia\Orchestration\Exception\Orchestration::class);
+        $this->expectExceptionMessage('K8s SDK adapter does not support environment variables in execute()');
+
+        self::getOrchestration()->execute(
+            'TestContainer',
+            ['echo', 'test'],
+            $output,
+            ['TEST_VAR' => 'value']  // This should trigger the exception
+        );
+    }
+
+    /**
+     * @depends testRunContainer
+     */
+    public function testExecuteWithTimeoutThrowsException(): void
+    {
+        $output = '';
+
+        $this->expectException(\Utopia\Orchestration\Exception\Orchestration::class);
+        $this->expectExceptionMessage('K8s SDK adapter does not support timeout in execute()');
+
+        self::getOrchestration()->execute(
+            'TestContainer',
+            ['echo', 'test'],
+            $output,
+            [],
+            10  // This should trigger the exception
+        );
+    }
+
     public function testCreateNetwork(): void
     {
         $response = self::getOrchestration()->createNetwork('TestNetworkSDK');

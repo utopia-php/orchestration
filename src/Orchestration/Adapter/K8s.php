@@ -589,7 +589,7 @@ class K8s extends Adapter
                     $volumeName = 'mount-folder';
                     $vol = PhpK8s::volume();
                     $vol->setAttribute('name', $volumeName);
-                    $vol->setAttribute('hostPath', ['path' => $mountFolder]);
+                    $vol->setAttribute('emptyDir', new \stdClass()); // emptyDir is an empty object
                     $volumeList[] = $vol;
 
                     $volumeMounts[] = [
@@ -627,6 +627,26 @@ class K8s extends Adapter
                 $tries++;
             }
 
+            // If mountFolder is set, copy files into the pod using kubectl cp
+            // This is necessary because we use emptyDir instead of hostPath
+            if (! empty($mountFolder)) {
+                $files = @\scandir(rtrim($mountFolder, '/')) ?: [];
+                foreach ($files as $file) {
+                    if ($file === '.' || $file === '..') {
+                        continue;
+                    }
+                    $local = rtrim($mountFolder, '/').'/'.$file;
+                    if (!is_file($local)) {
+                        continue;
+                    }
+
+                    // Use kubectl cp to copy files into the pod
+                    $output = '';
+                    $cmd = 'kubectl cp '.\escapeshellarg($local).' '.\escapeshellarg($this->k8sNamespace.'/'.$name.':/tmp/'.$file).' -c main';
+                    @\exec($cmd, $output);
+                }
+            }
+
             return $pod->getResourceUid();
         } catch (KubernetesAPIException $e) {
             throw new Orchestration("Failed to run container: {$e->getMessage()}");
@@ -636,8 +656,22 @@ class K8s extends Adapter
     /**
      * Execute Container (Execute command in K8s Pod)
      *
-     * @param  string[]  $command
-     * @param  array<string, string>  $vars
+     * IMPORTANT LIMITATIONS:
+     * - Environment variables ($vars) are NOT supported. The Kubernetes API does not allow
+     *   setting environment variables during exec. Env vars must be defined when creating
+     *   the pod via run(). This method will throw an exception if $vars is non-empty.
+     * - Timeout ($timeout) is NOT supported. The renoki-co/php-k8s library's exec() method
+     *   does not support timeout parameters. This method will throw an exception if a
+     *   timeout is specified.
+     *
+     * @param  string  $name  Container name
+     * @param  string[]  $command  Command to execute
+     * @param  string  $output  Output from the command (passed by reference)
+     * @param  array<string, string>  $vars  Environment variables (NOT SUPPORTED - will throw exception)
+     * @param  int  $timeout  Timeout in seconds (NOT SUPPORTED - will throw exception)
+     *
+     * @throws Orchestration If environment variables or timeout are specified
+     * @throws Orchestration If pod not found or execution fails
      */
     public function execute(
         string $name,
@@ -647,14 +681,19 @@ class K8s extends Adapter
         int $timeout = -1
     ): bool {
         try {
+            // Validate that unsupported parameters are not used
+            if (! empty($vars)) {
+                throw new Orchestration('K8s SDK adapter does not support environment variables in execute(). Environment variables must be set during pod creation via run().');
+            }
+
+            if ($timeout > 0) {
+                throw new Orchestration('K8s SDK adapter does not support timeout in execute(). The renoki-co/php-k8s library does not provide timeout functionality for exec operations.');
+            }
+
             $name = $this->sanitizePodName($name);
             $pod = $this->cluster->getPodByName($name, $this->k8sNamespace);
             // Ensure we have latest pod state
             $pod->refresh();
-
-            // Environment variables need to be set when the pod is created
-            // Exec doesn't support setting env vars dynamically
-            // For now, we'll just execute the command
 
             // Determine the container name explicitly to avoid defaults
             $containerName = $pod->getAttribute('spec.containers.0.name', null);

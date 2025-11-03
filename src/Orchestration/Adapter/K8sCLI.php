@@ -115,7 +115,7 @@ class K8sCLI extends Adapter
         $tmpFile = \tempnam(\sys_get_temp_dir(), 'k8s-');
         \file_put_contents($tmpFile, $yaml);
 
-        $result = Console::execute($this->buildKubectlCmd().' apply -f '.$tmpFile, '', $output, $timeout);
+        $result = Console::execute($this->buildKubectlCmd().' apply -f '.\escapeshellarg($tmpFile), '', $output, $timeout);
 
         \unlink($tmpFile);
 
@@ -136,7 +136,7 @@ class K8sCLI extends Adapter
         $flags .= ' --ignore-not-found=true';
 
         Console::execute(
-            $this->buildKubectlCmd().' delete pod '.$podName.$flags,
+            $this->buildKubectlCmd().' delete pod '.\escapeshellarg($podName).$flags,
             '',
             $output
         );
@@ -197,7 +197,7 @@ class K8sCLI extends Adapter
         $output = '';
 
         $resourceName = $this->sanitizePodName($name);
-        $result = Console::execute($this->buildKubectlCmd().' delete networkpolicy '.$resourceName, '', $output);
+        $result = Console::execute($this->buildKubectlCmd().' delete networkpolicy '.\escapeshellarg($resourceName), '', $output);
 
         return $result === 0;
     }
@@ -211,7 +211,7 @@ class K8sCLI extends Adapter
 
         // In K8s, we add a network label to the pod
         $labelValue = $this->sanitizeLabelValue($network);
-        $result = Console::execute($this->buildKubectlCmd().' label pod '.$container.' network='.$labelValue.' --overwrite', '', $output);
+        $result = Console::execute($this->buildKubectlCmd().' label pod '.\escapeshellarg($container).' network='.\escapeshellarg($labelValue).' --overwrite', '', $output);
 
         return $result === 0;
     }
@@ -224,7 +224,7 @@ class K8sCLI extends Adapter
         $output = '';
 
         // Remove the network label from the pod
-        $result = Console::execute($this->buildKubectlCmd().' label pod '.$container.' network-', '', $output);
+        $result = Console::execute($this->buildKubectlCmd().' label pod '.\escapeshellarg($container).' network-', '', $output);
 
         return $result === 0;
     }
@@ -237,7 +237,7 @@ class K8sCLI extends Adapter
         $output = '';
 
         $resourceName = $this->sanitizePodName($name);
-        $result = Console::execute($this->buildKubectlCmd().' get networkpolicy '.$resourceName.' --namespace='.$this->k8sNamespace.' -o name 2>/dev/null', '', $output);
+        $result = Console::execute($this->buildKubectlCmd().' get networkpolicy '.\escapeshellarg($resourceName).' --namespace='.$this->k8sNamespace.' -o name 2>/dev/null', '', $output);
 
         return $result === 0 && str_contains($output, $resourceName);
     }
@@ -300,7 +300,7 @@ class K8sCLI extends Adapter
             // Sanitize container name
             $container = $this->sanitizePodName($container);
 
-            $result = Console::execute($this->buildKubectlCmd().' top pod '.$container.' --namespace='.$this->k8sNamespace.' --no-headers 2>/dev/null', '', $output);
+            $result = Console::execute($this->buildKubectlCmd().' top pod '.\escapeshellarg($container).' --namespace='.$this->k8sNamespace.' --no-headers 2>/dev/null', '', $output);
         } else {
             $selector = $this->buildLabelSelector($filters);
             $result = Console::execute($this->buildKubectlCmd().' top pod'.$selector.' --namespace='.$this->k8sNamespace.' --no-headers 2>/dev/null', '', $output);
@@ -337,7 +337,7 @@ class K8sCLI extends Adapter
 
             // Get pod details for total memory limit
             $podOutput = '';
-            Console::execute($this->buildKubectlCmd().' get pod '.$podName.' -o json', '', $podOutput);
+            Console::execute($this->buildKubectlCmd().' get pod '.\escapeshellarg($podName).' -o json', '', $podOutput);
 
             $memoryUsagePercent = 0.0;
             $podData = \json_decode($podOutput, true);
@@ -448,7 +448,7 @@ YAML;
             // Check pod status for image pull errors
             $statusOutput = '';
             Console::execute(
-                $this->buildKubectlCmd().' get pod '.$tempPodName.' -o json',
+                $this->buildKubectlCmd().' get pod '.\escapeshellarg($tempPodName).' -o json',
                 '',
                 $statusOutput
             );
@@ -705,7 +705,7 @@ YAML;
         \file_put_contents($tmpFile, $yaml);
 
         $output = '';
-        $result = Console::execute($this->buildKubectlCmd().' apply -f '.$tmpFile, '', $output, 30);
+        $result = Console::execute($this->buildKubectlCmd().' apply -f '.\escapeshellarg($tmpFile), '', $output, 30);
 
         \unlink($tmpFile);
 
@@ -720,7 +720,7 @@ YAML;
         $tries = 0;
         while ($tries < 20) {
             $podOutput = '';
-            Console::execute($this->buildKubectlCmd().' get pod '.$name.' -o json', '', $podOutput);
+            Console::execute($this->buildKubectlCmd().' get pod '.\escapeshellarg($name).' -o json', '', $podOutput);
             $podData = \json_decode($podOutput, true);
             if (is_array($podData) && isset($podData['metadata']['uid'])) {
                 break;
@@ -735,7 +735,7 @@ YAML;
             $tries = 0;
             while ($tries < 20) {
                 $statusOutput = '';
-                Console::execute($this->buildKubectlCmd().' get pod '.$name.' -o json', '', $statusOutput);
+                Console::execute($this->buildKubectlCmd().' get pod '.\escapeshellarg($name).' -o json', '', $statusOutput);
                 $statusData = \json_decode($statusOutput, true);
                 $phase = $statusData['status']['phase'] ?? '';
                 if ($phase === 'Running' || $phase === 'Succeeded') {
@@ -758,7 +758,7 @@ YAML;
 
                 $output = '';
                 // Use kubectl cp: <local> <namespace>/<pod>:/tmp/<file> -c main
-                $cmd = $this->buildKubectlCmd().' cp '.\escapeshellarg($local).' '.$this->k8sNamespace.'/'.$name.':/tmp/'.str_replace("'", "'\\''", $file).' -c main';
+                $cmd = $this->buildKubectlCmd().' cp '.\escapeshellarg($local).' '.\escapeshellarg($this->k8sNamespace.'/'.$name.':/tmp/'.$file).' -c main';
                 Console::execute($cmd, '', $output, 30);
             }
         }
@@ -767,7 +767,7 @@ YAML;
         $tries = 0;
         while ($tries < 30) {
             $statusOutput = '';
-            Console::execute($this->buildKubectlCmd().' get pod '.$name.' -o json', '', $statusOutput);
+            Console::execute($this->buildKubectlCmd().' get pod '.\escapeshellarg($name).' -o json', '', $statusOutput);
             $statusData = \json_decode($statusOutput, true);
 
             // Check if container is ready
@@ -804,20 +804,16 @@ YAML;
 
         $cmdStr = '';
         foreach ($command as $cmd) {
-            if (str_contains($cmd, ' ')) {
-                $cmdStr .= " '".$cmd."'";
-            } else {
-                $cmdStr .= ' '.$cmd;
-            }
+            $cmdStr .= ' '.\escapeshellarg($cmd);
         }
 
-        $execCmd = $this->buildKubectlCmd().' exec '.$name.' --namespace='.$this->k8sNamespace.' -- ';
+        $execCmd = $this->buildKubectlCmd().' exec '.\escapeshellarg($name).' --namespace='.$this->k8sNamespace.' -- ';
 
         if (! empty($vars)) {
             $execCmd .= 'env ';
             foreach ($vars as $key => $value) {
                 $key = $this->filterEnvKey($key);
-                $execCmd .= $key.'='.\escapeshellarg($value).' ';
+                $execCmd .= \escapeshellarg($key).'='.\escapeshellarg($value).' ';
             }
         }
 
@@ -847,7 +843,7 @@ YAML;
         $output = '';
 
         $forceFlag = $force ? ' --force --grace-period=0' : '';
-        $result = Console::execute($this->buildKubectlCmd().' delete pod '.$name.$forceFlag.' --namespace='.$this->k8sNamespace, '', $output);
+        $result = Console::execute($this->buildKubectlCmd().' delete pod '.\escapeshellarg($name).$forceFlag.' --namespace='.$this->k8sNamespace, '', $output);
 
         if ($result !== 0) {
             throw new Orchestration("K8s Error: {$output}");

@@ -228,8 +228,8 @@ class K8sTest extends TestCase
 
         $this->assertNotEmpty($response);
 
-        // Wait for pod to be fully ready
-        sleep(2);
+        // Wait for pod to be fully ready (longer in CI environments)
+        sleep(5);
     }
 
     /**
@@ -237,19 +237,28 @@ class K8sTest extends TestCase
      */
     public function testListContainers(): void
     {
-        $response = self::getOrchestration()->list();
-
-        $this->assertIsArray($response);
-        $this->assertNotEmpty($response);
-
+        // Retry logic for eventual consistency in K8s
+        $maxRetries = 5;
         $foundContainer = false;
-        foreach ($response as $container) {
-            if ($container->getName() === 'testcontainer') {
-                $foundContainer = true;
-                break;
+
+        for ($i = 0; $i < $maxRetries && !$foundContainer; $i++) {
+            $response = self::getOrchestration()->list();
+
+            $this->assertIsArray($response);
+
+            foreach ($response as $container) {
+                if ($container->getName() === 'testcontainer') {
+                    $foundContainer = true;
+                    break; // Break out of foreach loop
+                }
+            }
+
+            if (!$foundContainer && $i < $maxRetries - 1) {
+                sleep(2); // Wait before retrying
             }
         }
 
+        $this->assertNotEmpty($response, 'No containers found in list');
         $this->assertTrue($foundContainer, 'testcontainer not found in list');
     }
 
@@ -258,18 +267,27 @@ class K8sTest extends TestCase
      */
     public function testListFilters(): void
     {
-        $response = self::getOrchestration()->list(['app' => 'test']);
-        $this->assertNotEmpty($response);
-
+        // Retry logic for eventual consistency in K8s
+        $maxRetries = 5;
         $foundContainer = false;
-        foreach ($response as $container) {
-            if ($container->getName() === 'testcontainer') {
-                $foundContainer = true;
-                break;
+
+        for ($i = 0; $i < $maxRetries && !$foundContainer; $i++) {
+            $response = self::getOrchestration()->list(['app' => 'test']);
+
+            foreach ($response as $container) {
+                if ($container->getName() === 'testcontainer') {
+                    $foundContainer = true;
+                    break; // Break out of foreach loop
+                }
+            }
+
+            if (!$foundContainer && $i < $maxRetries - 1) {
+                sleep(2); // Wait before retrying
             }
         }
 
-        $this->assertTrue($foundContainer);
+        $this->assertNotEmpty($response, 'No containers found with app=test filter');
+        $this->assertTrue($foundContainer, 'testcontainer not found with app=test filter');
     }
 
     /**

@@ -54,6 +54,8 @@ jobs:
 
       - name: Set up kind cluster
         uses: helm/kind-action@v1.10.0
+        with:
+          cluster_name: test-cluster
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
@@ -61,7 +63,7 @@ jobs:
       - name: Verify KinD Cluster
         run: |
           kubectl cluster-info
-          kind create cluster --name test-cluster
+          kubectl get nodes
 
       - name: Setup Docker network for KinD access
         run: |

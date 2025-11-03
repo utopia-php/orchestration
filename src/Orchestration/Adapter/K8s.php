@@ -233,6 +233,7 @@ class K8s extends Adapter
     public function networkConnect(string $container, string $network): bool
     {
         try {
+            $container = $this->sanitizePodName($container);
             $labelValue = $this->sanitizeLabelValue($network);
             $pod = $this->cluster->getPodByName($container, $this->k8sNamespace);
 
@@ -254,6 +255,7 @@ class K8s extends Adapter
     public function networkDisconnect(string $container, string $network, bool $force = false): bool
     {
         try {
+            $container = $this->sanitizePodName($container);
             $labelValue = $this->sanitizeLabelValue($network);
             $pod = $this->cluster->getPodByName($container, $this->k8sNamespace);
 
@@ -344,6 +346,7 @@ class K8s extends Adapter
 
         try {
             if ($container !== null) {
+                $container = $this->sanitizePodName($container);
                 $pods = [$this->cluster->getPodByName($container, $this->k8sNamespace)];
             } else {
                 // Apply label filters
@@ -619,9 +622,10 @@ class K8s extends Adapter
             // Create the pod
             $pod = $pod->create();
 
-            // Wait for container to be ready
+            // Wait for container to be ready (extended timeout for CI environments)
             $tries = 0;
-            while ($tries < 30) {
+            $maxTries = 60; // 60 seconds should be enough even for slow environments
+            while ($tries < $maxTries) {
                 try {
                     $pod->refresh();
                     $containerStatuses = $pod->getAttribute('status.containerStatuses', []);

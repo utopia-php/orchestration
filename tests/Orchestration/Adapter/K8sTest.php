@@ -216,7 +216,7 @@ class K8sTest extends TestCase
     {
         $response = self::getOrchestration()->run(
             'alpine:latest',
-            'TestContainer',
+            'testcontainer',
             ['sh', '-c', 'echo "Hello K8s SDK" && sleep 300'],
             '',
             '/workspace',
@@ -250,7 +250,7 @@ class K8sTest extends TestCase
             }
         }
 
-        $this->assertTrue($foundContainer, 'TestContainer not found in list');
+        $this->assertTrue($foundContainer, 'testcontainer not found in list');
     }
 
     /**
@@ -281,7 +281,7 @@ class K8sTest extends TestCase
 
         // Test successful execution
         $result = self::getOrchestration()->execute(
-            'TestContainer',
+            'testcontainer',
             ['echo', '-n', 'Hello from SDK exec'],
             $output
         );
@@ -293,7 +293,7 @@ class K8sTest extends TestCase
         // Test command with shell instead
         $output = '';
         $result = self::getOrchestration()->execute(
-            'TestContainer',
+            'testcontainer',
             ['sh', '-c', 'echo -n "executed successfully"'],
             $output
         );
@@ -322,7 +322,7 @@ class K8sTest extends TestCase
         $this->expectExceptionMessage('K8s SDK adapter does not support environment variables in execute()');
 
         self::getOrchestration()->execute(
-            'TestContainer',
+            'testcontainer',
             ['echo', 'test'],
             $output,
             ['TEST_VAR' => 'value']  // This should trigger the exception
@@ -340,7 +340,7 @@ class K8sTest extends TestCase
         $this->expectExceptionMessage('K8s SDK adapter does not support timeout in execute()');
 
         self::getOrchestration()->execute(
-            'TestContainer',
+            'testcontainer',
             ['echo', 'test'],
             $output,
             [],
@@ -461,7 +461,7 @@ class K8sTest extends TestCase
         // Create a pod for stats testing
         $podId = self::getOrchestration()->run(
             'alpine:latest',
-            'UsageStatsSDK1',
+            'usagestatssdk1',
             ['sh', '-c', 'sleep 300'],
             workdir: '/tmp',
             labels: ['stats-test' => 'true']
@@ -499,7 +499,7 @@ class K8sTest extends TestCase
     public function testRemoveContainer(): void
     {
         // Test successful removal
-        $response = self::getOrchestration()->remove('TestContainer', true);
+        $response = self::getOrchestration()->remove('testcontainer', true);
         $this->assertTrue($response);
 
         // Wait for K8s to complete pod deletion
@@ -539,7 +539,7 @@ class K8sTest extends TestCase
         /* Code below is unreachable but kept for documentation:
         $response = self::getOrchestration()->run(
             'alpine:latest',
-            'TestContainerRMSDK',
+            'testcontainerrmsdk',
             ['sh', '-c', 'echo "Auto remove test SDK" && exit 0'],
             '',
             '/tmp',
@@ -595,7 +595,7 @@ class K8sTest extends TestCase
         // Create a timeout test container
         $podId = self::getOrchestration()->run(
             'alpine:latest',
-            'TestContainerTimeoutSDK',
+            'testcontainertimeoutsdk',
             ['sh', '-c', 'sleep 300'],
             workdir: '/tmp'
         );
@@ -699,7 +699,7 @@ class K8sTest extends TestCase
 
         $response = self::getOrchestration()->run(
             'alpine:latest',
-            'TestContainerWithLimits',
+            'testcontainerwithlimits',
             ['sh', '-c', 'sleep 10'],
             labels: ['resource-test' => 'true']
         );

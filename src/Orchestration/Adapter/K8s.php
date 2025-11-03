@@ -717,10 +717,23 @@ class K8s extends Adapter
                 $containerName = $statuses[0]['name'] ?? null;
             }
 
+            // The exec method returns an array of channel/output objects via WebSocket
+            // Example: [{"channel":"stdout","output":"..."},{"channel":"stderr","output":"..."}]
+            // PHPStan may show warnings about type mismatch with PHPDoc, but this is the actual runtime behavior
+            /** @var array<array{channel: string, output: string}>|string $result */
             $result = $pod->exec($command, $containerName);
 
-            // The exec method returns a string
-            $output = (string) $result;
+            // The php-k8s exec method returns an array of channel/output objects
+            // Example: [{"channel":"stdout","output":"..."},{"channel":"stderr","output":"..."}]
+            if (is_array($result)) {
+                $outputParts = [];
+                foreach ($result as $item) {
+                    $outputParts[] = $item['output'];
+                }
+                $output = implode('', $outputParts);
+            } else {
+                $output = (string) $result;
+            }
 
             return true;
         } catch (\RenokiCo\PhpK8s\Exceptions\KubernetesExecException $e) {

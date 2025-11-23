@@ -1,10 +1,10 @@
-# Utopia Orchestration
+# Utopia Containers
 
-[![Build Status](https://app.travis-ci.com/utopia-php/orchestration.svg?branch=main)](https://app.travis-ci.com/github/utopia-php/orchestration)
-![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/orchestration.svg)
+[![Build Status](https://app.travis-ci.com/utopia-php/containers.svg?branch=main)](https://app.travis-ci.com/github/utopia-php/containers)
+![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/containers.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 
-Utopia framework orchestration library is simple and lite library for abstracting the interaction with multiple container orchestrators. This library is aiming to be as simple and easy to learn and use. This library is maintained by the [Appwrite team](https://appwrite.io).
+Utopia framework containers library is simple and lite library for abstracting the interaction with multiple container orchestrators. This library is aiming to be as simple and easy to learn and use. This library is maintained by the [Appwrite team](https://appwrite.io).
 
 Although this library is part of the [Utopia Framework](https://github.com/utopia-php/framework) project it is dependency free and can be used as standalone with any other PHP project or framework.
 
@@ -12,7 +12,7 @@ Although this library is part of the [Utopia Framework](https://github.com/utopi
 
 Install using composer:
 ```bash
-composer require utopia-php/orchestration
+composer require utopia-php/containers
 ```
 
 ### Example
@@ -21,26 +21,26 @@ composer require utopia-php/orchestration
 
 require_once 'vendor/autoload.php';
 
-use Utopia\Orchestration\Orchestration;
-use Utopia\Orchestration\Adapter\DockerCLI;
+use Utopia\Containers\Containers;
+use Utopia\Containers\Adapter\DockerCLI;
 
-// Initialise Orchestration with Docker CLI adapter.
-$orchestration = new Orchestration(new DockerCLI());
+// Initialise Containers with Docker CLI adapter.
+$containers = new Containers(new DockerCLI());
 
 // Pull the image.
-$orchestration->pull('ubuntu:latest');
+$containers->pull('ubuntu:latest');
 
 // Launch a ubuntu container that doesn't end using the tail command.
-$containerID = $orchestration->run('ubuntu:latest', 'testContainer', ['tail', '-f', '/dev/null']);
+$containerID = $containers->run('ubuntu:latest', 'testContainer', ['tail', '-f', '/dev/null']);
 
 $stderr = '';
 $stdout = '';
 
 // Execute a hello world command in the container
-$orchestration->execute($containerID, ['echo', 'Hello World!'], $stdout, $stderr);
+$containers->execute($containerID, ['echo', 'Hello World!'], $stdout, $stderr);
 
 // Remove the container forcefully since it's still running.
-$orchestration->remove($containerID, true);
+$containers->remove($containerID, true);
 ```
 
 ## Usage
@@ -53,30 +53,30 @@ There are currently two orchestrator adapters available and each of them has sli
     Directly communicates to the Docker Daemon using the Docker UNIX socket.
 
     ```php
-    use Utopia\Orchestration\Orchestration;
-    use Utopia\Orchestration\Adapter\DockerAPI;
+    use Utopia\Containers\Containers;
+    use Utopia\Containers\Adapter\DockerAPI;
 
-    $orchestration = new Orchestration(new DockerAPI($username, $password, $email));
+    $containers = new Containers(new DockerAPI($username, $password, $email));
     ```
     $username, $password and $email are optional and are only used to pull private images from Docker Hub.
 
 - ### DockerCLI
     Uses the Docker CLI to communicate to the Docker Daemon.
     ```php
-    use Utopia\Orchestration\Orchestration;
-    use Utopia\Orchestration\Adapter\DockerCLI;
+    use Utopia\Containers\Containers;
+    use Utopia\Containers\Adapter\DockerCLI;
 
-    $orchestration = new Orchestration(new DockerCLI($username, $password));
+    $containers = new Containers(new DockerCLI($username, $password));
     ```
     $username and $password are optional and are only used to pull private images from Docker Hub.
 
-Once you have initialised your Orchestration object the following methods can be used:
+Once you have initialised your Containers object the following methods can be used:
 
 - ### Pulling an image
     This method pulls the image requested from the orchestrators registry. It will return a boolean value indicating if the image was pulled successfully.
 
     ```php
-    $orchestration->pull('image:tag');
+    $containers->pull('image:tag');
     ```
 
     <details>
@@ -96,7 +96,7 @@ Once you have initialised your Orchestration object the following methods can be
     This method creates and runs a new container. On success, it will return a string containing the container ID. On failure, it will throw an exception.
 
     ```php
-    $orchestration->run(
+    $containers->run(
         'image:tag',
         'name',
         ['echo', 'hello world!'],
@@ -219,7 +219,7 @@ Once you have initialised your Orchestration object the following methods can be
     This method removes a container and returns a boolean value indicating if the container was removed successfully.
 
     ```php
-    $orchestration->remove('container_id', true);
+    $containers->remove('container_id', true);
     ```
 
     <details>
@@ -243,7 +243,7 @@ Once you have initialised your Orchestration object the following methods can be
     This method returns an array of containers.
 
     ```php
-    $orchestration->list(['label' => 'value']);
+    $containers->list(['label' => 'value']);
     ```
 
     <details>
@@ -263,7 +263,7 @@ Once you have initialised your Orchestration object the following methods can be
     This method returns an array of networks.
 
     ```php
-    $orchestration->listNetworks();
+    $containers->listNetworks();
     ```
 
     <details>
@@ -281,7 +281,7 @@ Once you have initialised your Orchestration object the following methods can be
     This method creates a new network and returns a boolean value indicating if the network was created successfully.
 
     ```php
-    $orchestration->createNetwork('name', false);
+    $containers->createNetwork('name', false);
     ```
 
     <details>
@@ -305,7 +305,7 @@ Once you have initialised your Orchestration object the following methods can be
     This method removes a network and returns a boolean value indicating if the network was removed successfully.
 
     ```php
-    $orchestration->removeNetwork('network_id');
+    $containers->removeNetwork('network_id');
     ```
 
     <details>
@@ -325,7 +325,7 @@ Once you have initialised your Orchestration object the following methods can be
     This method connects a container to a network and returns a boolean value indicating if the connection was successful.
 
     ```php
-    $orchestration->connect('container_id', 'network_id');
+    $containers->connect('container_id', 'network_id');
     ```
 
     <details>
@@ -349,7 +349,7 @@ Once you have initialised your Orchestration object the following methods can be
     This method disconnects a container from a network and returns a boolean value indicating if the removal was successful.
 
     ```php
-    $orchestration->disconnect('container_id', 'network_id', false);
+    $containers->disconnect('container_id', 'network_id', false);
     ```
 
     <details>

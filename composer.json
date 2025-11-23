@@ -1,8 +1,8 @@
 {
-    "name": "utopia-php/orchestration",
-    "description": "Lite & fast micro PHP abstraction library for container orchestration",
+    "name": "utopia-php/containers",
+    "description": "Lite & fast micro PHP abstraction library for container containers",
     "type": "library",
-    "keywords": ["php","framework", "upf", "utopia", "orchestration", "docker", "swarm", "kubernetes"],
+    "keywords": ["php","framework", "upf", "utopia", "containers", "docker", "swarm", "kubernetes"],
     "license": "MIT",
     "minimum-stability": "stable",
     "scripts": {
@@ -12,10 +12,10 @@
         "format": "./vendor/bin/pint"
     },
     "autoload": {
-        "psr-4": {"Utopia\\Orchestration\\": "src/Orchestration"}
+        "psr-4": {"Utopia\\Containers\\": "src/Containers"}
     },
     "autoload-dev": {
-        "psr-4": {"Utopia\\Tests\\": "tests/Orchestration"}
+        "psr-4": {"Utopia\\Tests\\": "tests/Containers"}
     },
     "require": {
         "php": ">=8.0",

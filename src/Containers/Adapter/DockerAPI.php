@@ -1,14 +1,14 @@
 <?php
 
-namespace Utopia\Orchestration\Adapter;
+namespace Utopia\Containers\Adapter;
 
 use stdClass;
-use Utopia\Orchestration\Adapter;
-use Utopia\Orchestration\Container;
-use Utopia\Orchestration\Container\Stats;
-use Utopia\Orchestration\Exception\Orchestration;
-use Utopia\Orchestration\Exception\Timeout;
-use Utopia\Orchestration\Network;
+use Utopia\Containers\Adapter;
+use Utopia\Containers\Container;
+use Utopia\Containers\Container\Stats;
+use Utopia\Containers\Exception\Containers;
+use Utopia\Containers\Exception\Timeout;
+use Utopia\Containers\Network;
 
 class DockerAPI extends Adapter
 {
@@ -184,7 +184,7 @@ class DockerAPI extends Adapter
             if (\curl_errno($ch) === CURLE_OPERATION_TIMEOUTED) {
                 throw new Timeout('Curl Error: '.curl_error($ch));
             } else {
-                throw new Orchestration('Curl Error: '.curl_error($ch));
+                throw new Containers('Curl Error: '.curl_error($ch));
             }
         }
 
@@ -214,9 +214,9 @@ class DockerAPI extends Adapter
         ]);
 
         if ($result['code'] === 409) {
-            throw new Orchestration('Network with name "'.$name.'" already exists: '.$result['response']);
+            throw new Containers('Network with name "'.$name.'" already exists: '.$result['response']);
         } elseif ($result['code'] !== 201) {
-            throw new Orchestration('Error creating network: '.$result['response']);
+            throw new Containers('Error creating network: '.$result['response']);
         }
 
         return $result['response'];
@@ -230,9 +230,9 @@ class DockerAPI extends Adapter
         $result = $this->call('http://localhost/networks/'.$name, 'DELETE');
 
         if ($result['code'] === 404) {
-            throw new Orchestration('Network with name "'.$name.'" does not exist: '.$result['response']);
+            throw new Containers('Network with name "'.$name.'" does not exist: '.$result['response']);
         } elseif ($result['code'] !== 204) {
-            throw new Orchestration('Error removing network: '.$result['response']);
+            throw new Containers('Error removing network: '.$result['response']);
         }
 
         return true;
@@ -253,7 +253,7 @@ class DockerAPI extends Adapter
         ]);
 
         if ($result['code'] !== 200) {
-            throw new Orchestration('Error attaching network: '.$result['response']);
+            throw new Containers('Error attaching network: '.$result['response']);
         }
 
         return $result['code'] === 200;
@@ -275,7 +275,7 @@ class DockerAPI extends Adapter
         ]);
 
         if ($result['code'] !== 200) {
-            throw new Orchestration('Error detatching network: '.$result['response']);
+            throw new Containers('Error detatching network: '.$result['response']);
         }
 
         return $result['code'] === 200;
@@ -392,7 +392,7 @@ class DockerAPI extends Adapter
         $list = [];
 
         if ($result['code'] !== 200) {
-            throw new Orchestration($result['response']);
+            throw new Containers($result['response']);
         }
 
         foreach (\json_decode($result['response'], true) as $value) {
@@ -453,7 +453,7 @@ class DockerAPI extends Adapter
         $list = [];
 
         if ($result['code'] !== 200) {
-            throw new Orchestration($result['response']);
+            throw new Containers($result['response']);
         }
 
         foreach (\json_decode($result['response'], true) as $value) {
@@ -500,7 +500,7 @@ class DockerAPI extends Adapter
     ): string {
         $result = $this->call('http://localhost/images/'.$image.'/json', 'GET');
         if ($result['code'] === 404 && ! $this->pull($image)) {
-            throw new Orchestration('Missing image "'.$image.'" and failed to pull it.');
+            throw new Containers('Missing image "'.$image.'" and failed to pull it.');
         }
 
         $parsedVariables = [];
@@ -551,11 +551,11 @@ class DockerAPI extends Adapter
         ]);
 
         if ($result['code'] === 404) {
-            throw new Orchestration('Container image "'.$image.'" not found.');
+            throw new Containers('Container image "'.$image.'" not found.');
         } elseif ($result['code'] === 409) {
-            throw new Orchestration('Container with name "'.$name.'" already exists.');
+            throw new Containers('Container with name "'.$name.'" already exists.');
         } elseif ($result['code'] !== 201) {
-            throw new Orchestration('Failed to create function environment: '.$result['response'].' Response Code: '.$result['code']);
+            throw new Containers('Failed to create function environment: '.$result['response'].' Response Code: '.$result['code']);
         }
 
         $parsedResponse = json_decode($result['response'], true);
@@ -564,7 +564,7 @@ class DockerAPI extends Adapter
         // Run Created Container
         $startResult = $this->call('http://localhost/containers/'.$containerId.'/start', 'POST', '{}');
         if ($startResult['code'] !== 204) {
-            throw new Orchestration('Failed to start container: '.$startResult['response']);
+            throw new Containers('Failed to start container: '.$startResult['response']);
         }
 
         return $containerId;
@@ -605,7 +605,7 @@ class DockerAPI extends Adapter
         ], $timeout);
 
         if ($result['code'] !== 201) {
-            throw new Orchestration('Failed to create execute command: '.$result['response'].' Response Code: '.$result['code']);
+            throw new Containers('Failed to create execute command: '.$result['response'].' Response Code: '.$result['code']);
         }
 
         $parsedResponse = json_decode($result['response'], true);
@@ -615,18 +615,18 @@ class DockerAPI extends Adapter
         $output = $result['stdout'].$result['stderr'];
 
         if ($result['code'] !== 200) {
-            throw new Orchestration('Failed to create execute command: '.$result['response'].' Response Code: '.$result['code']);
+            throw new Containers('Failed to create execute command: '.$result['response'].' Response Code: '.$result['code']);
         }
 
         $result = $this->call('http://localhost/exec/'.$parsedResponse['Id'].'/json', 'GET');
 
         if ($result['code'] !== 200) {
-            throw new Orchestration('Failed to inspect status of execute command: '.$result['response'].' Response Code: '.$result['code']);
+            throw new Containers('Failed to inspect status of execute command: '.$result['response'].' Response Code: '.$result['code']);
         }
 
         $parsedResponse = json_decode($result['response'], true);
         if ($parsedResponse['Running'] === true || $parsedResponse['ExitCode'] !== 0) {
-            throw new Orchestration('Failed to execute command. Exit code: '.$parsedResponse['ExitCode']);
+            throw new Containers('Failed to execute command. Exit code: '.$parsedResponse['ExitCode']);
         }
 
         return true;
@@ -640,7 +640,7 @@ class DockerAPI extends Adapter
         $result = $this->call('http://localhost/containers/'.$name.($force ? '?force=true' : ''), 'DELETE');
 
         if ($result['code'] !== 204) {
-            throw new Orchestration('Failed to remove container: '.$result['response'].' Response Code: '.$result['code']);
+            throw new Containers('Failed to remove container: '.$result['response'].' Response Code: '.$result['code']);
         } else {
             return true;
         }

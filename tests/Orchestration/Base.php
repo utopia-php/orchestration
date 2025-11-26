@@ -37,18 +37,18 @@ abstract class Base extends TestCase
          */
         $response = static::getOrchestration()->pull('appwrite/runtime-for-php:8.0');
 
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
 
         // Used later for CPU usage test
         $response = static::getOrchestration()->pull('containerstack/alpine-stress:latest');
 
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
 
         /**
          * Test for Failure
          */
         $response = static::getOrchestration()->pull('appwrite/tXDytMhecKCuz5B4PlITXL1yKhZXDP'); // Pull non-existent Container
-        $this->assertEquals(false, $response);
+        $this->assertSame(false, $response);
     }
 
     /**
@@ -105,7 +105,7 @@ abstract class Base extends TestCase
         $this->assertGreaterThanOrEqual(2, $occurances); // 2 logs mean it restarted at least once
 
         $response = static::getOrchestration()->remove('TestContainerWithRestart', true);
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
 
         // "No" Restart policy test
         $response = static::getOrchestration()->run(
@@ -134,10 +134,10 @@ abstract class Base extends TestCase
         \exec('docker logs '.$response, $output);
         $output = \implode("\n", $output);
         $occurances = \substr_count($output, 'Custom start');
-        $this->assertEquals(1, $occurances);
+        $this->assertSame(1, $occurances);
 
         $response = static::getOrchestration()->remove('TestContainerWithoutRestart', true);
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
 
         /**
          * Test for Failure
@@ -189,7 +189,7 @@ abstract class Base extends TestCase
     {
         $response = static::getOrchestration()->createNetwork('TestNetwork');
 
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
     }
 
     /**
@@ -207,7 +207,7 @@ abstract class Base extends TestCase
             }
         }
 
-        $this->assertEquals(true, $foundNetwork);
+        $this->assertSame(true, $foundNetwork);
     }
 
     /**
@@ -244,7 +244,7 @@ abstract class Base extends TestCase
 
         $response = static::getOrchestration()->networkConnect('TestContainer', 'TestNetwork');
 
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
     }
 
     /**
@@ -254,7 +254,7 @@ abstract class Base extends TestCase
     {
         $response = static::getOrchestration()->networkDisconnect('TestContainer', 'TestNetwork', true);
 
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
     }
 
     /**
@@ -264,7 +264,7 @@ abstract class Base extends TestCase
     {
         $response = static::getOrchestration()->removeNetwork('TestNetwork');
 
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
     }
 
     /**
@@ -333,7 +333,7 @@ abstract class Base extends TestCase
             ],
         );
 
-        $this->assertEquals('Hello World! testEnviromentVariable', $output);
+        $this->assertSame('Hello World! testEnviromentVariable', $output);
 
         /**
          * Test for Success
@@ -354,7 +354,7 @@ abstract class Base extends TestCase
         $length += 5; // "start"
         $length += 3; // "end"
 
-        $this->assertEquals($length, \strlen($output));
+        $this->assertSame($length, \strlen($output));
         $this->assertStringStartsWith('START', $output);
         $this->assertStringEndsWith('END', $output);
     }
@@ -375,7 +375,7 @@ abstract class Base extends TestCase
             $output
         );
 
-        $this->assertEquals('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper.', $output);
+        $this->assertSame('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper.', $output);
     }
 
     /**
@@ -445,7 +445,7 @@ abstract class Base extends TestCase
             10
         );
 
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
 
         /**
          * Test for Success
@@ -464,8 +464,8 @@ abstract class Base extends TestCase
             10
         );
 
-        $this->assertEquals('Hello World!', $output);
-        $this->assertEquals(true, $response);
+        $this->assertSame('Hello World!', $output);
+        $this->assertSame(true, $response);
     }
 
     /**
@@ -483,7 +483,7 @@ abstract class Base extends TestCase
             }
         }
 
-        $this->assertEquals(true, $foundContainer);
+        $this->assertSame(true, $foundContainer);
     }
 
     /**
@@ -493,7 +493,7 @@ abstract class Base extends TestCase
     {
         $response = $this->getOrchestration()->list(['id' => self::$containerID]);
 
-        $this->assertEquals(self::$containerID, $response[0]->getId());
+        $this->assertSame(self::$containerID, $response[0]->getId());
     }
 
     /**
@@ -506,10 +506,10 @@ abstract class Base extends TestCase
          */
         $response = static::getOrchestration()->remove('TestContainer', true);
 
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
 
         $response = static::getOrchestration()->remove('TestContainerTimeout', true);
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
 
         /**
          * Test for Failure
@@ -526,7 +526,7 @@ abstract class Base extends TestCase
          */
         $test = static::getOrchestration()->parseCommandString("sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'");
 
-        $this->assertEquals([
+        $this->assertSame([
             'sh',
             '-c',
             "'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'",
@@ -534,7 +534,7 @@ abstract class Base extends TestCase
 
         $test = static::getOrchestration()->parseCommandString('sudo apt-get update');
 
-        $this->assertEquals([
+        $this->assertSame([
             'sudo',
             'apt-get',
             'update',
@@ -542,7 +542,7 @@ abstract class Base extends TestCase
 
         $test = static::getOrchestration()->parseCommandString('test');
 
-        $this->assertEquals([
+        $this->assertSame([
             'test',
         ], $test);
 
@@ -588,7 +588,7 @@ abstract class Base extends TestCase
         // Check if container exists
         $statusResponse = static::getOrchestration()->list(['id' => $response]);
 
-        $this->assertEquals(0, count($statusResponse));
+        $this->assertSame(0, count($statusResponse));
     }
 
     /**
@@ -650,9 +650,9 @@ abstract class Base extends TestCase
         $this->assertCount(2 + 1, $stats); // +1 due to container running tests
 
         $this->assertNotEmpty($stats[0]->getContainerId());
-        $this->assertEquals(64, \strlen($stats[0]->getContainerId()));
+        $this->assertSame(64, \strlen($stats[0]->getContainerId()));
 
-        $this->assertEquals('UsageStats2', $stats[0]->getContainerName());
+        $this->assertSame('UsageStats2', $stats[0]->getContainerName());
 
         $this->assertGreaterThanOrEqual(0, $stats[0]->getCpuUsage());
         $this->assertLessThanOrEqual(2, $stats[0]->getCpuUsage()); // Sometimes it gives like 102% usage
@@ -681,33 +681,33 @@ abstract class Base extends TestCase
         $statsName1 = static::getOrchestration()->getStats('UsageStats1');
         $statsName2 = static::getOrchestration()->getStats('UsageStats2');
 
-        $this->assertEquals($statsName1[0]->getContainerId(), $stats1[0]->getContainerId());
-        $this->assertEquals($statsName1[0]->getContainerName(), $stats1[0]->getContainerName());
-        $this->assertEquals($statsName2[0]->getContainerName(), $stats2[0]->getContainerName());
-        $this->assertEquals($statsName2[0]->getContainerName(), $stats2[0]->getContainerName());
+        $this->assertSame($statsName1[0]->getContainerId(), $stats1[0]->getContainerId());
+        $this->assertSame($statsName1[0]->getContainerName(), $stats1[0]->getContainerName());
+        $this->assertSame($statsName2[0]->getContainerName(), $stats2[0]->getContainerName());
+        $this->assertSame($statsName2[0]->getContainerName(), $stats2[0]->getContainerName());
 
-        $this->assertEquals($stats[1]->getContainerId(), $stats1[0]->getContainerId());
-        $this->assertEquals($stats[1]->getContainerName(), $stats1[0]->getContainerName());
-        $this->assertEquals($stats[0]->getContainerId(), $stats2[0]->getContainerId());
-        $this->assertEquals($stats[0]->getContainerName(), $stats2[0]->getContainerName());
+        $this->assertSame($stats[1]->getContainerId(), $stats1[0]->getContainerId());
+        $this->assertSame($stats[1]->getContainerName(), $stats1[0]->getContainerName());
+        $this->assertSame($stats[0]->getContainerId(), $stats2[0]->getContainerId());
+        $this->assertSame($stats[0]->getContainerName(), $stats2[0]->getContainerName());
 
         $this->assertGreaterThanOrEqual(0, $stats[0]->getCpuUsage());
         $this->assertGreaterThanOrEqual(0, $stats[1]->getCpuUsage());
 
         $statsFiltered = static::getOrchestration()->getStats(filters: ['label' => 'utopia-container-type=stats']);
         $this->assertCount(1, $statsFiltered);
-        $this->assertEquals($containerId1, $statsFiltered[0]->getContainerId());
+        $this->assertSame($containerId1, $statsFiltered[0]->getContainerId());
 
         $statsFiltered = static::getOrchestration()->getStats(filters: ['label' => 'utopia-container-type=non-existing-type']);
         $this->assertCount(0, $statsFiltered);
 
         $response = static::getOrchestration()->remove('UsageStats1', true);
 
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
 
         $response = static::getOrchestration()->remove('UsageStats2', true);
 
-        $this->assertEquals(true, $response);
+        $this->assertSame(true, $response);
 
         /**
          * Test for Failure

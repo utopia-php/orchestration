@@ -21,9 +21,11 @@ class DockerCLI extends Adapter
     {
         if ($username && $password) {
             $output = '';
+            $stderr = '';
 
-            if (! Console::execute('docker login --username '.$username.' --password-stdin', $password, $output)) {
-                throw new Orchestration("Docker Error: {$output}");
+            if (Console::execute('docker login --username '.$username.' --password-stdin', $password, $output, $stderr) !== 0) {
+                $error = empty($stderr) ? $output : $stderr;
+                throw new Orchestration("Docker Error: {$error}");
             }
         }
     }
@@ -34,8 +36,9 @@ class DockerCLI extends Adapter
     public function createNetwork(string $name, bool $internal = false): bool
     {
         $output = '';
+        $stderr = '';
 
-        $result = Console::execute('docker network create '.$name.($internal ? '--internal' : ''), '', $output);
+        $result = Console::execute('docker network create '.$name.($internal ? '--internal' : ''), '', $output, $stderr);
 
         return $result === 0;
     }
@@ -46,8 +49,9 @@ class DockerCLI extends Adapter
     public function removeNetwork(string $name): bool
     {
         $output = '';
+        $stderr = '';
 
-        $result = Console::execute('docker network rm '.$name, '', $output);
+        $result = Console::execute('docker network rm '.$name, '', $output, $stderr);
 
         return $result === 0;
     }
@@ -58,8 +62,9 @@ class DockerCLI extends Adapter
     public function networkConnect(string $container, string $network): bool
     {
         $output = '';
+        $stderr = '';
 
-        $result = Console::execute('docker network connect '.$network.' '.$container, '', $output);
+        $result = Console::execute('docker network connect '.$network.' '.$container, '', $output, $stderr);
 
         return $result === 0;
     }
@@ -70,8 +75,9 @@ class DockerCLI extends Adapter
     public function networkDisconnect(string $container, string $network, bool $force = false): bool
     {
         $output = '';
+        $stderr = '';
 
-        $result = Console::execute('docker network disconnect '.$network.' '.$container.($force ? ' --force' : ''), '', $output);
+        $result = Console::execute('docker network disconnect '.$network.' '.$container.($force ? ' --force' : ''), '', $output, $stderr);
 
         return $result === 0;
     }
@@ -82,8 +88,9 @@ class DockerCLI extends Adapter
     public function networkExists(string $name): bool
     {
         $output = '';
+        $stderr = '';
 
-        $result = Console::execute('docker network inspect '.$name.' --format "{{.Name}}"', '', $output);
+        $result = Console::execute('docker network inspect '.$name.' --format "{{.Name}}"', '', $output, $stderr);
 
         return $result === 0 && trim($output) === $name;
     }
@@ -107,6 +114,7 @@ class DockerCLI extends Adapter
         }
 
         $output = '';
+        $stderr = '';
 
         if (\count($containerIds) <= 0 && \count($filters) > 0) {
             return []; // No containers found
@@ -120,7 +128,7 @@ class DockerCLI extends Adapter
             $containersString .= ' '.$containerId;
         }
 
-        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream'.$containersString, '', $output);
+        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream'.$containersString, '', $output, $stderr);
 
         if ($result !== 0) {
             return [];
@@ -208,11 +216,13 @@ class DockerCLI extends Adapter
     public function listNetworks(): array
     {
         $output = '';
+        $stderr = '';
 
-        $result = Console::execute('docker network ls --format "id={{.ID}}&name={{.Name}}&driver={{.Driver}}&scope={{.Scope}}"', '', $output);
+        $result = Console::execute('docker network ls --format "id={{.ID}}&name={{.Name}}&driver={{.Driver}}&scope={{.Scope}}"', '', $output, $stderr);
 
         if ($result !== 0) {
-            throw new Orchestration("Docker Error: {$output}");
+            $error = empty($stderr) ? $output : $stderr;
+            throw new Orchestration("Docker Error: {$error}");
         }
 
         $list = [];
@@ -239,8 +249,9 @@ class DockerCLI extends Adapter
     public function pull(string $image): bool
     {
         $output = '';
+        $stderr = '';
 
-        $result = Console::execute('docker pull '.$image, '', $output);
+        $result = Console::execute('docker pull '.$image, '', $output, $stderr);
 
         return $result === 0;
     }
@@ -254,6 +265,7 @@ class DockerCLI extends Adapter
     public function list(array $filters = []): array
     {
         $output = '';
+        $stderr = '';
 
         $filterString = '';
 
@@ -261,10 +273,11 @@ class DockerCLI extends Adapter
             $filterString = $filterString.' --filter "'.$key.'='.$value.'"';
         }
 
-        $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"'.$filterString, '', $output);
+        $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"'.$filterString, '', $output, $stderr);
 
         if ($result !== 0 && $result !== -1) {
-            throw new Orchestration("Docker Error: {$output}");
+            $error = empty($stderr) ? $output : $stderr;
+            throw new Orchestration("Docker Error: {$error}");
         }
 
         $list = [];
@@ -322,6 +335,7 @@ class DockerCLI extends Adapter
         string $restart = self::RESTART_NO
     ): string {
         $output = '';
+        $stderr = '';
 
         foreach ($command as $key => $value) {
             if (str_contains($value, ' ')) {
@@ -379,10 +393,11 @@ class DockerCLI extends Adapter
         (empty($hostname) ? '' : " --hostname {$hostname}").
         (empty($vars) ? '' : ' '.\implode(' ', $vars)).
         " {$image}".
-        (empty($command) ? '' : ' '.implode(' ', $command)), '', $output, 30);
+        (empty($command) ? '' : ' '.implode(' ', $command)), '', $output, $stderr, 30);
 
         if ($result !== 0) {
-            throw new Orchestration("Docker Error: {$output}");
+            $error = empty($stderr) ? $output : $stderr;
+            throw new Orchestration("Docker Error: {$error}");
         }
 
         // Use first line only, CLI can add warnings or other messages
@@ -404,6 +419,8 @@ class DockerCLI extends Adapter
         array $vars = [],
         int $timeout = -1
     ): bool {
+        $stderr = '';
+
         foreach ($command as $key => $value) {
             if (str_contains($value, ' ')) {
                 $command[$key] = "'".$value."'";
@@ -421,13 +438,14 @@ class DockerCLI extends Adapter
 
         $vars = $parsedVariables;
 
-        $result = Console::execute('docker exec '.\implode(' ', $vars)." {$name} ".implode(' ', $command), '', $output, $timeout);
+        $result = Console::execute('docker exec '.\implode(' ', $vars)." {$name} ".implode(' ', $command), '', $output, $stderr, $timeout);
 
         if ($result !== 0) {
             if ($result == 124) {
                 throw new Timeout('Command timed out');
             } else {
-                throw new Orchestration("Docker Error: {$output}");
+                $error = empty($stderr) ? $output : $stderr;
+                throw new Orchestration("Docker Error: {$error}");
             }
         }
 
@@ -440,11 +458,14 @@ class DockerCLI extends Adapter
     public function remove(string $name, bool $force = false): bool
     {
         $output = '';
+        $stderr = '';
 
-        $result = Console::execute('docker rm '.($force ? '--force' : '')." {$name}", '', $output);
+        $result = Console::execute('docker rm '.($force ? '--force' : '')." {$name}", '', $output, $stderr);
 
-        if (! \str_starts_with($output, $name) || \str_contains($output, 'No such container')) {
-            throw new Orchestration("Docker Error: {$output}");
+        $combinedOutput = $output.$stderr;
+
+        if (! \str_starts_with($combinedOutput, $name) || \str_contains($combinedOutput, 'No such container')) {
+            throw new Orchestration("Docker Error: {$combinedOutput}");
         }
 
         return ! $result;

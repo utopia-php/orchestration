@@ -130,6 +130,12 @@ class DockerCLI extends Adapter
 
         $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream'.$containersString, '', $output, $stderr);
 
+        $dump = function($value) {
+            $p = var_export($value, true);
+            $b = debug_backtrace();
+            print($b[0]['file'] . ':' . $b[0]['line'] . ' - ' . $p . "\n");
+        };
+        $dump($output);
         if ($result !== 0) {
             return [];
         }
@@ -338,9 +344,7 @@ class DockerCLI extends Adapter
         $stderr = '';
 
         foreach ($command as $key => $value) {
-            if (str_contains($value, ' ')) {
-                $command[$key] = "'".$value."'";
-            }
+            $command[$key] = \escapeshellarg($command[$key]);
         }
 
         $labelString = '';
@@ -422,9 +426,7 @@ class DockerCLI extends Adapter
         $stderr = '';
 
         foreach ($command as $key => $value) {
-            if (str_contains($value, ' ')) {
-                $command[$key] = "'".$value."'";
-            }
+            $command[$key] = \escapeshellarg($command[$key]);
         }
 
         $parsedVariables = [];

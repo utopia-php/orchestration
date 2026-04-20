@@ -264,20 +264,6 @@ class DockerCLI extends Adapter
         return $response;
     }
 
-    private function normalizeCommandArgument(string $value): string
-    {
-        if (
-            \strlen($value) >= 2
-            && \str_contains($value, ' ')
-            && ((\str_starts_with($value, "'") && \str_ends_with($value, "'"))
-            || (\str_starts_with($value, '"') && \str_ends_with($value, '"')))
-        ) {
-            return \substr($value, 1, -1);
-        }
-
-        return $value;
-    }
-
     /**
      * List Networks
      *
@@ -489,7 +475,7 @@ class DockerCLI extends Adapter
         $dockerCommand->argument($image);
 
         foreach ($command as $value) {
-            $dockerCommand->argument($this->normalizeCommandArgument($value));
+            $dockerCommand->argument($value);
         }
 
         $result = Console::execute($dockerCommand, '', $output, $stderr, 30);
@@ -532,7 +518,7 @@ class DockerCLI extends Adapter
         $dockerCommand->argument($name);
 
         foreach ($command as $value) {
-            $dockerCommand->argument($this->normalizeCommandArgument($value));
+            $dockerCommand->argument($value);
         }
 
         $result = Console::execute($dockerCommand, '', $output, $stderr, $timeout);

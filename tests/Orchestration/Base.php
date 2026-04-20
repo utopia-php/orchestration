@@ -497,6 +497,37 @@ abstract class Base extends TestCase
     }
 
     /**
+     * @depends testPullImage
+     */
+    public function testPreservesLabelValuesWithSingleQuotes(): void
+    {
+        $containerName = 'TestContainerLabelQuote';
+        $labelValue = "O'Brien";
+
+        $containerId = static::getOrchestration()->run(
+            'appwrite/runtime-for-php:8.0',
+            $containerName,
+            [
+                'sh',
+                '-c',
+                'tail -f /dev/null',
+            ],
+            labels: ['author' => $labelValue],
+        );
+
+        $this->assertNotEmpty($containerId);
+
+        $containers = static::getOrchestration()->list(['id' => $containerId]);
+
+        $this->assertCount(1, $containers);
+        $this->assertSame($containerId, $containers[0]->getId());
+        $this->assertSame($labelValue, $containers[0]->getLabels()['author']);
+
+        $response = static::getOrchestration()->remove($containerName, true);
+        $this->assertSame(true, $response);
+    }
+
+    /**
      * @depends testExecContainer
      */
     public function testRemoveContainer(): void
@@ -638,8 +669,8 @@ abstract class Base extends TestCase
 
         // This allows CPU-heavy load check
         $output = '';
-        static::getOrchestration()->execute($containerId1, ['screen', '-d', '-m', "'stress --cpu 1 --timeout 5'"], $output); // Run in screen so it's background task
-        static::getOrchestration()->execute($containerId2, ['screen', '-d', '-m', "'stress --cpu 1 --timeout 5'"], $output);
+        static::getOrchestration()->execute($containerId1, ['screen', '-d', '-m', 'stress', '--cpu', '1', '--timeout', '5'], $output); // Run in screen so it's background task
+        static::getOrchestration()->execute($containerId2, ['screen', '-d', '-m', 'stress', '--cpu', '1', '--timeout', '5'], $output);
 
         // Set CPU stress-test start
         \sleep(1);

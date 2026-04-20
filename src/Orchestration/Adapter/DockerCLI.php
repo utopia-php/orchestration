@@ -455,7 +455,6 @@ class DockerCLI extends Adapter
         }
 
         foreach ($labels as $labelKey => $label) {
-            $label = str_replace("'", '', $label);
             $dockerCommand->option('--label', $labelKey.'='.$label);
         }
 

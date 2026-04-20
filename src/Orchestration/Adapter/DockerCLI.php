@@ -2,6 +2,7 @@
 
 namespace Utopia\Orchestration\Adapter;
 
+use Utopia\Command;
 use Utopia\Console;
 use Utopia\Orchestration\Adapter;
 use Utopia\Orchestration\Container;
@@ -23,7 +24,13 @@ class DockerCLI extends Adapter
             $output = '';
             $stderr = '';
 
-            if (Console::execute('docker login --username '.$username.' --password-stdin', $password, $output, $stderr) !== 0) {
+            $command = new Command('docker');
+            $command
+                ->argument('login')
+                ->option('--username', $username)
+                ->flag('--password-stdin');
+
+            if (Console::execute($command, $password, $output, $stderr) !== 0) {
                 $error = empty($stderr) ? $output : $stderr;
                 throw new Orchestration("Docker Error: {$error}");
             }
@@ -38,7 +45,18 @@ class DockerCLI extends Adapter
         $output = '';
         $stderr = '';
 
-        $result = Console::execute('docker network create '.$name.($internal ? '--internal' : ''), '', $output, $stderr);
+        $command = new Command('docker');
+        $command
+            ->argument('network')
+            ->argument('create');
+
+        if ($internal) {
+            $command->flag('--internal');
+        }
+
+        $command->argument($name);
+
+        $result = Console::execute($command, '', $output, $stderr);
 
         return $result === 0;
     }
@@ -51,7 +69,13 @@ class DockerCLI extends Adapter
         $output = '';
         $stderr = '';
 
-        $result = Console::execute('docker network rm '.$name, '', $output, $stderr);
+        $command = new Command('docker');
+        $command
+            ->argument('network')
+            ->argument('rm')
+            ->argument($name);
+
+        $result = Console::execute($command, '', $output, $stderr);
 
         return $result === 0;
     }
@@ -64,7 +88,14 @@ class DockerCLI extends Adapter
         $output = '';
         $stderr = '';
 
-        $result = Console::execute('docker network connect '.$network.' '.$container, '', $output, $stderr);
+        $command = new Command('docker');
+        $command
+            ->argument('network')
+            ->argument('connect')
+            ->argument($network)
+            ->argument($container);
+
+        $result = Console::execute($command, '', $output, $stderr);
 
         return $result === 0;
     }
@@ -77,7 +108,20 @@ class DockerCLI extends Adapter
         $output = '';
         $stderr = '';
 
-        $result = Console::execute('docker network disconnect '.$network.' '.$container.($force ? ' --force' : ''), '', $output, $stderr);
+        $command = new Command('docker');
+        $command
+            ->argument('network')
+            ->argument('disconnect');
+
+        if ($force) {
+            $command->flag('--force');
+        }
+
+        $command
+            ->argument($network)
+            ->argument($container);
+
+        $result = Console::execute($command, '', $output, $stderr);
 
         return $result === 0;
     }
@@ -90,7 +134,14 @@ class DockerCLI extends Adapter
         $output = '';
         $stderr = '';
 
-        $result = Console::execute('docker network inspect '.$name.' --format "{{.Name}}"', '', $output, $stderr);
+        $command = new Command('docker');
+        $command
+            ->argument('network')
+            ->argument('inspect')
+            ->argument($name)
+            ->option('--format', '{{.Name}}');
+
+        $result = Console::execute($command, '', $output, $stderr);
 
         return $result === 0 && trim($output) === $name;
     }
@@ -122,13 +173,18 @@ class DockerCLI extends Adapter
 
         $stats = [];
 
-        $containersString = '';
+        $command = new Command('docker');
+        $command
+            ->argument('stats')
+            ->flag('--no-trunc')
+            ->option('--format', 'id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}')
+            ->flag('--no-stream');
 
         foreach ($containerIds as $containerId) {
-            $containersString .= ' '.$containerId;
+            $command->argument($containerId);
         }
 
-        $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream'.$containersString, '', $output, $stderr);
+        $result = Console::execute($command, '', $output, $stderr);
 
         if ($result !== 0) {
             return [];
@@ -208,6 +264,20 @@ class DockerCLI extends Adapter
         return $response;
     }
 
+    private function normalizeCommandArgument(string $value): string
+    {
+        if (
+            \strlen($value) >= 2
+            && \str_contains($value, ' ')
+            && ((\str_starts_with($value, "'") && \str_ends_with($value, "'"))
+            || (\str_starts_with($value, '"') && \str_ends_with($value, '"')))
+        ) {
+            return \substr($value, 1, -1);
+        }
+
+        return $value;
+    }
+
     /**
      * List Networks
      *
@@ -218,7 +288,13 @@ class DockerCLI extends Adapter
         $output = '';
         $stderr = '';
 
-        $result = Console::execute('docker network ls --format "id={{.ID}}&name={{.Name}}&driver={{.Driver}}&scope={{.Scope}}"', '', $output, $stderr);
+        $command = new Command('docker');
+        $command
+            ->argument('network')
+            ->argument('ls')
+            ->option('--format', 'id={{.ID}}&name={{.Name}}&driver={{.Driver}}&scope={{.Scope}}');
+
+        $result = Console::execute($command, '', $output, $stderr);
 
         if ($result !== 0) {
             $error = empty($stderr) ? $output : $stderr;
@@ -251,7 +327,12 @@ class DockerCLI extends Adapter
         $output = '';
         $stderr = '';
 
-        $result = Console::execute('docker pull '.$image, '', $output, $stderr);
+        $command = new Command('docker');
+        $command
+            ->argument('pull')
+            ->argument($image);
+
+        $result = Console::execute($command, '', $output, $stderr);
 
         return $result === 0;
     }
@@ -267,13 +348,18 @@ class DockerCLI extends Adapter
         $output = '';
         $stderr = '';
 
-        $filterString = '';
+        $command = new Command('docker');
+        $command
+            ->argument('ps')
+            ->flag('--all')
+            ->flag('--no-trunc')
+            ->option('--format', 'id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}');
 
         foreach ($filters as $key => $value) {
-            $filterString = $filterString.' --filter "'.$key.'='.$value.'"';
+            $command->option('--filter', $key.'='.$value);
         }
 
-        $result = Console::execute('docker ps --all --no-trunc --format "id={{.ID}}&name={{.Names}}&status={{.Status}}&labels={{.Labels}}"'.$filterString, '', $output, $stderr);
+        $result = Console::execute($command, '', $output, $stderr);
 
         if ($result !== 0 && $result !== -1) {
             $error = empty($stderr) ? $output : $stderr;
@@ -337,63 +423,76 @@ class DockerCLI extends Adapter
         $output = '';
         $stderr = '';
 
-        foreach ($command as $key => $value) {
-            if (str_contains($value, ' ')) {
-                $command[$key] = "'".$value."'";
-            }
+        $time = time();
+
+        $dockerCommand = new Command('docker');
+        $dockerCommand
+            ->argument('run')
+            ->flag('-d');
+
+        if ($remove) {
+            $dockerCommand->flag('--rm');
         }
 
-        $labelString = '';
+        if (! empty($network)) {
+            $dockerCommand->option('--network', $network);
+        }
+
+        if (! empty($entrypoint)) {
+            $dockerCommand->option('--entrypoint', $entrypoint);
+        }
+
+        if (! empty($this->cpus)) {
+            $dockerCommand->option('--cpus', $this->cpus);
+        }
+
+        if (! empty($this->memory)) {
+            $dockerCommand->option('--memory', $this->memory.'m');
+        }
+
+        if (! empty($this->swap)) {
+            $dockerCommand->option('--memory-swap', $this->swap.'m');
+        }
+
+        $dockerCommand
+            ->option('--restart', $restart)
+            ->option('--name', $name)
+            ->option('--label', "{$this->namespace}-type=runtime")
+            ->option('--label', "{$this->namespace}-created={$time}");
+
+        if (! empty($mountFolder)) {
+            $dockerCommand->option('--volume', $mountFolder.':/tmp:rw');
+        }
+
+        foreach ($volumes as $volume) {
+            $dockerCommand->option('--volume', $volume);
+        }
 
         foreach ($labels as $labelKey => $label) {
-            // sanitize label
             $label = str_replace("'", '', $label);
-
-            if (str_contains($label, ' ')) {
-                $label = "'".$label."'";
-            }
-
-            $labelString = $labelString.' --label '.$labelKey.'='.$label;
+            $dockerCommand->option('--label', $labelKey.'='.$label);
         }
 
-        $parsedVariables = [];
+        if (! empty($workdir)) {
+            $dockerCommand->option('--workdir', $workdir);
+        }
+
+        if (! empty($hostname)) {
+            $dockerCommand->option('--hostname', $hostname);
+        }
 
         foreach ($vars as $key => $value) {
             $key = $this->filterEnvKey($key);
-
-            $value = \escapeshellarg((empty($value)) ? '' : $value);
-            $parsedVariables[$key] = "--env {$key}={$value}";
+            $dockerCommand->option('--env', $key.'='.$value);
         }
 
-        $volumeString = '';
-        foreach ($volumes as $volume) {
-            $volumeString = $volumeString.'--volume '.$volume.' ';
+        $dockerCommand->argument($image);
+
+        foreach ($command as $value) {
+            $dockerCommand->argument($this->normalizeCommandArgument($value));
         }
 
-        $vars = $parsedVariables;
-
-        $time = time();
-
-        $result = Console::execute('docker run'.
-        ' -d'.
-        ($remove ? ' --rm' : '').
-        (empty($network) ? '' : " --network=\"{$network}\"").
-        (empty($entrypoint) ? '' : " --entrypoint=\"{$entrypoint}\"").
-        (empty($this->cpus) ? '' : (' --cpus='.$this->cpus)).
-        (empty($this->memory) ? '' : (' --memory='.$this->memory.'m')).
-        (empty($this->swap) ? '' : (' --memory-swap='.$this->swap.'m')).
-        " --restart={$restart}".
-        " --name={$name}".
-        " --label {$this->namespace}-type=runtime".
-        " --label {$this->namespace}-created={$time}".
-        (empty($mountFolder) ? '' : " --volume {$mountFolder}:/tmp:rw").
-        (empty($volumeString) ? '' : ' '.$volumeString).
-        (empty($labelString) ? '' : ' '.$labelString).
-        (empty($workdir) ? '' : " --workdir {$workdir}").
-        (empty($hostname) ? '' : " --hostname {$hostname}").
-        (empty($vars) ? '' : ' '.\implode(' ', $vars)).
-        " {$image}".
-        (empty($command) ? '' : ' '.implode(' ', $command)), '', $output, $stderr, 30);
+        $result = Console::execute($dockerCommand, '', $output, $stderr, 30);
 
         if ($result !== 0) {
             $error = empty($stderr) ? $output : $stderr;
@@ -421,27 +520,25 @@ class DockerCLI extends Adapter
     ): bool {
         $stderr = '';
 
-        foreach ($command as $key => $value) {
-            if (str_contains($value, ' ')) {
-                $command[$key] = "'".$value."'";
-            }
-        }
-
-        $parsedVariables = [];
+        $dockerCommand = new Command('docker');
+        $dockerCommand
+            ->argument('exec');
 
         foreach ($vars as $key => $value) {
             $key = $this->filterEnvKey($key);
-
-            $value = \escapeshellarg((empty($value)) ? '' : $value);
-            $parsedVariables[$key] = "--env {$key}={$value}";
+            $dockerCommand->option('--env', $key.'='.$value);
         }
 
-        $vars = $parsedVariables;
+        $dockerCommand->argument($name);
 
-        $result = Console::execute('docker exec '.\implode(' ', $vars)." {$name} ".implode(' ', $command), '', $output, $stderr, $timeout);
+        foreach ($command as $value) {
+            $dockerCommand->argument($this->normalizeCommandArgument($value));
+        }
+
+        $result = Console::execute($dockerCommand, '', $output, $stderr, $timeout);
 
         if ($result !== 0) {
-            if ($result == 124) {
+            if ($result === 124) {
                 throw new Timeout('Command timed out');
             } else {
                 $error = empty($stderr) ? $output : $stderr;
@@ -460,7 +557,17 @@ class DockerCLI extends Adapter
         $output = '';
         $stderr = '';
 
-        $result = Console::execute('docker rm '.($force ? '--force' : '')." {$name}", '', $output, $stderr);
+        $command = new Command('docker');
+        $command
+            ->argument('rm');
+
+        if ($force) {
+            $command->flag('--force');
+        }
+
+        $command->argument($name);
+
+        $result = Console::execute($command, '', $output, $stderr);
 
         $combinedOutput = $output.$stderr;
 

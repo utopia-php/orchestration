@@ -497,7 +497,7 @@ abstract class Base extends TestCase
         static::getOrchestration()->execute($containerId2, ['screen', '-d', '-m', "'stress --cpu 1 --timeout 5'"], $output);
 
         // Set CPU stress-test start
-        \sleep(1);
+        \sleep(5);
 
         // Fetch stats, should include high CPU usage
         $stats = static::getOrchestration()->getStats();

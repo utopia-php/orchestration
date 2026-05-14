@@ -111,6 +111,8 @@ class DockerCLI extends Adapter
             $containersString .= ' '.$containerId;
         }
 
+        \var_dump($containersString);
+
         $result = Console::execute('docker stats --no-trunc --format "id={{.ID}}&name={{.Name}}&cpu={{.CPUPerc}}&memory={{.MemPerc}}&diskIO={{.BlockIO}}&memoryIO={{.MemUsage}}&networkIO={{.NetIO}}" --no-stream'.$containersString, '', $output);
 
         if ($result !== 0) {

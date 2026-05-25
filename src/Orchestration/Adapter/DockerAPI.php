@@ -76,8 +76,6 @@ class DockerAPI extends Adapter
         $result = \curl_exec($ch);
         $responseCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
-        \curl_close($ch);
-
         return [
             'response' => $result,
             'code' => $responseCode,
@@ -187,8 +185,6 @@ class DockerAPI extends Adapter
                 throw new Orchestration('Curl Error: '.curl_error($ch));
             }
         }
-
-        \curl_close($ch);
 
         return [
             'response' => $result,

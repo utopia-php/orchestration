@@ -159,7 +159,7 @@ class Orchestration
      * On fail it will throw an exception.
      *
      * @param  string[]  $command
-     * @param  string[]  $volumes
+     * @param  array<int, string|Mount>  $volumes
      * @param  array<string, string>  $labels
      * @param  array<string, string>  $vars
      */

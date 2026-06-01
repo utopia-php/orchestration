@@ -9,6 +9,7 @@ use Utopia\Orchestration\Container;
 use Utopia\Orchestration\Container\Stats;
 use Utopia\Orchestration\Exception\Orchestration;
 use Utopia\Orchestration\Exception\Timeout;
+use Utopia\Orchestration\Mount;
 use Utopia\Orchestration\Network;
 
 class DockerCLI extends Adapter
@@ -387,7 +388,7 @@ class DockerCLI extends Adapter
      * On fail it will throw an exception.
      *
      * @param  string[]  $command
-     * @param  string[]  $volumes
+     * @param  array<int, string|Mount>  $volumes
      * @param  array<string, string>  $vars
      * @param  array<string, string>  $labels
      */
@@ -409,6 +410,42 @@ class DockerCLI extends Adapter
         $output = '';
         $stderr = '';
 
+        $dockerCommand = $this->getRunCommand($image, $name, $command, $entrypoint, $workdir, $volumes, $vars, $mountFolder, $labels, $hostname, $remove, $network, $restart);
+
+        $result = Console::execute($dockerCommand, '', $output, $stderr, 30);
+
+        if ($result !== 0) {
+            $error = empty($stderr) ? $output : $stderr;
+            throw new Orchestration("Docker Error: {$error}");
+        }
+
+        // Use first line only, CLI can add warnings or other messages
+        $output = \explode("\n", $output)[0];
+
+        return rtrim($output);
+    }
+
+    /**
+     * @param  string[]  $command
+     * @param  array<int, string|Mount>  $volumes
+     * @param  array<string, string>  $vars
+     * @param  array<string, string>  $labels
+     */
+    protected function getRunCommand(
+        string $image,
+        string $name,
+        array $command = [],
+        string $entrypoint = '',
+        string $workdir = '',
+        array $volumes = [],
+        array $vars = [],
+        string $mountFolder = '',
+        array $labels = [],
+        string $hostname = '',
+        bool $remove = false,
+        string $network = '',
+        string $restart = self::RESTART_NO
+    ): Command {
         $time = time();
 
         $dockerCommand = new Command('docker');
@@ -451,7 +488,11 @@ class DockerCLI extends Adapter
         }
 
         foreach ($volumes as $volume) {
-            $dockerCommand->option('--volume', $volume);
+            if ($volume instanceof Mount) {
+                $dockerCommand->option('--mount', $volume->toDockerCLI());
+            } else {
+                $dockerCommand->option('--volume', $volume);
+            }
         }
 
         foreach ($labels as $labelKey => $label) {
@@ -477,17 +518,7 @@ class DockerCLI extends Adapter
             $dockerCommand->argument($value);
         }
 
-        $result = Console::execute($dockerCommand, '', $output, $stderr, 30);
-
-        if ($result !== 0) {
-            $error = empty($stderr) ? $output : $stderr;
-            throw new Orchestration("Docker Error: {$error}");
-        }
-
-        // Use first line only, CLI can add warnings or other messages
-        $output = \explode("\n", $output)[0];
-
-        return rtrim($output);
+        return $dockerCommand;
     }
 
     /**

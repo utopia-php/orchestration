@@ -144,7 +144,7 @@ Once you have initialised your Orchestration object the following methods can be
 
     - `volumes` [Array]
 
-        The volumes to attach to the container. String values are passed as legacy Docker volume binds. `Mount::bind(...)` and `Mount::volume(...)` values are rendered as Docker mounts. Docker volume subpaths must already exist; callers are responsible for preparing them before running the container.
+        The volumes to attach to the container. String values are passed as legacy Docker volume binds. `Mount::bind(...)` and `Mount::volume(...)` values are rendered as Docker mounts. For bind mounts, `subpath` is appended to the host source path. Docker volume subpaths use Docker's native subpath support and must already exist; callers are responsible for preparing them before running the container.
     
     - `env` [Array]
 

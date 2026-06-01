@@ -22,6 +22,9 @@ class Mount
         return new self(self::TYPE_BIND, $source, $target, $readOnly, $subpath);
     }
 
+    /**
+     * Docker volume subpaths use native volume subpath support. Docker requires the subpath to already exist.
+     */
     public static function volume(string $source, string $target, bool $readOnly = false, string $subpath = ''): self
     {
         return new self(self::TYPE_VOLUME, $source, $target, $readOnly, $subpath);
@@ -73,6 +76,7 @@ class Mount
             return $this->source;
         }
 
+        // Bind subpaths are regular host path suffixes, not Docker native subpaths.
         return \rtrim($this->source, '/').'/'.\ltrim($this->subpath, '/');
     }
 }

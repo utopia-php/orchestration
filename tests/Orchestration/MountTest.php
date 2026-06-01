@@ -29,6 +29,40 @@ class MountTest extends TestCase
         );
     }
 
+    public function testBindSerialization(): void
+    {
+        $mount = Mount::bind('/host/path', '/container/path');
+
+        $this->assertSame([
+            'Type' => 'bind',
+            'Source' => '/host/path',
+            'Target' => '/container/path',
+            'ReadOnly' => false,
+        ], $mount->toDockerAPI());
+
+        $this->assertSame(
+            'type=bind,source=/host/path,target=/container/path',
+            $mount->toDockerCLI()
+        );
+    }
+
+    public function testBindSerializationWithSubpath(): void
+    {
+        $mount = Mount::bind('/host/path', '/container/path', subpath: 'sub');
+
+        $this->assertSame([
+            'Type' => 'bind',
+            'Source' => '/host/path/sub',
+            'Target' => '/container/path',
+            'ReadOnly' => false,
+        ], $mount->toDockerAPI());
+
+        $this->assertSame(
+            'type=bind,source=/host/path/sub,target=/container/path',
+            $mount->toDockerCLI()
+        );
+    }
+
     public function testDockerAPIRequestBodyIncludesMountsAndLegacyBinds(): void
     {
         $adapter = new MountTestDockerAPI();

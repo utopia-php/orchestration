@@ -23,6 +23,7 @@ require_once 'vendor/autoload.php';
 
 use Utopia\Orchestration\Orchestration;
 use Utopia\Orchestration\Adapter\DockerCLI;
+use Utopia\Orchestration\Mount;
 
 // Initialise Orchestration with Docker CLI adapter.
 $orchestration = new Orchestration(new DockerCLI());
@@ -102,7 +103,11 @@ Once you have initialised your Orchestration object the following methods can be
         ['echo', 'hello world!'],
         'entrypoint',
         'workdir',
-        ['tmp:/tmp:rw', 'cooldirectory:/home/folder:rw'],
+        [
+            'tmp:/tmp:rw',
+            Mount::bind('/host/cache', '/cache'),
+            Mount::volume('openruntimes-build-cache', '/cache', subpath: 'cache-key'),
+        ],
         ['ENV_VAR' => 'value'],
         '/tmp',
         ['label' => 'value'],
@@ -139,7 +144,7 @@ Once you have initialised your Orchestration object the following methods can be
 
     - `volumes` [Array]
 
-        The volumes to attach to the container.
+        The volumes to attach to the container. String values are passed as legacy Docker volume binds. `Mount::bind(...)` and `Mount::volume(...)` values are rendered as Docker mounts. For bind mounts, `subpath` is appended to the host source path. Docker volume subpaths use Docker's native subpath support and must already exist; callers are responsible for preparing them before running the container.
     
     - `env` [Array]
 

@@ -8,6 +8,7 @@ use Utopia\Orchestration\Container;
 use Utopia\Orchestration\Container\Stats;
 use Utopia\Orchestration\Exception\Orchestration;
 use Utopia\Orchestration\Exception\Timeout;
+use Utopia\Orchestration\Mount;
 use Utopia\Orchestration\Network;
 
 class DockerAPI extends Adapter
@@ -475,7 +476,7 @@ class DockerAPI extends Adapter
      * On fail it will throw an exception.
      *
      * @param  string[]  $command
-     * @param  string[]  $volumes
+     * @param  array<int, string|Mount>  $volumes
      * @param  array<string, string>  $vars
      * @param  array<string, string>  $labels
      */
@@ -511,6 +512,17 @@ class DockerAPI extends Adapter
         $labels[$this->namespace.'-type'] = 'runtime';
         $labels[$this->namespace.'-created'] = (string) time();
 
+        $binds = [];
+        $mounts = [];
+
+        foreach ($volumes as $volume) {
+            if ($volume instanceof Mount) {
+                $mounts[] = $volume->toDockerAPI();
+            } else {
+                $binds[] = $volume;
+            }
+        }
+
         $body = [
             'Hostname' => $hostname,
             'Entrypoint' => $entrypoint,
@@ -520,7 +532,8 @@ class DockerAPI extends Adapter
             'Labels' => (object) $labels,
             'Env' => array_values($vars),
             'HostConfig' => [
-                'Binds' => $volumes,
+                'Binds' => $binds,
+                'Mounts' => $mounts,
                 'CpuQuota' => floatval($this->cpus) * 100000,
                 'CpuPeriod' => 100000,
                 'Memory' => intval($this->memory) * 1e+6, // Convert into bytes

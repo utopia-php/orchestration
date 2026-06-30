@@ -621,8 +621,12 @@ class DockerAPI extends Adapter
         }
 
         $parsedResponse = json_decode($result['response'], true);
-        if ($parsedResponse['Running'] === true || $parsedResponse['ExitCode'] !== 0) {
+        if ($parsedResponse['Running'] === true) {
             throw new Orchestration('Failed to execute command. Exit code: '.$parsedResponse['ExitCode']);
+        }
+
+        if ($parsedResponse['ExitCode'] !== 0) {
+            return false;
         }
 
         return true;

@@ -1,7 +1,8 @@
 <?php
 
-namespace Utopia\Tests;
+namespace Utopia\Orchestration\Tests\E2E;
 
+use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\TestCase;
 use Utopia\Orchestration\Adapter\DockerAPI;
 use Utopia\Orchestration\Orchestration;
@@ -17,17 +18,43 @@ abstract class Base extends TestCase
      */
     public static $containerID;
 
+    /**
+     * Bind-mounted into the containers the tests start: the e2e tier runs on
+     * the host, so this path is the one the Docker daemon sees.
+     */
+    protected static function resources(): string
+    {
+        return __DIR__.'/Resources';
+    }
+
+    /**
+     * The daemon's speed varies with whatever else the host runs, so wait for
+     * a condition instead of sleeping a fixed time.
+     */
+    protected static function waitUntil(callable $condition, int $seconds = 30): bool
+    {
+        $deadline = \time() + $seconds;
+        while (! $condition()) {
+            if (\time() >= $deadline) {
+                return false;
+            }
+            \usleep(250_000);
+        }
+
+        return true;
+    }
+
     public function setUp(): void
     {
-        \exec('rm -rf /usr/src/code/tests/Orchestration/Resources/screens'); // cleanup
+        \exec('rm -rf '.\escapeshellarg(self::resources().'/screens')); // cleanup
 
-        \exec('sh -c "cd /usr/src/code/tests/Orchestration/Resources && tar -zcf ./php.tar.gz php"');
-        \exec('sh -c "cd /usr/src/code/tests/Orchestration/Resources && tar -zcf ./timeout.tar.gz timeout"');
+        \exec('cd '.\escapeshellarg(self::resources()).' && tar -zcf ./php.tar.gz php');
+        \exec('cd '.\escapeshellarg(self::resources()).' && tar -zcf ./timeout.tar.gz timeout');
     }
 
     public function tearDown(): void
     {
-        \exec('rm -rf /usr/src/code/tests/Orchestration/Resources/screens'); // cleanup
+        \exec('rm -rf '.\escapeshellarg(self::resources().'/screens')); // cleanup
     }
 
     public function testPullImage(): void
@@ -51,9 +78,7 @@ abstract class Base extends TestCase
         $this->assertSame(false, $response);
     }
 
-    /**
-     * @depends testPullImage
-     */
+    #[Depends('testPullImage')]
     public function testCreateContainer(): void
     {
         $response = static::getOrchestration()->run(
@@ -67,10 +92,10 @@ abstract class Base extends TestCase
             '',
             '/usr/local/src/',
             [
-                \getenv('HOST_DIR').'/tests/Orchestration/Resources:/test:rw',
+                self::resources().':/test:rw',
             ],
             [],
-            \getenv('HOST_DIR').'/tests/Orchestration/Resources'
+            self::resources()
         );
 
         $this->assertNotEmpty($response);
@@ -87,10 +112,10 @@ abstract class Base extends TestCase
             '',
             '/usr/local/src/',
             [
-                \getenv('HOST_DIR').'/tests/Orchestration/Resources:/test:rw',
+                self::resources().':/test:rw',
             ],
             [],
-            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
+            self::resources(),
             restart: DockerAPI::RESTART_ALWAYS
         );
 
@@ -119,10 +144,10 @@ abstract class Base extends TestCase
             '',
             '/usr/local/src/',
             [
-                \getenv('HOST_DIR').'/tests/Orchestration/Resources:/test:rw',
+                self::resources().':/test:rw',
             ],
             [],
-            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
+            self::resources(),
             restart: DockerAPI::RESTART_NO
         );
 
@@ -156,7 +181,7 @@ abstract class Base extends TestCase
             '/usr/local/src/',
             [],
             [],
-            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
+            self::resources(),
         );
 
         /**
@@ -176,15 +201,13 @@ abstract class Base extends TestCase
             '/usr/local/src/',
             [],
             [],
-            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
+            self::resources(),
         );
     }
 
     // Network Tests
 
-    /**
-     * @depends testCreateContainer
-     */
+    #[Depends('testCreateContainer')]
     public function testCreateNetwork(): void
     {
         $response = static::getOrchestration()->createNetwork('TestNetwork');
@@ -192,9 +215,7 @@ abstract class Base extends TestCase
         $this->assertSame(true, $response);
     }
 
-    /**
-     * @depends testCreateNetwork
-     */
+    #[Depends('testCreateNetwork')]
     public function testListNetworks(): void
     {
         $response = static::getOrchestration()->listNetworks();
@@ -210,9 +231,7 @@ abstract class Base extends TestCase
         $this->assertSame(true, $foundNetwork);
     }
 
-    /**
-     * @depends testCreateNetwork
-     */
+    #[Depends('testCreateNetwork')]
     public function testNetworkConnect(): void
     {
         $response = static::getOrchestration()->run(
@@ -229,7 +248,7 @@ abstract class Base extends TestCase
             [
                 'teasdsa' => '',
             ],
-            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
+            self::resources(),
             [
                 'test2' => 'Hello World!',
             ],
@@ -247,9 +266,7 @@ abstract class Base extends TestCase
         $this->assertSame(true, $response);
     }
 
-    /**
-     * @depends testNetworkConnect
-     */
+    #[Depends('testNetworkConnect')]
     public function testNetworkDisconnect(): void
     {
         $response = static::getOrchestration()->networkDisconnect('TestContainer', 'TestNetwork', true);
@@ -257,9 +274,7 @@ abstract class Base extends TestCase
         $this->assertSame(true, $response);
     }
 
-    /**
-     * @depends testNetworkDisconnect
-     */
+    #[Depends('testNetworkDisconnect')]
     public function testRemoveNetwork(): void
     {
         $response = static::getOrchestration()->removeNetwork('TestNetwork');
@@ -267,9 +282,7 @@ abstract class Base extends TestCase
         $this->assertSame(true, $response);
     }
 
-    /**
-     * @depends testCreateContainer
-     */
+    #[Depends('testCreateContainer')]
     public function testExecContainer(): void
     {
         /**
@@ -287,7 +300,7 @@ abstract class Base extends TestCase
                 ],
                 $output
             );
-        } catch (\Exception $err) {
+        } catch (\Exception) {
             $threwException = true;
         }
         $this->assertTrue($threwException);
@@ -311,7 +324,7 @@ abstract class Base extends TestCase
                 ],
                 1
             );
-        } catch (\Exception $err) {
+        } catch (\Exception) {
             $threwException = true;
         }
         $this->assertTrue($threwException);
@@ -359,9 +372,7 @@ abstract class Base extends TestCase
         $this->assertStringEndsWith('END', $output);
     }
 
-    /**
-     * @depends testExecContainer
-     */
+    #[Depends('testExecContainer')]
     public function testCheckVolume(): void
     {
         $output = '';
@@ -378,9 +389,7 @@ abstract class Base extends TestCase
         $this->assertSame('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper.', $output);
     }
 
-    /**
-     * @depends testExecContainer
-     */
+    #[Depends('testExecContainer')]
     public function testTimeoutContainer(): void
     {
         // Create container
@@ -398,7 +407,7 @@ abstract class Base extends TestCase
             [
                 'teasdsa' => '',
             ],
-            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
+            self::resources(),
             [
                 'test2' => 'Hello World!',
             ]
@@ -424,7 +433,7 @@ abstract class Base extends TestCase
                 [],
                 1
             );
-        } catch (\Exception $err) {
+        } catch (\Exception) {
             $threwException = true;
         }
         $this->assertTrue($threwException);
@@ -468,9 +477,7 @@ abstract class Base extends TestCase
         $this->assertSame(true, $response);
     }
 
-    /**
-     * @depends testCreateContainer
-     */
+    #[Depends('testCreateContainer')]
     public function testListContainers(): void
     {
         $response = static::getOrchestration()->list();
@@ -486,9 +493,7 @@ abstract class Base extends TestCase
         $this->assertSame(true, $foundContainer);
     }
 
-    /**
-     * @depends testCreateContainer
-     */
+    #[Depends('testCreateContainer')]
     public function testListFilters(): void
     {
         $response = $this->getOrchestration()->list(['id' => self::$containerID]);
@@ -496,9 +501,7 @@ abstract class Base extends TestCase
         $this->assertSame(self::$containerID, $response[0]->getId());
     }
 
-    /**
-     * @depends testPullImage
-     */
+    #[Depends('testPullImage')]
     public function testPreservesLabelValuesWithSingleQuotes(): void
     {
         $containerName = 'TestContainerLabelQuote';
@@ -527,9 +530,7 @@ abstract class Base extends TestCase
         $this->assertSame(true, $response);
     }
 
-    /**
-     * @depends testExecContainer
-     */
+    #[Depends('testExecContainer')]
     public function testRemoveContainer(): void
     {
         /**
@@ -548,41 +549,6 @@ abstract class Base extends TestCase
         $this->expectException(\Exception::class);
 
         $response = static::getOrchestration()->remove('TestContainer', true);
-    }
-
-    public function testParseCLICommand(): void
-    {
-        /**
-         * Test for success
-         */
-        $test = static::getOrchestration()->parseCommandString("sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'");
-
-        $this->assertSame([
-            'sh',
-            '-c',
-            "'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'",
-        ], $test);
-
-        $test = static::getOrchestration()->parseCommandString('sudo apt-get update');
-
-        $this->assertSame([
-            'sudo',
-            'apt-get',
-            'update',
-        ], $test);
-
-        $test = static::getOrchestration()->parseCommandString('test');
-
-        $this->assertSame([
-            'test',
-        ], $test);
-
-        /**
-         * Test for failure
-         */
-        $this->expectException(\Exception::class);
-
-        $test = static::getOrchestration()->parseCommandString("sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null");
     }
 
     public function testRunRemove(): void
@@ -604,7 +570,7 @@ abstract class Base extends TestCase
             [
                 'teasdsa' => '',
             ],
-            \getenv('HOST_DIR').'/tests/Orchestration/Resources',
+            self::resources(),
             [
                 'test2' => 'Hello World!',
             ],
@@ -614,25 +580,21 @@ abstract class Base extends TestCase
 
         $this->assertNotEmpty($response);
 
-        sleep(1);
-
         // Check if container exists
-        $statusResponse = static::getOrchestration()->list(['id' => $response]);
+        $removed = self::waitUntil(fn (): bool => static::getOrchestration()->list(['id' => $response]) === []);
 
-        $this->assertSame(0, count($statusResponse));
+        $this->assertTrue($removed, 'TestContainerRM still exists after exiting');
     }
 
-    /**
-     * @depends testPullImage
-     */
+    #[Depends('testPullImage')]
     public function testUsageStats(): void
     {
         /**
          * Test for Success
          */
-        $stats = static::getOrchestration()->getStats();
-        // 1 expected due to container running tests
-        $this->assertCount(1, $stats, 'Container(s) still running: '.\json_encode($stats, JSON_PRETTY_PRINT));
+        // The e2e tier shares the host's Docker daemon, so count against
+        // whatever was already running before this test started.
+        $running = \count(static::getOrchestration()->getStats());
 
         // This allows CPU-heavy load check
         static::getOrchestration()->setCpus(1);
@@ -646,7 +608,7 @@ abstract class Base extends TestCase
                 'apk update && apk add screen && tail -f /dev/null',
             ],
             workdir: '/usr/local/src/',
-            mountFolder: \getenv('HOST_DIR').'/tests/Orchestration/Resources',
+            mountFolder: self::resources(),
             labels: ['utopia-container-type' => 'stats']
         );
 
@@ -661,11 +623,28 @@ abstract class Base extends TestCase
                 'apk update && apk add screen && tail -f /dev/null',
             ],
             workdir: '/usr/local/src/',
-            mountFolder: \getenv('HOST_DIR').'/tests/Orchestration/Resources',
+            mountFolder: self::resources(),
         );
 
         $this->assertNotEmpty($containerId2);
-        sleep(2);
+
+        // Both containers install screen on start
+        foreach ([$containerId1, $containerId2] as $containerId) {
+            $installed = self::waitUntil(function () use ($containerId): bool {
+                $output = '';
+                try {
+                    // Bound each probe too: execute() waits forever by default, which
+                    // would keep a stalled daemon from ever reaching the deadline.
+                    static::getOrchestration()->execute($containerId, ['which', 'screen'], $output, timeout: 10);
+                } catch (\Exception) {
+                    return false;
+                }
+
+                return true;
+            }, 120);
+
+            $this->assertTrue($installed, "screen is not installed in {$containerId}");
+        }
 
         // This allows CPU-heavy load check
         $output = '';
@@ -678,7 +657,7 @@ abstract class Base extends TestCase
         // Fetch stats, should include high CPU usage
         $stats = static::getOrchestration()->getStats();
 
-        $this->assertCount(2 + 1, $stats); // +1 due to container running tests
+        $this->assertCount($running + 2, $stats);
 
         $this->assertNotEmpty($stats[0]->getContainerId());
         $this->assertSame(64, \strlen($stats[0]->getContainerId()));

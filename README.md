@@ -1,5 +1,8 @@
 # Utopia Orchestration
 
+> [!IMPORTANT]
+> This repository is a read-only mirror of [`packages/orchestration`](https://github.com/appwrite/appwrite/tree/main/packages/orchestration) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
+
 [![Build Status](https://app.travis-ci.com/utopia-php/orchestration.svg?branch=main)](https://app.travis-ci.com/github/utopia-php/orchestration)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/orchestration.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
@@ -33,11 +36,10 @@ $orchestration->pull('ubuntu:latest');
 // Launch a ubuntu container that doesn't end using the tail command.
 $containerID = $orchestration->run('ubuntu:latest', 'testContainer', ['tail', '-f', '/dev/null']);
 
-$stderr = '';
-$stdout = '';
+$output = '';
 
 // Execute a hello world command in the container
-$orchestration->execute($containerID, ['echo', 'Hello World!'], $stdout, $stderr);
+$orchestration->execute($containerID, ['echo', 'Hello World!'], $output);
 
 // Remove the container forcefully since it's still running.
 $orchestration->remove($containerID, true);
@@ -128,7 +130,7 @@ Once you have initialised your Orchestration object the following methods can be
     - `command` [Array]
 
         The command to run in the container seperated into a array.
-    
+
     - `entrypoint` [String]
 
         The executable to run in the container.
@@ -140,11 +142,11 @@ Once you have initialised your Orchestration object the following methods can be
     - `volumes` [Array]
 
         The volumes to attach to the container.
-    
+
     - `env` [Array]
 
         The environment variables to set in the container.
-    
+
     - `mountFolder` [String]
 
         A folder that will be automatically mounted to /tmp in the container
@@ -158,7 +160,7 @@ Once you have initialised your Orchestration object the following methods can be
         The hostname to set on the container.
 
     - `remove` [Boolean]
-  
+
         Whether to remove the container once it exits.
 
     </details>
@@ -169,17 +171,15 @@ Once you have initialised your Orchestration object the following methods can be
     This method executes a command in an already running container and returns a boolean value indicating if the command was executed successfully.
 
     ```php
-    $stdout = '';
-    $stderr = '';
+    $output = '';
 
-    $orchestraton->execute(
+    $orchestration->execute(
         'container_id',
         ['echo', 'Hello World!'],
-        $stdout,
-        $stderr,
+        $output,
         ['VAR' => 'VALUE'],
         10,
-    )
+    );
     ```
 
     <details>
@@ -191,18 +191,14 @@ Once you have initialised your Orchestration object the following methods can be
     - `container_id` [String] [Required]
 
         The ID of the container to execute the command in.
-    
+
     - `command` [Array] [Required]
 
         The command to execute in the container.
 
-    - `stdout` [String] [Reference]
+    - `output` [String] [Reference]
 
-        The variable to store the stdout of the command in.
-
-    - `stderr` [String] [Reference]
-
-        The variable to store the stderr of the command in.
+        The variable to store the command's output in. `DockerAPI` appends stderr to stdout; `DockerCLI` stores stdout and reports stderr in the exception it throws when the command fails.
 
     - `env` [Array]
 
@@ -239,7 +235,7 @@ Once you have initialised your Orchestration object the following methods can be
     </details>
 
 - ### List containers
-    
+
     This method returns an array of containers.
 
     ```php
@@ -259,7 +255,7 @@ Once you have initialised your Orchestration object the following methods can be
     </details>
 
 - ### List Networks
-    
+
     This method returns an array of networks.
 
     ```php
@@ -277,7 +273,7 @@ Once you have initialised your Orchestration object the following methods can be
     </details>
 
 - ### Create a Network
-    
+
     This method creates a new network and returns a boolean value indicating if the network was created successfully.
 
     ```php
